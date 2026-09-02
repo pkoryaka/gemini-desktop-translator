@@ -7,6 +7,14 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 
+function getIconPath() {
+  const icoPath = path.join(__dirname, 'app-icon.ico');
+  if (fs.existsSync(icoPath)) return icoPath;
+  const pngPath = path.join(__dirname, 'app-icon.png');
+  if (fs.existsSync(pngPath)) return pngPath;
+  return path.join(__dirname, 'icon.svg');
+}
+
 function getStartupShortcutPath() {
   const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
   return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini Translator.lnk');
@@ -26,12 +34,14 @@ function setAutoStartEnabled(enable) {
     const startupPath = getStartupShortcutPath();
     if (enable) {
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
+      const iconFile = getIconPath();
       const psCommand = `
         $WshShell = New-Object -comObject WScript.Shell;
         $Shortcut = $WshShell.CreateShortcut("${startupPath.replace(/\\/g, '\\\\')}");
         $Shortcut.TargetPath = "wscript.exe";
         $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
         $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
+        $Shortcut.IconLocation = "${iconFile.replace(/\\/g, '\\\\')}";
         $Shortcut.Description = "Gemini AI Desktop Translator (Silent Auto-start)";
         $Shortcut.Save();
       `;
@@ -57,7 +67,7 @@ function setAutoStartEnabled(enable) {
   return enable;
 }
 
-// Create Windows Start Menu Shortcut automatically (Silent - No Terminal)
+// Create Windows Start Menu Shortcut automatically (with app-icon.ico)
 function ensureStartMenuShortcut() {
   if (process.platform === 'win32') {
     try {
@@ -65,6 +75,7 @@ function ensureStartMenuShortcut() {
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
       const shortcutPath = path.join(startMenuDir, 'Gemini Translator.lnk');
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
+      const iconFile = getIconPath();
 
       const psCommand = `
         $WshShell = New-Object -comObject WScript.Shell;
@@ -72,6 +83,7 @@ function ensureStartMenuShortcut() {
         $Shortcut.TargetPath = "wscript.exe";
         $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
         $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
+        $Shortcut.IconLocation = "${iconFile.replace(/\\/g, '\\\\')}";
         $Shortcut.Description = "Gemini AI Desktop Translator";
         $Shortcut.Save();
       `;
@@ -85,13 +97,9 @@ function ensureStartMenuShortcut() {
 }
 
 function getAppIcon() {
-  const iconPngPath = path.join(__dirname, 'app-icon.png');
-  if (fs.existsSync(iconPngPath)) {
-    return nativeImage.createFromPath(iconPngPath);
-  }
-  const iconSvgPath = path.join(__dirname, 'icon.svg');
-  if (fs.existsSync(iconSvgPath)) {
-    return nativeImage.createFromPath(iconSvgPath);
+  const iconPath = getIconPath();
+  if (fs.existsSync(iconPath)) {
+    return nativeImage.createFromPath(iconPath);
   }
   return nativeImage.createEmpty();
 }
