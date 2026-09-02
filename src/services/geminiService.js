@@ -204,13 +204,17 @@ ${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native ph
     ],
     generationConfig: {
       temperature: parseFloat(temperature) || 0.2,
-      topP: 0.95,
+      topP: 0.8,
+      topK: 40,
+      maxOutputTokens: explainJargon ? 2048 : 1024,
+      candidateCount: 1,
       ...(explainJargon ? { responseMimeType: 'application/json' } : {})
     }
   };
 
   const response = await fetch(endpoint, {
     method: 'POST',
+    keepalive: true,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
