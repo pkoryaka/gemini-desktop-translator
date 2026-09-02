@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw } from 'lucide-react';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power } from 'lucide-react';
 import { AVAILABLE_MODELS, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 
@@ -9,7 +9,6 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const currentSettings = storageService.getSettings();
   const currentKey = storageService.getApiKey();
 
-  // Auto-migrate old decommissioned model names if saved in local storage
   const initialModel = (!currentSettings.model || currentSettings.model.includes('2.5')) 
     ? 'gemini-3.6-flash' 
     : currentSettings.model;
@@ -18,6 +17,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [model, setModel] = useState(initialModel);
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.3);
   const [showKey, setShowKey] = useState(false);
+  const [autoStart, setAutoStart] = useState(false);
 
   const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
@@ -32,7 +32,6 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       const liveModels = await fetchLiveAvailableModels(activeKey);
       if (liveModels && liveModels.length > 0) {
         setModelsList(liveModels);
-        // If current selected model not in list, pick the first one or gemini-3.6-flash
         if (!liveModels.some((m) => m.id === model)) {
           const defaultMatch = liveModels.find((m) => m.id.includes('3.6-flash') || m.id.includes('flash')) || liveModels[0];
           if (defaultMatch) setModel(defaultMatch.id);
@@ -49,7 +48,25 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     if (apiKey && apiKey.trim()) {
       handleRefreshModels(apiKey);
     }
+    // Check autostart status
+    if (window.electronAPI?.getAutoStart) {
+      window.electronAPI.getAutoStart().then((enabled) => {
+        setAutoStart(Boolean(enabled));
+      }).catch((e) => console.warn('Autostart check failed', e));
+    }
   }, []);
+
+  const handleToggleAutoStart = async (e) => {
+    const newValue = e.target.checked;
+    setAutoStart(newValue);
+    if (window.electronAPI?.setAutoStart) {
+      try {
+        await window.electronAPI.setAutoStart(newValue);
+      } catch (err) {
+        console.warn('Failed to set autostart', err);
+      }
+    }
+  };
 
   const handleTestConnection = async () => {
     if (!apiKey.trim()) {
@@ -61,7 +78,6 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     try {
       await testGeminiApiKey(apiKey, model);
       setTestStatus({ success: true, message: 'Connection successful! Gemini is ready.' });
-      // Also refresh the models list dynamically
       handleRefreshModels(apiKey);
     } catch (err) {
       setTestStatus({ success: false, message: err.message || 'Connection test failed.' });
@@ -202,7 +218,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </div>
         </div>
 
-        {/* Desktop Integration & Shortcuts Box */}
+        {/* Windows Startup & Desktop Integration Box */}
         <div style={{
           background: 'rgba(15, 23, 42, 0.7)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -210,16 +226,46 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px'
+          gap: '10px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
-            <Monitor size={15} color="#6366f1" />
-            <span>Windows Desktop Shortcuts & Tray</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+              <Power size={15} color="#10b981" />
+              <span>Launch with Windows</span>
+            </div>
+            <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={autoStart}
+                onChange={handleToggleAutoStart}
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
+              <span style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: autoStart ? '#6366f1' : 'rgba(255,255,255,0.15)',
+                borderRadius: '999px',
+                transition: 'all 0.2s ease'
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  content: '""',
+                  height: '14px',
+                  width: '14px',
+                  left: autoStart ? '21px' : '3px',
+                  bottom: '3px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  transition: 'all 0.2s ease'
+                }} />
+              </span>
+            </label>
           </div>
+
           <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
             • <strong>Global Hotkey:</strong> Highlight text in any app & press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>Ctrl + Alt + T</kbd> to translate instantly.
             <br />
-            • <strong>System Tray:</strong> Closing the window minimizes it to the Windows taskbar tray so it stays ready in the background.
+            • <strong>System Tray:</strong> Closing window keeps it active in tray for instant global hotkey access.
           </div>
         </div>
 

@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readClipboard: () => ipcRenderer.invoke('clipboard:read'),
   hideToTray: () => ipcRenderer.invoke('window:hide-to-tray'),
   showWindow: () => ipcRenderer.invoke('window:show'),
+  getAutoStart: () => ipcRenderer.invoke('autostart:get'),
+  setAutoStart: (enable) => ipcRenderer.invoke('autostart:set', enable),
   onQuickTranslate: (callback) => {
     const subscription = (event, text) => callback(text);
     ipcRenderer.on('quick-translate', subscription);

@@ -7,6 +7,55 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 
+function getStartupShortcutPath() {
+  const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
+  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini Translator.lnk');
+}
+
+function isAutoStartEnabled() {
+  if (process.platform === 'win32') {
+    const startupPath = getStartupShortcutPath();
+    if (fs.existsSync(startupPath)) return true;
+    return app.getLoginItemSettings().openAtLogin;
+  }
+  return app.getLoginItemSettings().openAtLogin;
+}
+
+function setAutoStartEnabled(enable) {
+  if (process.platform === 'win32') {
+    const startupPath = getStartupShortcutPath();
+    if (enable) {
+      const targetScript = path.join(__dirname, '..', 'start.bat');
+      const psCommand = `
+        $WshShell = New-Object -comObject WScript.Shell;
+        $Shortcut = $WshShell.CreateShortcut("${startupPath.replace(/\\/g, '\\\\')}");
+        $Shortcut.TargetPath = "${targetScript.replace(/\\/g, '\\\\')}";
+        $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
+        $Shortcut.Description = "Gemini AI Desktop Translator (Auto-start)";
+        $Shortcut.Save();
+      `;
+      exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, ' ')}"`, (err) => {
+        if (err) console.warn('Autostart shortcut creation warning:', err);
+      });
+    } else {
+      if (fs.existsSync(startupPath)) {
+        try {
+          fs.unlinkSync(startupPath);
+        } catch (e) {
+          console.warn('Could not remove autostart shortcut:', e);
+        }
+      }
+    }
+  }
+
+  app.setLoginItemSettings({
+    openAtLogin: enable,
+    openAsHidden: true
+  });
+
+  return enable;
+}
+
 // Create Windows Start Menu Shortcut automatically
 function ensureStartMenuShortcut() {
   if (process.platform === 'win32') {
@@ -151,9 +200,6 @@ function createTray() {
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation() {
   if (process.platform === 'win32') {
-    // Save current clipboard text
-    const previousClipboard = clipboard.readText();
-
     // Send Ctrl+C to active foreground window via PowerShell SendKeys
     const psScript = `
       Add-Type -AssemblyName System.Windows.Forms;
@@ -178,7 +224,6 @@ function triggerGlobalSelectionTranslation() {
       }, 120);
     });
   } else {
-    // Fallback for other platforms: use current clipboard
     const text = clipboard.readText();
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
@@ -192,12 +237,10 @@ function triggerGlobalSelectionTranslation() {
 }
 
 function registerGlobalHotkeys() {
-  // Main shortcut: Ctrl + Alt + T
   globalShortcut.register('CommandOrControl+Alt+T', () => {
     triggerGlobalSelectionTranslation();
   });
 
-  // Secondary convenient shortcut: Ctrl + Shift + T
   globalShortcut.register('CommandOrControl+Shift+T', () => {
     triggerGlobalSelectionTranslation();
   });
@@ -227,7 +270,7 @@ app.on('window-all-closed', () => {
   // Do not quit on window close, keep running in system tray
 });
 
-// Clipboard and Window IPC
+// IPC Handlers
 ipcMain.handle('clipboard:copy', async (event, text) => {
   clipboard.writeText(text);
   return true;
@@ -250,4 +293,12 @@ ipcMain.handle('window:show', () => {
     mainWindow.focus();
   }
   return true;
+});
+
+ipcMain.handle('autostart:get', async () => {
+  return isAutoStartEnabled();
+});
+
+ipcMain.handle('autostart:set', async (event, enable) => {
+  return setAutoStartEnabled(enable);
 });
