@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_SETTINGS = {
-  model: 'gemini-2.0-flash',
+  model: 'gemini-1.5-flash',
   temperature: 0.1,
   autoDetectLanguage: true,
   autoSpeak: false,
@@ -40,7 +40,12 @@ export const storageService = {
   getSettings: () => {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return data ? { ...DEFAULT_SETTINGS, ...JSON.parse(data) } : DEFAULT_SETTINGS;
+      if (!data) return DEFAULT_SETTINGS;
+      const parsed = JSON.parse(data);
+      if (parsed.model && (parsed.model.includes('3.6') || parsed.model.includes('3.7') || parsed.model.includes('2.5'))) {
+        parsed.model = 'gemini-1.5-flash';
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SETTINGS;
     }

@@ -1,6 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Rock-Solid, High-Speed Translation with Multi-Model Fallback
+ * Curated for verified, production-ready Google Gemini models.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -13,32 +13,24 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    tag: '⚡ Ultra Fast',
-    badgeColor: '#10b981',
-    description: 'Blazing fast real-time response with lowest latency. Recommended for instant hotkey translation.',
-    bestFor: 'Instant hotkey translation, zero-lag daily chatting, high rate limits.'
-  },
-  {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
-    tag: '📦 Universal Stable',
+    tag: '⚡ Ultra Fast & Universal (Default)',
+    badgeColor: '#10b981',
+    description: 'Universally available and ultra-reliable with fast sub-second response time. Works across all Google AI Studio tiers.',
+    bestFor: 'Daily instant hotkey translations, rapid chatting, and guaranteed uptime.'
+  },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    tag: '🚀 Next-Gen Flash',
     badgeColor: '#06b6d4',
-    description: 'Broadly available, ultra-reliable translation model with high speed.',
-    bestFor: 'Universal reliability, fast multilingual translation.'
+    description: 'High throughput generation model with modern multilingual vocabulary.',
+    bestFor: 'General translation, bulk text, high rate limits.'
   },
   {
-    id: 'gemini-3.6-flash',
-    name: 'Gemini 3.6 Flash',
-    tag: '⚡ Next-Gen Flash',
-    badgeColor: '#3b82f6',
-    description: 'Latest high-throughput model with enhanced reasoning and high context retention.',
-    bestFor: 'Long text translation, articles, complex sentence structures.'
-  },
-  {
-    id: 'gemini-3.6-pro',
-    name: 'Gemini 3.6 Pro',
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
     tag: '🧠 Deep Nuance & Slang Expert',
     badgeColor: '#a855f7',
     description: 'Advanced reasoning model. Excels at complex idioms, literary context, technical documents, and in-depth cultural jargon explanations.',
@@ -58,14 +50,14 @@ export async function fetchLiveAvailableModels(apiKey) {
   return AVAILABLE_MODELS;
 }
 
-export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
+export async function testGeminiApiKey(apiKey, model = 'gemini-1.5-flash') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
     const response = await fetch(endpoint, {
@@ -106,7 +98,7 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = 'gemini-2.0-flash',
+  model = 'gemini-1.5-flash',
   temperature = 0.1,
   onStreamChunk = null
 }) {
@@ -117,8 +109,14 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
+  // Sanitize model name: automatically replace any legacy/invalid model with gemini-1.5-flash
+  let activeModel = model;
+  if (!activeModel || activeModel.includes('3.6') || activeModel.includes('3.7') || activeModel.includes('2.5')) {
+    activeModel = 'gemini-1.5-flash';
+  }
+
   // 1. Check Local Memory Cache (0ms response)
-  const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, model);
+  const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, activeModel);
   if (translationCache.has(cacheKey)) {
     const cachedResult = translationCache.get(cacheKey);
     if (onStreamChunk) {
@@ -154,9 +152,12 @@ Respond ONLY in JSON format:
     systemInstructionText = `Translate from ${sourceName} into ${targetName}. Output the fluent translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
   }
 
-  const candidateModels = [model, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.6-flash'].filter(
-    (m, idx, arr) => arr.indexOf(m) === idx
-  );
+  const candidateModels = [
+    activeModel,
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro'
+  ].filter((m, idx, arr) => arr.indexOf(m) === idx);
 
   let lastError = null;
 
@@ -176,7 +177,7 @@ Respond ONLY in JSON format:
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     try {
       const response = await fetch(endpoint, {

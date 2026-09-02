@@ -10,8 +10,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const currentSettings = storageService.getSettings();
   const currentKey = storageService.getApiKey();
 
-  const initialModel = (!currentSettings.model || currentSettings.model.includes('2.5')) 
-    ? 'gemini-3.6-flash' 
+  const initialModel = (!currentSettings.model || currentSettings.model.includes('3.6') || currentSettings.model.includes('3.7') || currentSettings.model.includes('2.5')) 
+    ? 'gemini-1.5-flash' 
     : currentSettings.model;
 
   const [apiKey, setApiKey] = useState(currentKey);
