@@ -448,6 +448,11 @@ body {
   font-size: 1.05rem;
   line-height: 1.6;
   user-select: text;
+  word-break: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: none;
+  white-space: pre-wrap;
 }
 
 .panel-textarea::placeholder {

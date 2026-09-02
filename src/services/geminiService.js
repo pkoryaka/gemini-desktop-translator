@@ -16,12 +16,20 @@ export const SUPPORTED_LANGUAGES = [
  */
 export const AVAILABLE_MODELS = [
   {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    tag: '⚡ Ultra Fast (Sub-200ms TTFT)',
+    badgeColor: '#10b981',
+    description: 'Blazing fast real-time token streaming with lowest latency. Recommended for instant hotkey translation.',
+    bestFor: 'Instant hotkey translation, zero-lag daily chatting, high rate limits.'
+  },
+  {
     id: 'gemini-3.6-flash',
     name: 'Gemini 3.6 Flash',
-    tag: '⚡ Ultra Fast (Recommended)',
-    badgeColor: '#10b981',
-    description: 'Fastest response time with real-time token streaming. Ideal for daily translation, rapid chat, and global hotkey usage.',
-    bestFor: 'Daily communication, instant selected-text hotkey, high free-tier rate limits.'
+    tag: '⚡ Next-Gen Fast',
+    badgeColor: '#06b6d4',
+    description: 'High-throughput translation model with enhanced reasoning and high context retention.',
+    bestFor: 'Fast multilingual translation, long articles, multi-turn context.'
   },
   {
     id: 'gemini-3.6-pro',
@@ -30,14 +38,6 @@ export const AVAILABLE_MODELS = [
     badgeColor: '#a855f7',
     description: 'Advanced reasoning model. Excels at complex idioms, literary context, technical documents, and in-depth cultural jargon explanations.',
     bestFor: 'Demystifying complex slang, professional/diplomatic correspondence, literary texts.'
-  },
-  {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    tag: '🔄 Fast Multilingual Fallback',
-    badgeColor: '#06b6d4',
-    description: 'High-throughput generation model with strong multilingual vocabulary across Ukrainian, Russian, Spanish, and English.',
-    bestFor: 'General translation, bulk text, reliable fallback.'
   },
   {
     id: 'gemini-1.5-flash',
@@ -49,7 +49,7 @@ export const AVAILABLE_MODELS = [
   }
 ];
 
-// In-Memory Fast LRU Cache (up to 200 entries)
+// In-Memory Fast LRU Cache (up to 300 entries)
 const translationCache = new Map();
 
 function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, model) {
@@ -58,39 +58,10 @@ function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, 
 
 export async function fetchLiveAvailableModels(apiKey) {
   if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
-
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
-    const response = await fetch(endpoint);
-    if (!response.ok) return AVAILABLE_MODELS;
-
-    const data = await response.json();
-    if (data.models && Array.isArray(data.models)) {
-      // Filter strictly to generative text/multimodal models suitable for translation (excluding embedding, imagen, aqa, etc.)
-      const translationEligible = data.models.filter((m) => {
-        const id = m.name.toLowerCase();
-        return (
-          m.supportedGenerationMethods?.includes('generateContent') &&
-          !id.includes('embedding') &&
-          !id.includes('imagen') &&
-          !id.includes('aqa') &&
-          !id.includes('text-bison') &&
-          (id.includes('flash') || id.includes('pro'))
-        );
-      });
-
-      if (translationEligible.length > 0) {
-        return AVAILABLE_MODELS; // Keep the curated, richly annotated list prioritized
-      }
-    }
-  } catch (err) {
-    console.warn('Could not fetch live models, using defaults:', err);
-  }
-
   return AVAILABLE_MODELS;
 }
 
-export async function testGeminiApiKey(apiKey, model = 'gemini-3.6-flash') {
+export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }
@@ -116,7 +87,7 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-3.6-flash') {
 }
 
 /**
- * Fast Streaming Translation
+ * Fast Streaming Translation (Optimized for Lowest TTFT)
  */
 export async function translateText({
   apiKey,
@@ -125,8 +96,8 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = 'gemini-3.6-flash',
-  temperature = 0.2,
+  model = 'gemini-2.0-flash',
+  temperature = 0.1,
   onStreamChunk = null
 }) {
   if (!apiKey || !apiKey.trim()) {
@@ -136,7 +107,7 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  // 1. Check Local Memory Cache
+  // 1. Check Local Memory Cache (0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, model);
   if (translationCache.has(cacheKey)) {
     const cachedResult = translationCache.get(cacheKey);
@@ -149,41 +120,29 @@ export async function translateText({
   const sourceLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang);
   const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
 
-  const sourceName = sourceLang === 'auto' ? 'the source language (auto-detect)' : `${sourceLangObj?.name || sourceLang}`;
+  const sourceName = sourceLang === 'auto' ? 'the source language' : `${sourceLangObj?.name || sourceLang}`;
   const targetName = `${targetLangObj?.name || targetLang}`;
 
   let systemInstructionText = '';
   let userText = trimmedText;
 
   if (explainJargon) {
-    systemInstructionText = `You are a world-class polyglot translator and cultural communication expert for Ukrainian, Russian, Spanish, and English.
-Task:
-1. Translate from ${sourceName} into ${targetName}.
-2. Explain clearly in plain, simple everyday language what the speaker meant.
-3. Identify any slang, idioms, or technical terms with literal vs intended meaning.
-4. Detect the tone.
-${customPrompt ? `Style Instruction: "${customPrompt}"` : ''}
-
-Respond ONLY with this JSON schema (no markdown formatting, no code blocks):
+    systemInstructionText = `Translate from ${sourceName} into ${targetName}, clarify plain meaning, detect tone, and break down slang/idioms.
+${customPrompt ? `Style: ${customPrompt}` : ''}
+Respond ONLY in JSON format:
 {
   "detectedSourceLanguage": "string",
   "translation": "string",
   "plainLanguageMeaning": "string",
   "detectedTone": "string",
   "jargonBreakdown": [
-    {
-      "term": "string",
-      "literalMeaning": "string",
-      "intendedMeaning": "string",
-      "nuance": "string"
-    }
+    { "term": "string", "literalMeaning": "string", "intendedMeaning": "string", "nuance": "string" }
   ],
   "culturalNotes": "string or null"
 }`;
   } else {
-    systemInstructionText = `You are an ultra-fast professional translator. Translate from ${sourceName} into ${targetName}.
-Deliver ONLY the translation. No quotes, no markdown fences, no preamble, no explanations.
-${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native phrasing.'}`;
+    // Ultra-concise system instruction for minimum prefill latency
+    systemInstructionText = `Translate from ${sourceName} into ${targetName}. Output the fluent translation only with no extra commentary or quotes.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
   }
 
   // Use Server-Sent Events (SSE) streaming endpoint for instantaneous token delivery
@@ -203,9 +162,9 @@ ${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native ph
       }
     ],
     generationConfig: {
-      temperature: parseFloat(temperature) || 0.2,
+      temperature: parseFloat(temperature) ?? 0.1,
       topP: 0.8,
-      topK: 40,
+      topK: 20,
       maxOutputTokens: explainJargon ? 2048 : 1024,
       candidateCount: 1,
       ...(explainJargon ? { responseMimeType: 'application/json' } : {})
@@ -238,7 +197,7 @@ ${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native ph
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep remainder in buffer
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
@@ -252,8 +211,8 @@ ${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native ph
                 onStreamChunk(accumulatedText);
               }
             }
-          } catch (e) {
-            // Partial JSON chunk, continue
+          } catch {
+            // Incomplete chunk, continue reading stream
           }
         }
       }
@@ -264,57 +223,53 @@ ${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native ph
       translation: accumulatedText.trim()
     };
 
-    // Cache the result
-    if (translationCache.size > 200) {
-      const firstKey = translationCache.keys().next().value;
-      translationCache.delete(firstKey);
+    if (finalResult.translation) {
+      translationCache.set(cacheKey, finalResult);
+      if (translationCache.size > 300) {
+        const firstKey = translationCache.keys().next().value;
+        translationCache.delete(firstKey);
+      }
     }
-    translationCache.set(cacheKey, finalResult);
 
     return finalResult;
   }
 
-  // Non-streaming / Jargon Mode
+  // Non-streaming JSON mode (for Jargon explanation)
   const data = await response.json();
-  const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-  let finalResult;
   if (explainJargon) {
     try {
-      const cleaned = rawResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      finalResult = {
+      const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+      const result = {
         isExplained: true,
-        translation: parsed.translation || '',
+        translation: parsed.translation || rawOutput,
         plainLanguageMeaning: parsed.plainLanguageMeaning || '',
         detectedTone: parsed.detectedTone || '',
         jargonBreakdown: parsed.jargonBreakdown || [],
         culturalNotes: parsed.culturalNotes || '',
-        detectedSourceLanguage: parsed.detectedSourceLanguage || ''
+        detectedSourceLanguage: parsed.detectedSourceLanguage || sourceLang
       };
+      translationCache.set(cacheKey, result);
+      return result;
     } catch {
-      finalResult = {
+      const fallbackResult = {
         isExplained: true,
-        translation: rawResponse.trim(),
-        plainLanguageMeaning: 'Could not structure JSON breakdown automatically.',
-        detectedTone: 'Unknown',
-        jargonBreakdown: [],
-        culturalNotes: ''
+        translation: rawOutput,
+        plainLanguageMeaning: rawOutput,
+        detectedTone: 'Neutral',
+        jargonBreakdown: []
       };
+      translationCache.set(cacheKey, fallbackResult);
+      return fallbackResult;
     }
-  } else {
-    finalResult = {
-      isExplained: false,
-      translation: rawResponse.trim()
-    };
   }
 
-  // Cache result
-  if (translationCache.size > 200) {
-    const firstKey = translationCache.keys().next().value;
-    translationCache.delete(firstKey);
-  }
-  translationCache.set(cacheKey, finalResult);
-
-  return finalResult;
+  const standardResult = {
+    isExplained: false,
+    translation: rawOutput.trim()
+  };
+  translationCache.set(cacheKey, standardResult);
+  return standardResult;
 }

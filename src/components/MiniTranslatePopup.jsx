@@ -196,7 +196,11 @@ export function MiniTranslatePopup({
           maxHeight: '50px',
           overflowY: 'auto',
           borderLeft: '3px solid #6366f1',
-          lineHeight: 1.4
+          lineHeight: 1.4,
+          wordBreak: 'normal',
+          overflowWrap: 'break-word',
+          hyphens: 'none',
+          whiteSpace: 'pre-wrap'
         }}>
           "{sourceText}"
         </div>
@@ -220,7 +224,14 @@ export function MiniTranslatePopup({
             <span>Translating into {targetLangObj?.name || targetLang}...</span>
           </div>
         ) : (
-          <div style={{ width: '100%', whiteSpace: 'pre-wrap', fontWeight: 500 }}>
+          <div style={{
+            width: '100%',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'normal',
+            overflowWrap: 'break-word',
+            hyphens: 'none',
+            fontWeight: 500
+          }}>
             {translatedText}
           </div>
         )}
