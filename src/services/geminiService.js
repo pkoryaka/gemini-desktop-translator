@@ -1,6 +1,7 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Reliable translation with transparent error reporting and live Google model discovery.
+ * 100% Grounded in Google AI Studio REST API
+ * Models are discovered directly from Google ModelService.ListModels.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -15,50 +16,18 @@ export const AVAILABLE_MODELS = [
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    tag: '⚡ Ultra Fast (Default)',
+    tag: '⚡ Ultra Fast (Recommended)',
     badgeColor: '#10b981',
-    description: 'Fastest real-time streaming model with sub-second response times. Universally available on Google AI Studio.',
+    description: 'Official Google Gemini 2.0 production model with sub-second response times.',
     bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
-  },
-  {
-    id: 'gemini-2.0-flash-lite',
-    name: 'Gemini 2.0 Flash Lite',
-    tag: '⚡ Lightweight Fast',
-    badgeColor: '#06b6d4',
-    description: 'Lightweight high-efficiency model designed for high throughput and quick lookups.',
-    bestFor: 'Single-sentence hotkey lookups.'
   },
   {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
     tag: '📦 Stable Production',
     badgeColor: '#6366f1',
-    description: 'Reliable general-purpose model with broad vocabulary and high rate limits.',
-    bestFor: 'Universal reliability across all text lengths.'
-  },
-  {
-    id: 'gemini-1.5-flash-8b',
-    name: 'Gemini 1.5 Flash 8B',
-    tag: '🚀 Compact Fast',
-    badgeColor: '#3b82f6',
-    description: 'Compact 8-billion parameter model tuned for rapid text processing.',
-    bestFor: 'Fast translation of straightforward sentences.'
-  },
-  {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    tag: '🧠 Deep Nuance & Slang Expert',
-    badgeColor: '#a855f7',
-    description: 'Advanced reasoning model for difficult cultural nuances, complex idioms, business contracts, and technical jargon.',
-    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
-  },
-  {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    tag: '✨ Next-Gen Flash',
-    badgeColor: '#f59e0b',
-    description: 'Google’s next-gen flash model with enhanced multilingual accuracy and fluency.',
-    bestFor: 'High-accuracy nuanced translations.'
+    description: 'Universally available production model with high rate limits across all tiers.',
+    bestFor: 'Universal reliability.'
   }
 ];
 
@@ -70,78 +39,89 @@ function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, 
 }
 
 /**
- * Queries Google's ModelService.ListModels endpoint directly from Google AI Studio,
- * filtering strictly with an allowlist of genuine translation models.
- * Non-translation models (nano, banana, deep-search, embeddings, vision, etc.) are strictly blocked.
+ * Queries Google's live ModelService.ListModels endpoint directly using the user's API key.
+ * Strictly returns models that Google confirms support generateContent.
+ * Excludes non-text/experimental clutter (nano, banana, search, embeddings, vision, audio).
  */
 export async function fetchLiveAvailableModels(apiKey) {
-  if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
+  if (!apiKey || !apiKey.trim()) {
+    return AVAILABLE_MODELS;
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-
     const response = await fetch(endpoint, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return AVAILABLE_MODELS;
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Google API returned HTTP ${response.status}`);
     }
 
     const data = await response.json();
     if (!data.models || !Array.isArray(data.models)) {
-      return AVAILABLE_MODELS;
+      throw new Error('Google API returned no models for this API key.');
     }
 
-    // Filter strictly for models that support generateContent and are translation models
-    const live = data.models
+    // Filter only models that support generateContent and are real translation models
+    const valid = data.models
       .filter((m) => {
         const methods = m.supportedGenerationMethods || [];
         if (!methods.includes('generateContent')) return false;
 
-        const rawName = (m.name || '').toLowerCase();
-        // Strictly reject clutter, benchmarks, agents, and device-local models
+        const name = (m.name || '').toLowerCase();
+        // Discard non-translation, specialized, or noisy experimental models
         if (
-          rawName.includes('nano') ||
-          rawName.includes('banana') ||
-          rawName.includes('search') ||
-          rawName.includes('research') ||
-          rawName.includes('embedding') ||
-          rawName.includes('aqa') ||
-          rawName.includes('imagen') ||
-          rawName.includes('tts') ||
-          rawName.includes('learnlm') ||
-          rawName.includes('bison') ||
-          rawName.includes('robot') ||
-          rawName.includes('computer-use') ||
-          rawName.includes('tuning')
+          name.includes('embedding') ||
+          name.includes('imagen') ||
+          name.includes('aqa') ||
+          name.includes('tts') ||
+          name.includes('audio') ||
+          name.includes('nano') ||
+          name.includes('banana') ||
+          name.includes('bison') ||
+          name.includes('search') ||
+          name.includes('research') ||
+          name.includes('tuning') ||
+          name.includes('robot') ||
+          name.includes('computer-use')
         ) {
           return false;
         }
 
-        return rawName.includes('flash') || rawName.includes('pro');
+        return true;
       })
       .map((m) => {
         const cleanId = m.name.replace(/^models\//, '');
-        const matchingDefault = AVAILABLE_MODELS.find((am) => am.id === cleanId);
-        if (matchingDefault) return matchingDefault;
-
         const isFlash = cleanId.includes('flash');
+        const isPro = cleanId.includes('pro');
+
         return {
           id: cleanId,
           name: m.displayName || cleanId,
-          tag: isFlash ? '⚡ Fast Translation' : '🧠 Deep Nuance',
-          badgeColor: isFlash ? '#10b981' : '#a855f7',
-          description: m.description || 'Google Gemini AI language model for translation.',
+          tag: isFlash ? '⚡ Fast Translation' : isPro ? '🧠 Deep Nuance' : 'Active Model',
+          badgeColor: isFlash ? '#10b981' : isPro ? '#a855f7' : '#06b6d4',
+          description: m.description || 'Google Gemini AI language model.',
           bestFor: isFlash ? 'Instant low-latency translations.' : 'Idioms, slang, and cultural jargon.'
         };
       });
 
-    return live.length > 0 ? live : AVAILABLE_MODELS;
+    // Sort: flash models first for optimal translation performance
+    valid.sort((a, b) => {
+      if (a.id.includes('2.0-flash') && !b.id.includes('2.0-flash')) return -1;
+      if (a.id.includes('flash') && !b.id.includes('flash')) return -1;
+      if (!a.id.includes('flash') && b.id.includes('flash')) return 1;
+      return 0;
+    });
+
+    return valid.length > 0 ? valid : AVAILABLE_MODELS;
   } catch (err) {
-    console.warn('Could not query live models list from Google:', err);
-    return AVAILABLE_MODELS;
+    clearTimeout(timeoutId);
+    console.warn('Error fetching live models from Google:', err);
+    throw err;
   }
 }
 
@@ -186,7 +166,7 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
 
 /**
  * Ultra-Fast Direct Translation
- * Directly translates using the user's selected model and reports exact errors transparently.
+ * Translates directly using the verified model selected by the user.
  */
 export async function translateText({
   apiKey,

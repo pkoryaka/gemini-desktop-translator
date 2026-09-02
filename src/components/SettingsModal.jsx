@@ -16,6 +16,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [model, setModel] = useState(initialModel);
   const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
+  const [refreshMsg, setRefreshMsg] = useState(null);
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.1);
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
@@ -39,8 +40,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   const handleRefreshModels = async (keyToUse = apiKey) => {
     const key = keyToUse || apiKey;
-    if (!key || !key.trim()) return;
+    if (!key || !key.trim()) {
+      setRefreshMsg({ error: true, text: 'Please enter an API key above first.' });
+      return;
+    }
     setIsRefreshingModels(true);
+    setRefreshMsg(null);
     try {
       const live = await fetchLiveAvailableModels(key.trim());
       if (live && live.length > 0) {
@@ -48,9 +53,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
         if (!live.some((m) => m.id === model)) {
           setModel(live[0].id);
         }
+        setRefreshMsg({ error: false, text: `✓ Found ${live.length} live models directly from Google AI` });
+        setTimeout(() => setRefreshMsg(null), 5000);
       }
     } catch (err) {
       console.warn('Failed to refresh models list:', err);
+      setRefreshMsg({ error: true, text: err.message || 'Failed to query Google API.' });
     } finally {
       setIsRefreshingModels(false);
     }
@@ -247,9 +255,19 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
               title="Query Google API for all active models supported by your key"
             >
               <RotateCw size={13} className={isRefreshingModels ? 'spinner' : ''} />
-              <span>{isRefreshingModels ? 'Refreshing from Google...' : 'Refresh Models from Google'}</span>
+              <span>{isRefreshingModels ? 'Querying Google API...' : 'Refresh Models from Google'}</span>
             </button>
           </div>
+          {refreshMsg && (
+            <div style={{
+              fontSize: '0.74rem',
+              color: refreshMsg.error ? '#f87171' : '#34d399',
+              marginTop: '2px',
+              fontWeight: 500
+            }}>
+              {refreshMsg.text}
+            </div>
+          )}
           <select
             className="form-input"
             value={model}
