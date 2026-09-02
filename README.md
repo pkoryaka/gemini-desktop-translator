@@ -15,8 +15,11 @@ A desktop application designed for multilingual communication across **Ukrainian
   - Preset quick chips: *Natural & Fluent*, *Formal / Business*, *Casual / Chat*, *Explain Like I'm 5 (ELI5)*, *Technical / Exact*.
   - Custom instruction input for specific translation personas or domain-specific needs.
 - **Google Gemini Integration (Free Tier):**
-  - Works out of the box with free API keys from [Google AI Studio](https://aistudio.google.com/).
-  - Supported models: `gemini-2.5-flash` (recommended default), `gemini-1.5-flash`, `gemini-2.0-flash`, and `gemini-1.5-pro`.
+  - Curated exclusively for models that excel at multilingual translation:
+    - **`gemini-3.6-flash`** ⚡ *Ultra Fast (Default)*: Optimized for lowest latency, instant token streaming, and daily chat/hotkey usage.
+    - **`gemini-3.6-pro`** 🧠 *Deep Nuance & Slang Expert*: Advanced reasoning engine for difficult idioms, literary nuances, and complex jargon.
+    - **`gemini-2.0-flash`** 🔄 *Fast Multilingual Fallback*: High throughput multilingual translation.
+    - **`gemini-1.5-flash`** 📦 *Stable Legacy*: Stable legacy baseline.
   - Built-in connection tester and temperature slider.
 - **Desktop Native Experience:**
   - Keyboard shortcuts (`Ctrl+Enter` to translate).

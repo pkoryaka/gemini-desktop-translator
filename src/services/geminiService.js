@@ -1,6 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service (High-Speed Streaming & Caching)
- * Uses Google Gemini API with native system instructions and streaming for near-zero latency.
+ * Curated for models that excel specifically at multilingual translation.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -11,11 +11,42 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English' }
 ];
 
+/**
+ * Curated list of Gemini models verified for translation & jargon explanation
+ */
 export const AVAILABLE_MODELS = [
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash (Ultra Fast & Recommended)', freeTier: true },
-  { id: 'gemini-3.6-pro', name: 'Gemini 3.6 Pro (Advanced Reasoning)', freeTier: true },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast)', freeTier: true },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)', freeTier: true }
+  {
+    id: 'gemini-3.6-flash',
+    name: 'Gemini 3.6 Flash',
+    tag: '⚡ Ultra Fast (Recommended)',
+    badgeColor: '#10b981',
+    description: 'Fastest response time with real-time token streaming. Ideal for daily translation, rapid chat, and global hotkey usage.',
+    bestFor: 'Daily communication, instant selected-text hotkey, high free-tier rate limits.'
+  },
+  {
+    id: 'gemini-3.6-pro',
+    name: 'Gemini 3.6 Pro',
+    tag: '🧠 Deep Nuance & Slang Expert',
+    badgeColor: '#a855f7',
+    description: 'Advanced reasoning model. Excels at complex idioms, literary context, technical documents, and in-depth cultural jargon explanations.',
+    bestFor: 'Demystifying complex slang, professional/diplomatic correspondence, literary texts.'
+  },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    tag: '🔄 Fast Multilingual Fallback',
+    badgeColor: '#06b6d4',
+    description: 'High-throughput generation model with strong multilingual vocabulary across Ukrainian, Russian, Spanish, and English.',
+    bestFor: 'General translation, bulk text, reliable fallback.'
+  },
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Gemini 1.5 Flash',
+    tag: '📦 Stable Legacy',
+    badgeColor: '#64748b',
+    description: 'Legacy baseline model. Stable and lightweight for standard dictionary translation.',
+    bestFor: 'Legacy compatibility and lightweight translation.'
+  }
 ];
 
 // In-Memory Fast LRU Cache (up to 200 entries)
@@ -35,18 +66,22 @@ export async function fetchLiveAvailableModels(apiKey) {
 
     const data = await response.json();
     if (data.models && Array.isArray(data.models)) {
-      const activeModels = data.models
-        .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
-        .map((m) => {
-          const id = m.name.replace(/^models\//, '');
-          return {
-            id,
-            name: `${m.displayName || id} (${id})`,
-            freeTier: true
-          };
-        });
+      // Filter strictly to generative text/multimodal models suitable for translation (excluding embedding, imagen, aqa, etc.)
+      const translationEligible = data.models.filter((m) => {
+        const id = m.name.toLowerCase();
+        return (
+          m.supportedGenerationMethods?.includes('generateContent') &&
+          !id.includes('embedding') &&
+          !id.includes('imagen') &&
+          !id.includes('aqa') &&
+          !id.includes('text-bison') &&
+          (id.includes('flash') || id.includes('pro'))
+        );
+      });
 
-      return activeModels.length > 0 ? activeModels : AVAILABLE_MODELS;
+      if (translationEligible.length > 0) {
+        return AVAILABLE_MODELS; // Keep the curated, richly annotated list prioritized
+      }
     }
   } catch (err) {
     console.warn('Could not fetch live models, using defaults:', err);
@@ -121,7 +156,7 @@ export async function translateText({
   let userText = trimmedText;
 
   if (explainJargon) {
-    systemInstructionText = `You are a high-speed polyglot translator and cultural communication expert for Ukrainian, Russian, Spanish, and English.
+    systemInstructionText = `You are a world-class polyglot translator and cultural communication expert for Ukrainian, Russian, Spanish, and English.
 Task:
 1. Translate from ${sourceName} into ${targetName}.
 2. Explain clearly in plain, simple everyday language what the speaker meant.

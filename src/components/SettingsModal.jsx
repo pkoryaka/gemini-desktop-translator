@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power } from 'lucide-react';
-import { AVAILABLE_MODELS, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Info, HelpCircle } from 'lucide-react';
+import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 
 export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
@@ -19,35 +19,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
 
-  const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
-  const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
 
-  const handleRefreshModels = async (keyToUse) => {
-    const activeKey = keyToUse !== undefined ? keyToUse : apiKey;
-    if (!activeKey || !activeKey.trim()) return;
-
-    setIsFetchingModels(true);
-    try {
-      const liveModels = await fetchLiveAvailableModels(activeKey);
-      if (liveModels && liveModels.length > 0) {
-        setModelsList(liveModels);
-        if (!liveModels.some((m) => m.id === model)) {
-          const defaultMatch = liveModels.find((m) => m.id.includes('3.6-flash') || m.id.includes('flash')) || liveModels[0];
-          if (defaultMatch) setModel(defaultMatch.id);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to refresh models:', e);
-    } finally {
-      setIsFetchingModels(false);
-    }
-  };
+  const selectedModelInfo = AVAILABLE_MODELS.find((m) => m.id === model) || AVAILABLE_MODELS[0];
 
   useEffect(() => {
-    if (apiKey && apiKey.trim()) {
-      handleRefreshModels(apiKey);
-    }
     // Check autostart status
     if (window.electronAPI?.getAutoStart) {
       window.electronAPI.getAutoStart().then((enabled) => {
@@ -77,8 +53,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     setTestStatus({ loading: true, message: 'Testing connection to Gemini API...' });
     try {
       await testGeminiApiKey(apiKey, model);
-      setTestStatus({ success: true, message: 'Connection successful! Gemini is ready.' });
-      handleRefreshModels(apiKey);
+      setTestStatus({ success: true, message: 'Connection successful! Model is ready.' });
     } catch (err) {
       setTestStatus({ success: false, message: err.message || 'Connection test failed.' });
     }
@@ -99,7 +74,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Key size={20} color="#6366f1" />
@@ -155,43 +130,50 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </span>
         </div>
 
-        {/* Model Selection with Refresh Button */}
+        {/* Translation Model Selection */}
         <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="form-label">Gemini Model</label>
-            <button
-              type="button"
-              onClick={() => handleRefreshModels(apiKey)}
-              disabled={isFetchingModels || !apiKey.trim()}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#a5b4fc',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-              title="Query Google API for live active models"
-            >
-              <RotateCw size={12} className={isFetchingModels ? 'spinner' : ''} />
-              <span>{isFetchingModels ? 'Fetching...' : 'Refresh Live Models'}</span>
-            </button>
-          </div>
-
+          <label className="form-label">Active Translation Model</label>
           <select
             className="form-input"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', fontWeight: 600 }}
           >
-            {modelsList.map((m) => (
+            {AVAILABLE_MODELS.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name}
+                {m.name} — {m.tag}
               </option>
             ))}
           </select>
+
+          {/* Model Explanatory Card */}
+          {selectedModelInfo && (
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              marginTop: '4px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e0e7ff' }}>
+                  {selectedModelInfo.name}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: selectedModelInfo.badgeColor, fontWeight: 600 }}>
+                  {selectedModelInfo.tag}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.4 }}>
+                {selectedModelInfo.description}
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
+                💡 <strong>Best for:</strong> {selectedModelInfo.bestFor}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Temperature */}
@@ -213,7 +195,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
             <span>0.0 (Precise / Literal)</span>
-            <span>0.3 (Recommended)</span>
+            <span>0.2 (Optimal Speed)</span>
             <span>1.0 (Creative)</span>
           </div>
         </div>
@@ -226,7 +208,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px'
+          gap: '8px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
@@ -306,7 +288,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
           <button
             type="button"
             className="preset-chip"
