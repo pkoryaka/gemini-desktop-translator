@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { LanguageSelector } from './components/LanguageSelector';
 import { TranslationPromptBar } from './components/TranslationPromptBar';
@@ -8,6 +8,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { HistoryDrawer } from './components/HistoryDrawer';
 import { translateText } from './services/geminiService';
 import { storageService } from './services/storageService';
+import { Zap } from 'lucide-react';
 
 export function App() {
   const [sourceLang, setSourceLang] = useState('auto');
@@ -22,6 +23,7 @@ export function App() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [quickTranslateToast, setQuickTranslateToast] = useState(false);
 
   // Modals & Settings
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -34,10 +36,12 @@ export function App() {
     setApiKey(storageService.getApiKey());
   };
 
-  const handleTranslate = useCallback(async () => {
-    if (!sourceText.trim()) return;
+  const executeTranslation = useCallback(async (textToTranslate) => {
+    const text = (textToTranslate !== undefined ? textToTranslate : sourceText).trim();
+    if (!text) return;
 
-    if (!apiKey) {
+    const currentKey = storageService.getApiKey();
+    if (!currentKey) {
       setErrorMessage('Please set your free Google Gemini API Key in Settings first.');
       setIsSettingsOpen(true);
       return;
@@ -47,16 +51,18 @@ export function App() {
     setErrorMessage('');
     setExplanationData(null);
 
+    const currentSettings = storageService.getSettings();
+
     try {
       const result = await translateText({
-        apiKey,
-        text: sourceText,
+        apiKey: currentKey,
+        text,
         sourceLang,
         targetLang,
         customPrompt,
         explainJargon,
-        model: settings.model || 'gemini-2.5-flash',
-        temperature: settings.temperature ?? 0.3
+        model: currentSettings.model || 'gemini-2.5-flash',
+        temperature: currentSettings.temperature ?? 0.3
       });
 
       if (result) {
@@ -66,9 +72,9 @@ export function App() {
         }
 
         // Save to History
-        if (settings.saveHistory !== false) {
+        if (currentSettings.saveHistory !== false) {
           storageService.addHistoryItem({
-            sourceText,
+            sourceText: text,
             translatedText: result.translation,
             sourceLang,
             targetLang,
@@ -83,7 +89,35 @@ export function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [sourceText, apiKey, sourceLang, targetLang, customPrompt, explainJargon, settings]);
+  }, [sourceText, sourceLang, targetLang, customPrompt, explainJargon]);
+
+  const handleTranslate = useCallback(() => {
+    executeTranslation();
+  }, [executeTranslation]);
+
+  // Setup Global Quick Translate & Settings IPC Listeners
+  useEffect(() => {
+    if (window.electronAPI?.onQuickTranslate) {
+      const unsubscribe = window.electronAPI.onQuickTranslate((text) => {
+        if (text && text.trim()) {
+          setSourceText(text);
+          setQuickTranslateToast(true);
+          setTimeout(() => setQuickTranslateToast(false), 3000);
+          executeTranslation(text);
+        }
+      });
+      return () => unsubscribe && unsubscribe();
+    }
+  }, [executeTranslation]);
+
+  useEffect(() => {
+    if (window.electronAPI?.onOpenSettings) {
+      const unsubscribe = window.electronAPI.onOpenSettings(() => {
+        setIsSettingsOpen(true);
+      });
+      return () => unsubscribe && unsubscribe();
+    }
+  }, []);
 
   const handleSelectHistoryItem = (item) => {
     setSourceText(item.sourceText || '');
@@ -96,6 +130,31 @@ export function App() {
 
   return (
     <div className="app-container">
+      {/* Quick Translate Toast Notification */}
+      {quickTranslateToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+          color: '#fff',
+          padding: '8px 18px',
+          borderRadius: '999px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          boxShadow: '0 8px 25px rgba(99, 102, 241, 0.4)',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <Zap size={16} />
+          <span>Quick Translated Selected Text (Ctrl+Alt+T)</span>
+        </div>
+      )}
+
       {/* Header */}
       <Header
         currentModel={settings.model || 'gemini-2.5-flash'}

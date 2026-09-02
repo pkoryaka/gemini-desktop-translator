@@ -1,16 +1,58 @@
-const { app, BrowserWindow, ipcMain, shell, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, clipboard, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const path = require('path');
+const { exec } = require('child_process');
+const fs = require('fs');
 
-let mainWindow;
+let mainWindow = null;
+let tray = null;
+let isQuitting = false;
+
+// Create Windows Start Menu Shortcut automatically
+function ensureStartMenuShortcut() {
+  if (process.platform === 'win32') {
+    try {
+      const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
+      const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
+      const shortcutPath = path.join(startMenuDir, 'Gemini Translator.lnk');
+      const targetScript = path.join(__dirname, '..', 'start.bat');
+
+      // Use PowerShell to create or update the Start Menu shortcut
+      const psCommand = `
+        $WshShell = New-Object -comObject WScript.Shell;
+        $Shortcut = $WshShell.CreateShortcut("${shortcutPath.replace(/\\/g, '\\\\')}");
+        $Shortcut.TargetPath = "${targetScript.replace(/\\/g, '\\\\')}";
+        $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
+        $Shortcut.Description = "Gemini AI Desktop Translator";
+        $Shortcut.Save();
+      `;
+      exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, ' ')}"`, (err) => {
+        if (err) console.warn('Start menu shortcut creation warning:', err);
+      });
+    } catch (e) {
+      console.warn('Could not create start menu shortcut:', e);
+    }
+  }
+}
+
+function getAppIcon() {
+  const iconSvgPath = path.join(__dirname, 'icon.svg');
+  if (fs.existsSync(iconSvgPath)) {
+    return nativeImage.createFromPath(iconSvgPath);
+  }
+  return nativeImage.createEmpty();
+}
 
 function createWindow() {
+  const icon = getAppIcon();
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
     minWidth: 800,
     minHeight: 600,
     title: 'Gemini AI Desktop Translator',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#090d16',
+    icon: icon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -31,25 +73,161 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+
+  // Intercept window close to minimize to system tray
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+      return false;
+    }
+  });
+}
+
+function createTray() {
+  const icon = getAppIcon();
+  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Open Gemini Translator',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    {
+      label: 'Translate Selected Text (Ctrl+Alt+T)',
+      click: () => {
+        triggerGlobalSelectionTranslation();
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Settings',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+          mainWindow.webContents.send('open-settings');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit Translator',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('Gemini AI Desktop Translator (Ctrl+Alt+T to translate)');
+  tray.setContextMenu(contextMenu);
+
+  // Toggle window on single/double click
+  tray.on('click', () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    }
+  });
+
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
+// Global hotkey handler: Grabs highlighted text from any Windows app and translates it
+function triggerGlobalSelectionTranslation() {
+  if (process.platform === 'win32') {
+    // Save current clipboard text
+    const previousClipboard = clipboard.readText();
+
+    // Send Ctrl+C to active foreground window via PowerShell SendKeys
+    const psScript = `
+      Add-Type -AssemblyName System.Windows.Forms;
+      [System.Windows.Forms.SendKeys]::SendWait("^c");
+    `;
+
+    exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, () => {
+      // Small timeout to allow target app to copy text to clipboard
+      setTimeout(() => {
+        const selectedText = clipboard.readText();
+        
+        // Show and focus main window
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+          
+          if (selectedText && selectedText.trim()) {
+            mainWindow.webContents.send('quick-translate', selectedText.trim());
+          }
+        }
+      }, 120);
+    });
+  } else {
+    // Fallback for other platforms: use current clipboard
+    const text = clipboard.readText();
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+      if (text && text.trim()) {
+        mainWindow.webContents.send('quick-translate', text.trim());
+      }
+    }
+  }
+}
+
+function registerGlobalHotkeys() {
+  // Main shortcut: Ctrl + Alt + T
+  globalShortcut.register('CommandOrControl+Alt+T', () => {
+    triggerGlobalSelectionTranslation();
+  });
+
+  // Secondary convenient shortcut: Ctrl + Shift + T
+  globalShortcut.register('CommandOrControl+Shift+T', () => {
+    triggerGlobalSelectionTranslation();
+  });
 }
 
 app.whenReady().then(() => {
   createWindow();
+  createTray();
+  registerGlobalHotkeys();
+  ensureStartMenuShortcut();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
+    } else if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
     }
   });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
-// Clipboard IPC
+app.on('window-all-closed', () => {
+  // Do not quit on window close, keep running in system tray
+});
+
+// Clipboard and Window IPC
 ipcMain.handle('clipboard:copy', async (event, text) => {
   clipboard.writeText(text);
   return true;
@@ -57,4 +235,19 @@ ipcMain.handle('clipboard:copy', async (event, text) => {
 
 ipcMain.handle('clipboard:read', async () => {
   return clipboard.readText();
+});
+
+ipcMain.handle('window:hide-to-tray', () => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+  return true;
+});
+
+ipcMain.handle('window:show', () => {
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+  return true;
 });

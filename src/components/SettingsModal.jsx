@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Sliders } from 'lucide-react';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, Keyboard } from 'lucide-react';
 import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 
@@ -140,6 +140,27 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             <span>0.0 (Precise / Literal)</span>
             <span>0.3 (Recommended)</span>
             <span>1.0 (Creative)</span>
+          </div>
+        </div>
+
+        {/* Desktop Integration & Shortcuts Box */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+            <Monitor size={15} color="#6366f1" />
+            <span>Windows Desktop Shortcuts & Tray</span>
+          </div>
+          <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
+            • <strong>Global Hotkey:</strong> Highlight text in any app & press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>Ctrl + Alt + T</kbd> to translate instantly.
+            <br />
+            • <strong>System Tray:</strong> Closing the window minimizes it to the Windows taskbar tray so it stays ready in the background.
           </div>
         </div>
 
