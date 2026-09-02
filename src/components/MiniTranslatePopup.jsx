@@ -6,10 +6,10 @@ import {
   VolumeX, 
   Maximize2, 
   X, 
-  Sparkles, 
   BookOpen, 
   ArrowRight, 
-  Loader2 
+  Loader2,
+  ChevronDown
 } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../services/geminiService';
 
@@ -18,6 +18,7 @@ export function MiniTranslatePopup({
   translatedText,
   sourceLang,
   targetLang,
+  setTargetLang,
   explanationData,
   isLoading,
   onExpandToFull,
@@ -71,27 +72,58 @@ export function MiniTranslatePopup({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      background: 'rgba(15, 23, 42, 0.95)',
+      background: 'rgba(15, 23, 42, 0.98)',
       backdropFilter: 'blur(20px)',
       color: '#fff',
-      padding: '16px',
-      gap: '12px',
+      padding: '14px 18px',
+      gap: '10px',
       userSelect: 'text',
-      overflowY: 'auto'
+      overflowY: 'auto',
+      boxSizing: 'border-box'
     }}>
-      {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8' }}>
-          <span style={{ color: '#cbd5e1' }}>{sourceLangObj?.name || 'Auto'}</span>
-          <ArrowRight size={13} />
-          <span style={{ color: '#818cf8', fontWeight: 700 }}>{targetLangObj?.name || targetLang}</span>
+      {/* Top Header Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            {sourceLangObj?.name || 'Auto-Detect'}
+          </span>
+          <ArrowRight size={13} color="#6366f1" />
+
+          {/* Quick Target Language Selector */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <select
+              value={targetLang}
+              onChange={(e) => setTargetLang && setTargetLang(e.target.value)}
+              style={{
+                appearance: 'none',
+                background: 'rgba(99, 102, 241, 0.15)',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                borderRadius: '6px',
+                padding: '3px 22px 3px 8px',
+                color: '#818cf8',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((l) => (
+                <option key={`mini-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} color="#818cf8" style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          </div>
+
           {explanationData && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', padding: '2px 8px', borderRadius: '999px', fontSize: '0.72rem' }}>
-              <BookOpen size={11} /> Jargon Explainer
+            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600 }}>
+              <BookOpen size={10} /> Jargon Mode
             </span>
           )}
         </div>
 
+        {/* Action Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {translatedText && (
             <>
@@ -100,69 +132,84 @@ export function MiniTranslatePopup({
                 className="btn-icon"
                 onClick={handleCopy}
                 title={copied ? 'Copied!' : 'Copy Translation'}
-                style={{ width: '30px', height: '30px' }}
+                style={{ width: '28px', height: '28px' }}
               >
-                {copied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                {copied ? <Check size={14} color="#10b981" /> : <Copy size={13} />}
               </button>
 
               <button
                 type="button"
                 className={`btn-icon ${isSpeaking ? 'active' : ''}`}
                 onClick={handleSpeak}
-                title="Listen"
-                style={{ width: '30px', height: '30px' }}
+                title="Listen (Text-to-Speech)"
+                style={{ width: '28px', height: '28px' }}
               >
-                {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
               </button>
             </>
           )}
 
+          {/* Prominent Expand Button */}
           <button
             type="button"
-            className="btn-icon"
             onClick={onExpandToFull}
-            title="Expand to Full Window"
-            style={{ width: '30px', height: '30px' }}
+            title="Open Full Gemini Translator Application"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '6px',
+              padding: '4px 8px',
+              fontSize: '0.72rem',
+              color: '#f8fafc',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s ease'
+            }}
           >
-            <Maximize2 size={14} />
+            <Maximize2 size={12} />
+            <span>Full App</span>
           </button>
 
           <button
             type="button"
             className="btn-icon"
             onClick={onClose}
-            title="Close (Esc)"
-            style={{ width: '30px', height: '30px' }}
+            title="Close to Tray (Esc)"
+            style={{ width: '28px', height: '28px' }}
           >
             <X size={14} />
           </button>
         </div>
       </div>
 
-      {/* Source snippet */}
+      {/* Source Selected Text snippet */}
       {sourceText && (
         <div style={{
-          fontSize: '0.8rem',
+          fontSize: '0.78rem',
           color: '#94a3b8',
           background: 'rgba(255,255,255,0.03)',
-          borderRadius: '8px',
+          borderRadius: '6px',
           padding: '6px 10px',
-          maxHeight: '60px',
+          maxHeight: '50px',
           overflowY: 'auto',
-          borderLeft: '3px solid #6366f1'
+          borderLeft: '3px solid #6366f1',
+          lineHeight: 1.4
         }}>
           "{sourceText}"
         </div>
       )}
 
-      {/* Main Translated Text */}
+      {/* Main Translated Text Area */}
       <div style={{
         flex: 1,
         fontSize: '1.05rem',
         lineHeight: 1.5,
         color: '#f8fafc',
         fontFamily: 'var(--font-main)',
-        minHeight: '80px',
+        minHeight: '70px',
         display: 'flex',
         alignItems: isLoading && !translatedText ? 'center' : 'flex-start',
         justifyContent: isLoading && !translatedText ? 'center' : 'flex-start'
@@ -170,34 +217,36 @@ export function MiniTranslatePopup({
         {isLoading && !translatedText ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a5b4fc', fontSize: '0.9rem' }}>
             <Loader2 size={18} className="spinner" />
-            <span>Translating...</span>
+            <span>Translating into {targetLangObj?.name || targetLang}...</span>
           </div>
         ) : (
-          <div style={{ width: '100%', whiteSpace: 'pre-wrap' }}>{translatedText}</div>
+          <div style={{ width: '100%', whiteSpace: 'pre-wrap', fontWeight: 500 }}>
+            {translatedText}
+          </div>
         )}
       </div>
 
       {/* Plain Language & Jargon Breakdown (if active) */}
       {explanationData && (
         <div style={{
-          background: 'rgba(168, 85, 247, 0.1)',
+          background: 'rgba(168, 85, 247, 0.12)',
           border: '1px solid rgba(168, 85, 247, 0.3)',
           borderRadius: '8px',
           padding: '8px 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: '6px',
-          fontSize: '0.82rem'
+          fontSize: '0.8rem'
         }}>
           {explanationData.plainLanguageMeaning && (
             <div>
-              <strong style={{ color: '#c084fc' }}>Meaning in Plain Words: </strong>
+              <strong style={{ color: '#c084fc' }}>Meaning: </strong>
               <span style={{ color: '#e2e8f0' }}>{explanationData.plainLanguageMeaning}</span>
             </div>
           )}
 
           {explanationData.detectedTone && (
-            <div style={{ fontSize: '0.75rem', color: '#fde68a' }}>
+            <div style={{ fontSize: '0.74rem', color: '#fde68a' }}>
               <strong>Tone:</strong> {explanationData.detectedTone}
             </div>
           )}
@@ -208,7 +257,7 @@ export function MiniTranslatePopup({
                 <span
                   key={i}
                   style={{
-                    background: 'rgba(15, 23, 42, 0.8)',
+                    background: 'rgba(15, 23, 42, 0.9)',
                     border: '1px solid rgba(168,85,247,0.3)',
                     padding: '2px 6px',
                     borderRadius: '4px',

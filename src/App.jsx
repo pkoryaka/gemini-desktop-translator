@@ -66,32 +66,33 @@ export function App() {
     }
   };
 
-  const executeTranslationWithMode = useCallback(async (textToTranslate, explicitExplainMode) => {
+  const executeTranslationWithMode = useCallback(async (textToTranslate, explicitTargetLang, explicitExplainMode) => {
     const text = (textToTranslate !== undefined ? textToTranslate : sourceText).trim();
     if (!text) return;
 
     const currentKey = storageService.getApiKey();
     if (!currentKey) {
       setErrorMessage('Please set your free Google Gemini API Key in Settings first.');
+      switchToFullMode();
       setIsSettingsOpen(true);
       return;
     }
 
+    const currentSettings = storageService.getSettings();
     const mode = explicitExplainMode !== undefined ? explicitExplainMode : explainJargon;
+    const effectiveTarget = explicitTargetLang || targetLang || currentSettings.primaryTargetLanguage || 'uk';
 
     setIsLoading(true);
+    setTranslatedText(''); // Clear stale previous text
     setErrorMessage('');
     setExplanationData(null);
-
-    const currentSettings = storageService.getSettings();
-    const effectiveTargetLang = targetLang || currentSettings.primaryTargetLanguage || 'uk';
 
     try {
       const result = await translateText({
         apiKey: currentKey,
         text,
         sourceLang,
-        targetLang: effectiveTargetLang,
+        targetLang: effectiveTarget,
         customPrompt,
         explainJargon: mode,
         model: currentSettings.model || 'gemini-3.6-flash',
@@ -115,7 +116,7 @@ export function App() {
             sourceText: text,
             translatedText: result.translation,
             sourceLang,
-            targetLang: effectiveTargetLang,
+            targetLang: effectiveTarget,
             isExplained: result.isExplained,
             customPrompt
           });
@@ -130,8 +131,15 @@ export function App() {
   }, [sourceText, sourceLang, targetLang, customPrompt, explainJargon]);
 
   const handleTranslate = useCallback(() => {
-    executeTranslationWithMode(sourceText, explainJargon);
-  }, [executeTranslationWithMode, sourceText, explainJargon]);
+    executeTranslationWithMode(sourceText, targetLang, explainJargon);
+  }, [executeTranslationWithMode, sourceText, targetLang, explainJargon]);
+
+  const handleMiniTargetLangChange = (newTarget) => {
+    setTargetLang(newTarget);
+    if (sourceText && sourceText.trim()) {
+      executeTranslationWithMode(sourceText, newTarget, explainJargon);
+    }
+  };
 
   // Setup Global Quick Translate & Settings IPC Listeners
   useEffect(() => {
@@ -143,6 +151,7 @@ export function App() {
         if (text && text.trim()) {
           const currentSettings = storageService.getSettings();
           const target = currentSettings.primaryTargetLanguage || 'uk';
+          
           setTargetLang(target);
           setSourceText(text);
           setExplainJargon(shouldExplain);
@@ -162,7 +171,8 @@ export function App() {
           );
           setTimeout(() => setQuickTranslateToast(false), 3000);
 
-          executeTranslationWithMode(text, shouldExplain);
+          // Trigger execution immediately with current text & target
+          executeTranslationWithMode(text, target, shouldExplain);
         }
       });
       return () => unsubscribe && unsubscribe();
@@ -174,6 +184,15 @@ export function App() {
       const unsubscribe = window.electronAPI.onOpenSettings(() => {
         switchToFullMode();
         setIsSettingsOpen(true);
+      });
+      return () => unsubscribe && unsubscribe();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.electronAPI?.onShowFullWindow) {
+      const unsubscribe = window.electronAPI.onShowFullWindow(() => {
+        switchToFullMode();
       });
       return () => unsubscribe && unsubscribe();
     }
@@ -209,6 +228,7 @@ export function App() {
         translatedText={translatedText}
         sourceLang={sourceLang}
         targetLang={targetLang}
+        setTargetLang={handleMiniTargetLangChange}
         explanationData={explanationData}
         isLoading={isLoading}
         onExpandToFull={switchToFullMode}

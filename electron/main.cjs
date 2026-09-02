@@ -143,10 +143,11 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
-    minWidth: 800,
-    minHeight: 600,
+    minWidth: 460,
+    minHeight: 280,
     title: 'Gemini AI Desktop Translator',
     backgroundColor: '#090d16',
+    autoHideMenuBar: true,
     icon: icon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -155,6 +156,9 @@ function createWindow() {
       sandbox: false
     }
   });
+
+  mainWindow.setMenuBarVisibility(false);
+  mainWindow.removeMenu();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -182,9 +186,12 @@ function updateTrayMenu() {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Open Gemini Translator',
+      label: 'Open Gemini Translator (Full Window)',
       click: () => {
         focusAppWindow();
+        if (mainWindow) {
+          mainWindow.webContents.send('show-full-window');
+        }
       }
     },
     {
@@ -204,7 +211,10 @@ function updateTrayMenu() {
       label: 'Settings',
       click: () => {
         focusAppWindow();
-        mainWindow.webContents.send('open-settings');
+        if (mainWindow) {
+          mainWindow.webContents.send('show-full-window');
+          mainWindow.webContents.send('open-settings');
+        }
       }
     },
     { type: 'separator' },
@@ -233,12 +243,16 @@ function createTray() {
         mainWindow.hide();
       } else {
         focusAppWindow();
+        mainWindow.webContents.send('show-full-window');
       }
     }
   });
 
   tray.on('double-click', () => {
     focusAppWindow();
+    if (mainWindow) {
+      mainWindow.webContents.send('show-full-window');
+    }
   });
 }
 
