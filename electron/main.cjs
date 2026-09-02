@@ -7,6 +7,9 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 
+let translateHotkey = 'CommandOrControl+Alt+T';
+let explainHotkey = 'CommandOrControl+Alt+J';
+
 function getIconPath() {
   const icoPath = path.join(__dirname, 'app-icon.ico');
   if (fs.existsSync(icoPath)) return icoPath;
@@ -146,9 +149,8 @@ function createWindow() {
   });
 }
 
-function createTray() {
-  const icon = getAppIcon();
-  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+function updateTrayMenu() {
+  if (!tray) return;
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -161,9 +163,15 @@ function createTray() {
       }
     },
     {
-      label: 'Translate Selected Text (Ctrl+Alt+T)',
+      label: `Quick Translate (${translateHotkey.replace('CommandOrControl', 'Ctrl')})`,
       click: () => {
-        triggerGlobalSelectionTranslation();
+        triggerGlobalSelectionTranslation(false);
+      }
+    },
+    {
+      label: `Translate & Explain Jargon (${explainHotkey.replace('CommandOrControl', 'Ctrl')})`,
+      click: () => {
+        triggerGlobalSelectionTranslation(true);
       }
     },
     { type: 'separator' },
@@ -187,8 +195,15 @@ function createTray() {
     }
   ]);
 
-  tray.setToolTip('Gemini AI Desktop Translator (Ctrl+Alt+T to translate)');
+  tray.setToolTip(`Gemini Translator (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
   tray.setContextMenu(contextMenu);
+}
+
+function createTray() {
+  const icon = getAppIcon();
+  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+
+  updateTrayMenu();
 
   // Toggle window on single/double click
   tray.on('click', () => {
@@ -211,7 +226,7 @@ function createTray() {
 }
 
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
-function triggerGlobalSelectionTranslation() {
+function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
     // Send Ctrl+C to active foreground window via PowerShell SendKeys
     const psScript = `
@@ -220,18 +235,19 @@ function triggerGlobalSelectionTranslation() {
     `;
 
     exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, () => {
-      // Small timeout to allow target app to copy text to clipboard
       setTimeout(() => {
         const selectedText = clipboard.readText();
         
-        // Show and focus main window
         if (mainWindow) {
           if (mainWindow.isMinimized()) mainWindow.restore();
           mainWindow.show();
           mainWindow.focus();
           
           if (selectedText && selectedText.trim()) {
-            mainWindow.webContents.send('quick-translate', selectedText.trim());
+            mainWindow.webContents.send('quick-translate', {
+              text: selectedText.trim(),
+              explainJargon
+            });
           }
         }
       }, 120);
@@ -243,26 +259,44 @@ function triggerGlobalSelectionTranslation() {
       mainWindow.show();
       mainWindow.focus();
       if (text && text.trim()) {
-        mainWindow.webContents.send('quick-translate', text.trim());
+        mainWindow.webContents.send('quick-translate', {
+          text: text.trim(),
+          explainJargon
+        });
       }
     }
   }
 }
 
-function registerGlobalHotkeys() {
-  globalShortcut.register('CommandOrControl+Alt+T', () => {
-    triggerGlobalSelectionTranslation();
-  });
+function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
+  globalShortcut.unregisterAll();
 
-  globalShortcut.register('CommandOrControl+Shift+T', () => {
-    triggerGlobalSelectionTranslation();
-  });
+  if (newTranslateKey) translateHotkey = newTranslateKey;
+  if (newExplainKey) explainHotkey = newExplainKey;
+
+  try {
+    globalShortcut.register(translateHotkey, () => {
+      triggerGlobalSelectionTranslation(false);
+    });
+  } catch (e) {
+    console.warn(`Failed to register translate hotkey ${translateHotkey}:`, e);
+  }
+
+  try {
+    globalShortcut.register(explainHotkey, () => {
+      triggerGlobalSelectionTranslation(true);
+    });
+  } catch (e) {
+    console.warn(`Failed to register explain hotkey ${explainHotkey}:`, e);
+  }
+
+  updateTrayMenu();
 }
 
 app.whenReady().then(() => {
   createWindow();
   createTray();
-  registerGlobalHotkeys();
+  registerGlobalHotkeys(translateHotkey, explainHotkey);
   ensureStartMenuShortcut();
 
   app.on('activate', () => {
@@ -314,4 +348,16 @@ ipcMain.handle('autostart:get', async () => {
 
 ipcMain.handle('autostart:set', async (event, enable) => {
   return setAutoStartEnabled(enable);
+});
+
+ipcMain.handle('hotkeys:get', async () => {
+  return {
+    translateHotkey,
+    explainHotkey
+  };
+});
+
+ipcMain.handle('hotkeys:update', async (event, { translateKey, explainKey }) => {
+  registerGlobalHotkeys(translateKey, explainKey);
+  return { success: true, translateHotkey, explainHotkey };
 });

@@ -7,8 +7,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showWindow: () => ipcRenderer.invoke('window:show'),
   getAutoStart: () => ipcRenderer.invoke('autostart:get'),
   setAutoStart: (enable) => ipcRenderer.invoke('autostart:set', enable),
+  getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
+  updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
   onQuickTranslate: (callback) => {
-    const subscription = (event, text) => callback(text);
+    const subscription = (event, data) => callback(data);
     ipcRenderer.on('quick-translate', subscription);
     return () => ipcRenderer.removeListener('quick-translate', subscription);
   },

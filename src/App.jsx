@@ -36,7 +36,7 @@ export function App() {
     setApiKey(storageService.getApiKey());
   };
 
-  const executeTranslation = useCallback(async (textToTranslate) => {
+  const executeTranslationWithMode = useCallback(async (textToTranslate, explicitExplainMode) => {
     const text = (textToTranslate !== undefined ? textToTranslate : sourceText).trim();
     if (!text) return;
 
@@ -46,6 +46,8 @@ export function App() {
       setIsSettingsOpen(true);
       return;
     }
+
+    const mode = explicitExplainMode !== undefined ? explicitExplainMode : explainJargon;
 
     setIsLoading(true);
     setErrorMessage('');
@@ -60,11 +62,13 @@ export function App() {
         sourceLang,
         targetLang,
         customPrompt,
-        explainJargon,
+        explainJargon: mode,
         model: currentSettings.model || 'gemini-3.6-flash',
         temperature: currentSettings.temperature ?? 0.2,
         onStreamChunk: (partialText) => {
-          setTranslatedText(partialText);
+          if (!mode) {
+            setTranslatedText(partialText);
+          }
         }
       });
 
@@ -95,23 +99,36 @@ export function App() {
   }, [sourceText, sourceLang, targetLang, customPrompt, explainJargon]);
 
   const handleTranslate = useCallback(() => {
-    executeTranslation();
-  }, [executeTranslation]);
+    executeTranslationWithMode(sourceText, explainJargon);
+  }, [executeTranslationWithMode, sourceText, explainJargon]);
+
+  const [quickToastMessage, setQuickToastMessage] = useState('');
 
   // Setup Global Quick Translate & Settings IPC Listeners
   useEffect(() => {
     if (window.electronAPI?.onQuickTranslate) {
-      const unsubscribe = window.electronAPI.onQuickTranslate((text) => {
+      const unsubscribe = window.electronAPI.onQuickTranslate((payload) => {
+        const text = typeof payload === 'string' ? payload : payload?.text;
+        const shouldExplain = typeof payload === 'object' ? Boolean(payload.explainJargon) : false;
+
         if (text && text.trim()) {
           setSourceText(text);
+          setExplainJargon(shouldExplain);
           setQuickTranslateToast(true);
+          setQuickToastMessage(
+            shouldExplain 
+              ? '💡 Translated & Explained Jargon' 
+              : '⚡ Quick Translated Selected Text'
+          );
           setTimeout(() => setQuickTranslateToast(false), 3000);
-          executeTranslation(text);
+
+          // Trigger execution with the specified mode
+          executeTranslationWithMode(text, shouldExplain);
         }
       });
       return () => unsubscribe && unsubscribe();
     }
-  }, [executeTranslation]);
+  }, []);
 
   useEffect(() => {
     if (window.electronAPI?.onOpenSettings) {
@@ -154,7 +171,7 @@ export function App() {
           animation: 'fadeIn 0.2s ease'
         }}>
           <Zap size={16} />
-          <span>Quick Translated Selected Text (Ctrl+Alt+T)</span>
+          <span>{quickToastMessage || 'Quick Translated Selected Text'}</span>
         </div>
       )}
 

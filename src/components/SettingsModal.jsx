@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Info, HelpCircle } from 'lucide-react';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen } from 'lucide-react';
 import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
 import { storageService } from '../services/storageService';
+
+const HOTKEY_TRANSLATE_PRESETS = [
+  { label: 'Ctrl + Alt + T (Default)', value: 'CommandOrControl+Alt+T' },
+  { label: 'Ctrl + Shift + T', value: 'CommandOrControl+Shift+T' },
+  { label: 'Alt + T', value: 'Alt+T' },
+  { label: 'Alt + Q', value: 'Alt+Q' },
+  { label: 'Ctrl + Space', value: 'CommandOrControl+Space' }
+];
+
+const HOTKEY_EXPLAIN_PRESETS = [
+  { label: 'Ctrl + Alt + J (Default)', value: 'CommandOrControl+Alt+J' },
+  { label: 'Ctrl + Shift + J', value: 'CommandOrControl+Shift+J' },
+  { label: 'Ctrl + Alt + E', value: 'CommandOrControl+Alt+E' },
+  { label: 'Alt + J', value: 'Alt+J' },
+  { label: 'Alt + E', value: 'Alt+E' }
+];
 
 export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   if (!isOpen) return null;
@@ -15,9 +31,13 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   const [apiKey, setApiKey] = useState(currentKey);
   const [model, setModel] = useState(initialModel);
-  const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.3);
+  const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.2);
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
+
+  // Global Hotkeys
+  const [translateHotkey, setTranslateHotkey] = useState(currentSettings.translateHotkey || 'CommandOrControl+Alt+T');
+  const [explainHotkey, setExplainHotkey] = useState(currentSettings.explainHotkey || 'CommandOrControl+Alt+J');
 
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
 
@@ -29,6 +49,13 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       window.electronAPI.getAutoStart().then((enabled) => {
         setAutoStart(Boolean(enabled));
       }).catch((e) => console.warn('Autostart check failed', e));
+    }
+
+    if (window.electronAPI?.getHotkeys) {
+      window.electronAPI.getHotkeys().then((keys) => {
+        if (keys?.translateHotkey) setTranslateHotkey(keys.translateHotkey);
+        if (keys?.explainHotkey) setExplainHotkey(keys.explainHotkey);
+      }).catch((e) => console.warn('Failed to load hotkeys', e));
     }
   }, []);
 
@@ -64,8 +91,19 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     storageService.saveSettings({
       ...currentSettings,
       model,
-      temperature
+      temperature,
+      translateHotkey,
+      explainHotkey
     });
+
+    // Update Electron Global Hotkeys
+    if (window.electronAPI?.updateHotkeys) {
+      window.electronAPI.updateHotkeys({
+        translateKey: translateHotkey,
+        explainKey: explainHotkey
+      });
+    }
+
     if (onSettingsUpdated) {
       onSettingsUpdated();
     }
@@ -74,11 +112,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Key size={20} color="#6366f1" />
-            <h2 className="modal-title">Settings & Gemini API</h2>
+            <h2 className="modal-title">Settings & Shortcuts</h2>
           </div>
           <button className="btn-icon" onClick={onClose} aria-label="Close modal">
             <X size={18} />
@@ -176,6 +214,64 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           )}
         </div>
 
+        {/* Global Hotkeys Customization Section */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.8)',
+          border: '1px solid rgba(99, 102, 241, 0.25)',
+          borderRadius: 'var(--radius-md)',
+          padding: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 700 }}>
+            <Keyboard size={16} color="#6366f1" />
+            <span>Custom Global Hotkeys (Work Anywhere on Windows)</span>
+          </div>
+
+          {/* Hotkey 1: Quick Translation */}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Zap size={14} color="#10b981" />
+              <span>1. Quick Translate Selected Text</span>
+            </label>
+            <select
+              className="form-input"
+              value={translateHotkey}
+              onChange={(e) => setTranslateHotkey(e.target.value)}
+              style={{ cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              {HOTKEY_TRANSLATE_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+              Highlight text & press hotkey to immediately translate.
+            </span>
+          </div>
+
+          {/* Hotkey 2: Translate & Explain Jargon */}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <BookOpen size={14} color="#c084fc" />
+              <span>2. Translate & Explain Jargon / Slang</span>
+            </label>
+            <select
+              className="form-input"
+              value={explainHotkey}
+              onChange={(e) => setExplainHotkey(e.target.value)}
+              style={{ cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              {HOTKEY_EXPLAIN_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+              Highlight text & press hotkey to de-jargonize and explain slang in plain words.
+            </span>
+          </div>
+        </div>
+
         {/* Temperature */}
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -200,55 +296,47 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </div>
         </div>
 
-        {/* Windows Startup & Desktop Integration Box */}
+        {/* Windows Startup Toggle */}
         <div style={{
           background: 'rgba(15, 23, 42, 0.7)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: 'var(--radius-md)',
           padding: '12px 14px',
           display: 'flex',
-          flexDirection: 'column',
-          gap: '8px'
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
-              <Power size={15} color="#10b981" />
-              <span>Launch with Windows</span>
-            </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={autoStart}
-                onChange={handleToggleAutoStart}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+            <Power size={15} color="#10b981" />
+            <span>Launch with Windows (Start in Tray)</span>
+          </div>
+          <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={autoStart}
+              onChange={handleToggleAutoStart}
+              style={{ opacity: 0, width: 0, height: 0 }}
+            />
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: autoStart ? '#6366f1' : 'rgba(255,255,255,0.15)',
+              borderRadius: '999px',
+              transition: 'all 0.2s ease'
+            }}>
               <span style={{
                 position: 'absolute',
-                inset: 0,
-                backgroundColor: autoStart ? '#6366f1' : 'rgba(255,255,255,0.15)',
-                borderRadius: '999px',
+                content: '""',
+                height: '14px',
+                width: '14px',
+                left: autoStart ? '21px' : '3px',
+                bottom: '3px',
+                backgroundColor: 'white',
+                borderRadius: '50%',
                 transition: 'all 0.2s ease'
-              }}>
-                <span style={{
-                  position: 'absolute',
-                  content: '""',
-                  height: '14px',
-                  width: '14px',
-                  left: autoStart ? '21px' : '3px',
-                  bottom: '3px',
-                  backgroundColor: 'white',
-                  borderRadius: '50%',
-                  transition: 'all 0.2s ease'
-                }} />
-              </span>
-            </label>
-          </div>
-
-          <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
-            • <strong>Global Hotkey:</strong> Highlight text in any app & press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>Ctrl + Alt + T</kbd> to translate instantly.
-            <br />
-            • <strong>System Tray:</strong> Closing window keeps it active in tray for instant global hotkey access.
-          </div>
+              }} />
+            </span>
+          </label>
         </div>
 
         {/* Test Connection Button & Status */}

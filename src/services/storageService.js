@@ -7,11 +7,13 @@ const STORAGE_KEYS = {
 
 const DEFAULT_SETTINGS = {
   model: 'gemini-3.6-flash',
-  temperature: 0.3,
+  temperature: 0.2,
   autoDetectLanguage: true,
   autoSpeak: false,
   saveHistory: true,
-  enableStreaming: false
+  enableStreaming: true,
+  translateHotkey: 'CommandOrControl+Alt+T',
+  explainHotkey: 'CommandOrControl+Alt+J'
 };
 
 const DEFAULT_PRESETS = [
