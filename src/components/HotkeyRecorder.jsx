@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Keyboard, X, RotateCcw } from 'lucide-react';
 
 /**
- * Converts browser KeyboardEvent into an Electron-compatible Accelerator string and display string
+ * Converts browser KeyboardEvent into an Electron-compatible Accelerator string
+ * Uses physical e.code mapping so it works across all keyboard layouts (Ukrainian, Russian, Spanish, English, etc.)
  */
 export function formatElectronAccelerator(e) {
   const parts = [];
@@ -10,21 +11,61 @@ export function formatElectronAccelerator(e) {
   if (e.altKey) parts.push('Alt');
   if (e.shiftKey) parts.push('Shift');
 
-  let key = e.key;
+  const code = e.code;
+  let keyName = '';
 
-  // Normalize special keys
-  if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
+  if (['ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ShiftLeft', 'ShiftRight', 'MetaLeft', 'MetaRight'].includes(code)) {
     return null; // Only modifier pressed so far
   }
 
-  if (key === ' ') key = 'Space';
-  else if (key === 'ArrowUp') key = 'Up';
-  else if (key === 'ArrowDown') key = 'Down';
-  else if (key === 'ArrowLeft') key = 'Left';
-  else if (key === 'ArrowRight') key = 'Right';
-  else if (key.length === 1) key = key.toUpperCase();
+  // Map physical code to Electron Accelerator string
+  if (code.startsWith('Key')) {
+    keyName = code.replace('Key', ''); // 'A' .. 'Z'
+  } else if (code.startsWith('Digit')) {
+    keyName = code.replace('Digit', ''); // '0' .. '9'
+  } else if (code.startsWith('Numpad') && code.length === 7) {
+    keyName = 'num' + code.replace('Numpad', '');
+  } else if (/^F\d+$/.test(code)) {
+    keyName = code; // 'F1' .. 'F12'
+  } else if (code === 'Space') {
+    keyName = 'Space';
+  } else if (code === 'Tab') {
+    keyName = 'Tab';
+  } else if (code === 'Enter') {
+    keyName = 'Enter';
+  } else if (code === 'Escape') {
+    keyName = 'Escape';
+  } else if (code === 'Backspace') {
+    keyName = 'Backspace';
+  } else if (code === 'Delete') {
+    keyName = 'Delete';
+  } else if (code === 'Insert') {
+    keyName = 'Insert';
+  } else if (code === 'Home') {
+    keyName = 'Home';
+  } else if (code === 'End') {
+    keyName = 'End';
+  } else if (code === 'PageUp') {
+    keyName = 'PageUp';
+  } else if (code === 'PageDown') {
+    keyName = 'PageDown';
+  } else if (code === 'ArrowUp') {
+    keyName = 'Up';
+  } else if (code === 'ArrowDown') {
+    keyName = 'Down';
+  } else if (code === 'ArrowLeft') {
+    keyName = 'Left';
+  } else if (code === 'ArrowRight') {
+    keyName = 'Right';
+  } else if (e.key && e.key.length === 1) {
+    keyName = e.key.toUpperCase();
+  } else {
+    keyName = e.key;
+  }
 
-  parts.push(key);
+  if (!keyName) return null;
+
+  parts.push(keyName);
   return parts.join('+');
 }
 
@@ -32,6 +73,7 @@ export function formatDisplayShortcut(accelerator) {
   if (!accelerator) return 'None';
   return accelerator
     .replace(/CommandOrControl/g, 'Ctrl')
+    .replace(/Key/g, '')
     .replace(/\+/g, ' + ');
 }
 

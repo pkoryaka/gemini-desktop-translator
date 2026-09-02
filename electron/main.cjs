@@ -262,18 +262,20 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
         const selectedText = clipboard.readText();
         focusAppWindow();
 
-        if (selectedText && selectedText.trim()) {
-          mainWindow.webContents.send('quick-translate', {
-            text: selectedText.trim(),
-            explainJargon
-          });
+        if (mainWindow) {
+          if (selectedText && selectedText.trim()) {
+            mainWindow.webContents.send('quick-translate', {
+              text: selectedText.trim(),
+              explainJargon
+            });
+          }
         }
-      }, 150);
+      }, 100);
     });
   } else {
     const text = clipboard.readText();
     focusAppWindow();
-    if (text && text.trim()) {
+    if (mainWindow && text && text.trim()) {
       mainWindow.webContents.send('quick-translate', {
         text: text.trim(),
         explainJargon
