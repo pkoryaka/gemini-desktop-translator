@@ -10,6 +10,36 @@ let isQuitting = false;
 let translateHotkey = 'CommandOrControl+Alt+T';
 let explainHotkey = 'CommandOrControl+Alt+J';
 
+function getHotkeysConfigPath() {
+  const userData = app.getPath('userData');
+  return path.join(userData, 'hotkeys.json');
+}
+
+function loadSavedHotkeys() {
+  try {
+    const configPath = getHotkeysConfigPath();
+    if (fs.existsSync(configPath)) {
+      const data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (data.translateHotkey) translateHotkey = data.translateHotkey;
+      if (data.explainHotkey) explainHotkey = data.explainHotkey;
+    }
+  } catch (e) {
+    console.warn('Could not load saved hotkeys:', e);
+  }
+}
+
+function saveHotkeysConfig(transKey, explKey) {
+  try {
+    const configPath = getHotkeysConfigPath();
+    fs.writeFileSync(configPath, JSON.stringify({
+      translateHotkey: transKey,
+      explainHotkey: explKey
+    }), 'utf8');
+  } catch (e) {
+    console.warn('Could not save hotkeys config:', e);
+  }
+}
+
 function getIconPath() {
   const icoPath = path.join(__dirname, 'app-icon.ico');
   if (fs.existsSync(icoPath)) return icoPath;
@@ -126,7 +156,6 @@ function createWindow() {
     }
   });
 
-  // Open external links in default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -139,7 +168,6 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
-  // Intercept window close to minimize to system tray
   mainWindow.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault();
@@ -156,10 +184,7 @@ function updateTrayMenu() {
     {
       label: 'Open Gemini Translator',
       click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
+        focusAppWindow();
       }
     },
     {
@@ -178,11 +203,8 @@ function updateTrayMenu() {
     {
       label: 'Settings',
       click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-          mainWindow.webContents.send('open-settings');
-        }
+        focusAppWindow();
+        mainWindow.webContents.send('open-settings');
       }
     },
     { type: 'separator' },
@@ -205,65 +227,57 @@ function createTray() {
 
   updateTrayMenu();
 
-  // Toggle window on single/double click
   tray.on('click', () => {
     if (mainWindow) {
       if (mainWindow.isVisible()) {
         mainWindow.hide();
       } else {
-        mainWindow.show();
-        mainWindow.focus();
+        focusAppWindow();
       }
     }
   });
 
   tray.on('double-click', () => {
-    if (mainWindow) {
-      mainWindow.show();
-      mainWindow.focus();
-    }
+    focusAppWindow();
   });
+}
+
+function focusAppWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.setAlwaysOnTop(true);
+  mainWindow.focus();
+  mainWindow.setAlwaysOnTop(false);
 }
 
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
-    // Send Ctrl+C to active foreground window via PowerShell SendKeys
-    const psScript = `
-      Add-Type -AssemblyName System.Windows.Forms;
-      [System.Windows.Forms.SendKeys]::SendWait("^c");
-    `;
-
-    exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, () => {
+    const copyVbs = path.join(__dirname, 'copy.vbs');
+    
+    // Execute silent fast copy via VBScript SendKeys
+    exec(`wscript.exe "${copyVbs}"`, () => {
       setTimeout(() => {
         const selectedText = clipboard.readText();
-        
-        if (mainWindow) {
-          if (mainWindow.isMinimized()) mainWindow.restore();
-          mainWindow.show();
-          mainWindow.focus();
-          
-          if (selectedText && selectedText.trim()) {
-            mainWindow.webContents.send('quick-translate', {
-              text: selectedText.trim(),
-              explainJargon
-            });
-          }
+        focusAppWindow();
+
+        if (selectedText && selectedText.trim()) {
+          mainWindow.webContents.send('quick-translate', {
+            text: selectedText.trim(),
+            explainJargon
+          });
         }
-      }, 120);
+      }, 150);
     });
   } else {
     const text = clipboard.readText();
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.show();
-      mainWindow.focus();
-      if (text && text.trim()) {
-        mainWindow.webContents.send('quick-translate', {
-          text: text.trim(),
-          explainJargon
-        });
-      }
+    focusAppWindow();
+    if (text && text.trim()) {
+      mainWindow.webContents.send('quick-translate', {
+        text: text.trim(),
+        explainJargon
+      });
     }
   }
 }
@@ -274,26 +288,35 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
   if (newTranslateKey) translateHotkey = newTranslateKey;
   if (newExplainKey) explainHotkey = newExplainKey;
 
-  try {
-    globalShortcut.register(translateHotkey, () => {
-      triggerGlobalSelectionTranslation(false);
-    });
-  } catch (e) {
-    console.warn(`Failed to register translate hotkey ${translateHotkey}:`, e);
+  saveHotkeysConfig(translateHotkey, explainHotkey);
+
+  if (translateHotkey) {
+    try {
+      const ok = globalShortcut.register(translateHotkey, () => {
+        triggerGlobalSelectionTranslation(false);
+      });
+      if (!ok) console.warn(`Failed to register ${translateHotkey}`);
+    } catch (e) {
+      console.warn(`Error registering ${translateHotkey}:`, e);
+    }
   }
 
-  try {
-    globalShortcut.register(explainHotkey, () => {
-      triggerGlobalSelectionTranslation(true);
-    });
-  } catch (e) {
-    console.warn(`Failed to register explain hotkey ${explainHotkey}:`, e);
+  if (explainHotkey) {
+    try {
+      const ok = globalShortcut.register(explainHotkey, () => {
+        triggerGlobalSelectionTranslation(true);
+      });
+      if (!ok) console.warn(`Failed to register ${explainHotkey}`);
+    } catch (e) {
+      console.warn(`Error registering ${explainHotkey}:`, e);
+    }
   }
 
   updateTrayMenu();
 }
 
 app.whenReady().then(() => {
+  loadSavedHotkeys();
   createWindow();
   createTray();
   registerGlobalHotkeys(translateHotkey, explainHotkey);
@@ -302,9 +325,8 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
-    } else if (mainWindow) {
-      mainWindow.show();
-      mainWindow.focus();
+    } else {
+      focusAppWindow();
     }
   });
 });
@@ -335,10 +357,7 @@ ipcMain.handle('window:hide-to-tray', () => {
 });
 
 ipcMain.handle('window:show', () => {
-  if (mainWindow) {
-    mainWindow.show();
-    mainWindow.focus();
-  }
+  focusAppWindow();
   return true;
 });
 
