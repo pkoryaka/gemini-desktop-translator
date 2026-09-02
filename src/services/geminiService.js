@@ -1,6 +1,7 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Curated exclusively for translation models (Flash & Pro series, including Gemini 3.8 Flash)
+ * Strictly curated exclusively for dedicated translation models (Flash & Pro series)
+ * All experimental, non-translation models (nano, banana, search, etc.) are strictly blocked.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -17,7 +18,7 @@ export const AVAILABLE_MODELS = [
     name: 'Gemini 3.8 Flash',
     tag: '⚡ Latest Flagship (Recommended)',
     badgeColor: '#10b981',
-    description: 'The newest, most advanced Gemini flash model. Delivers cutting-edge multilingual fluency, idiomatic accuracy, and ultra-fast speed.',
+    description: 'The newest, most advanced Gemini flash model. Delivers cutting-edge multilingual fluency, idiomatic precision, and rapid speed.',
     bestFor: 'Daily instant hotkey translations, high accuracy, modern slang.'
   },
   {
@@ -25,7 +26,7 @@ export const AVAILABLE_MODELS = [
     name: 'Gemini 3.7 Flash',
     tag: '🚀 Next-Gen Flash',
     badgeColor: '#06b6d4',
-    description: 'High-throughput 3.7 flash model combining rapid streaming with deep linguistic context.',
+    description: 'High-throughput 3.7 flash model combining rapid token generation with deep linguistic context.',
     bestFor: 'Instant selected-text hotkey translations, articles, chatting.'
   },
   {
@@ -62,6 +63,19 @@ export const AVAILABLE_MODELS = [
   }
 ];
 
+// Strict Whitelist of translation-capable model IDs
+const ALLOWED_TRANSLATION_IDS = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-3.8-pro',
+  'gemini-1.5-pro'
+];
+
 // In-Memory Fast LRU Cache (up to 300 entries)
 const translationCache = new Map();
 
@@ -71,7 +85,8 @@ function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, 
 
 /**
  * Queries Google's ModelService.ListModels endpoint directly from Google AI Studio,
- * filtering ONLY dedicated translation/text generation models and stripping experimental/nano/banana clutter.
+ * filtering strictly with an allowlist of genuine translation models.
+ * Non-translation models (nano, banana, deep-search, embeddings, vision, etc.) are strictly blocked.
  */
 export async function fetchLiveAvailableModels(apiKey) {
   if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
@@ -93,54 +108,62 @@ export async function fetchLiveAvailableModels(apiKey) {
       return AVAILABLE_MODELS;
     }
 
-    // Filter strictly for translation-relevant models (Flash & Pro series)
-    // and explicitly exclude non-translation models (nano, banana, vision, embeddings, audio, robotics)
+    // Filter strictly against the translation allowlist & reject any clutter keywords
     const live = data.models
       .filter((m) => {
         const methods = m.supportedGenerationMethods || [];
-        const isGenerate = methods.includes('generateContent');
-        const name = (m.name || '').toLowerCase();
+        if (!methods.includes('generateContent')) return false;
 
-        const isClutter =
-          name.includes('nano') ||
-          name.includes('banana') ||
-          name.includes('embedding') ||
-          name.includes('aqa') ||
-          name.includes('imagen') ||
-          name.includes('tts') ||
-          name.includes('learnlm') ||
-          name.includes('bison') ||
-          name.includes('robot') ||
-          name.includes('computer-use') ||
-          name.includes('tuning');
+        const rawName = (m.name || '').toLowerCase();
+        const cleanId = rawName.replace(/^models\//, '');
 
-        const isTranslationSeries = name.includes('flash') || name.includes('pro');
+        // Strictly reject clutter, benchmarks, agents, and device-local models
+        if (
+          rawName.includes('nano') ||
+          rawName.includes('banana') ||
+          rawName.includes('search') ||
+          rawName.includes('research') ||
+          rawName.includes('embedding') ||
+          rawName.includes('aqa') ||
+          rawName.includes('imagen') ||
+          rawName.includes('tts') ||
+          rawName.includes('learnlm') ||
+          rawName.includes('bison') ||
+          rawName.includes('robot') ||
+          rawName.includes('computer-use') ||
+          rawName.includes('tuning')
+        ) {
+          return false;
+        }
 
-        return isGenerate && !isClutter && isTranslationSeries;
+        // Only allow recognized translation models
+        return ALLOWED_TRANSLATION_IDS.includes(cleanId) || cleanId.startsWith('gemini-3.8') || cleanId.startsWith('gemini-3.7') || cleanId.startsWith('gemini-2.0-flash');
       })
       .map((m) => {
         const cleanId = m.name.replace(/^models\//, '');
-        const isFlash = cleanId.includes('flash');
-        const isPro = cleanId.includes('pro');
-        const is38 = cleanId.includes('3.8');
-        const is37 = cleanId.includes('3.7');
+        const matchingDefault = AVAILABLE_MODELS.find((am) => am.id === cleanId);
+        if (matchingDefault) return matchingDefault;
 
+        const isFlash = cleanId.includes('flash');
         return {
           id: cleanId,
           name: m.displayName || cleanId,
-          tag: is38 ? '⚡ Flagship 3.8' : is37 ? '⚡ Flagship 3.7' : isFlash ? '⚡ Fast Translation' : '🧠 Deep Nuance',
-          badgeColor: is38 ? '#10b981' : isFlash ? '#06b6d4' : '#a855f7',
+          tag: isFlash ? '⚡ Fast Translation' : '🧠 Deep Nuance',
+          badgeColor: isFlash ? '#10b981' : '#a855f7',
           description: m.description || 'Google Gemini AI language model for translation and text generation.',
           bestFor: isFlash ? 'Instant low-latency translations.' : 'Idioms, slang, and cultural jargon.'
         };
       });
 
-    // Ensure Gemini 3.8 Flash is available in the list
-    if (!live.some(m => m.id === 'gemini-3.8-flash')) {
-      live.unshift(AVAILABLE_MODELS[0]);
+    // Ensure our curated top models are always preserved
+    const result = [...AVAILABLE_MODELS];
+    for (const item of live) {
+      if (!result.some(r => r.id === item.id)) {
+        result.push(item);
+      }
     }
 
-    return live.length > 0 ? live : AVAILABLE_MODELS;
+    return result;
   } catch (err) {
     console.warn('Could not query live models list from Google:', err);
     return AVAILABLE_MODELS;
@@ -186,7 +209,7 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-3.8-flash') {
 }
 
 /**
- * Ultra-Fast Direct Translation with Zero Pre-Flight Latency & Multi-Model Fallback
+ * Ultra-Fast Direct Translation with Zero Pre-Flight Latency & Clean Translation Fallback
  */
 export async function translateText({
   apiKey,
@@ -206,7 +229,11 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  const targetModel = model || 'gemini-3.8-flash';
+  // Sanitize model choice to ensure no clutter model is ever invoked
+  let targetModel = model || 'gemini-3.8-flash';
+  if (targetModel.includes('nano') || targetModel.includes('banana') || targetModel.includes('search')) {
+    targetModel = 'gemini-3.8-flash';
+  }
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
@@ -245,7 +272,7 @@ Respond ONLY in JSON format:
     systemInstructionText = `Translate from ${sourceName} into ${targetName}. Output the fluent translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
   }
 
-  // Candidate models: Start IMMEDIATELY with target model, fallback to fast models only if error occurs
+  // Clean fallback cascade strictly consisting of real translation models
   const fallbackList = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   const candidateModels = [targetModel, ...fallbackList].filter((m, idx, arr) => arr.indexOf(m) === idx);
 
