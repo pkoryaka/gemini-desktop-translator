@@ -1,7 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Strictly curated exclusively for dedicated translation models (Flash & Pro series)
- * All experimental, non-translation models (nano, banana, search, etc.) are strictly blocked.
+ * Reliable translation with transparent error reporting and live Google model discovery.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -14,66 +13,53 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-3.8-flash',
-    name: 'Gemini 3.8 Flash',
-    tag: '⚡ Latest Flagship (Recommended)',
-    badgeColor: '#10b981',
-    description: 'The newest, most advanced Gemini flash model. Delivers cutting-edge multilingual fluency, idiomatic precision, and rapid speed.',
-    bestFor: 'Daily instant hotkey translations, high accuracy, modern slang.'
-  },
-  {
-    id: 'gemini-3.7-flash',
-    name: 'Gemini 3.7 Flash',
-    tag: '🚀 Next-Gen Flash',
-    badgeColor: '#06b6d4',
-    description: 'High-throughput 3.7 flash model combining rapid token generation with deep linguistic context.',
-    bestFor: 'Instant selected-text hotkey translations, articles, chatting.'
-  },
-  {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    tag: '⚡ Ultra Fast',
-    badgeColor: '#3b82f6',
-    description: 'Ultra-low latency model engineered for sub-second responses and high rate limits.',
-    bestFor: 'Fast single-sentence hotkey lookups.'
+    tag: '⚡ Ultra Fast (Default)',
+    badgeColor: '#10b981',
+    description: 'Fastest real-time streaming model with sub-second response times. Universally available on Google AI Studio.',
+    bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
+  },
+  {
+    id: 'gemini-2.0-flash-lite',
+    name: 'Gemini 2.0 Flash Lite',
+    tag: '⚡ Lightweight Fast',
+    badgeColor: '#06b6d4',
+    description: 'Lightweight high-efficiency model designed for high throughput and quick lookups.',
+    bestFor: 'Single-sentence hotkey lookups.'
   },
   {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
-    tag: '📦 Universal Stable',
+    tag: '📦 Stable Production',
     badgeColor: '#6366f1',
-    description: 'Universally available production model with high uptime across all Google AI Studio tiers.',
-    bestFor: 'Universal reliability and backup translation.'
+    description: 'Reliable general-purpose model with broad vocabulary and high rate limits.',
+    bestFor: 'Universal reliability across all text lengths.'
   },
   {
-    id: 'gemini-3.8-pro',
-    name: 'Gemini 3.8 Pro',
-    tag: '🧠 Deep Nuance & Slang Expert',
-    badgeColor: '#a855f7',
-    description: 'Top-tier reasoning model for tricky cultural nuances, business contracts, literature, and detailed jargon breakdowns.',
-    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
+    id: 'gemini-1.5-flash-8b',
+    name: 'Gemini 1.5 Flash 8B',
+    tag: '🚀 Compact Fast',
+    badgeColor: '#3b82f6',
+    description: 'Compact 8-billion parameter model tuned for rapid text processing.',
+    bestFor: 'Fast translation of straightforward sentences.'
   },
   {
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
-    tag: '📚 Literary & Professional',
-    badgeColor: '#ec4899',
-    description: 'High-capacity context model with advanced linguistic understanding.',
-    bestFor: 'Formal business documents and long articles.'
+    tag: '🧠 Deep Nuance & Slang Expert',
+    badgeColor: '#a855f7',
+    description: 'Advanced reasoning model for difficult cultural nuances, complex idioms, business contracts, and technical jargon.',
+    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    tag: '✨ Next-Gen Flash',
+    badgeColor: '#f59e0b',
+    description: 'Google’s next-gen flash model with enhanced multilingual accuracy and fluency.',
+    bestFor: 'High-accuracy nuanced translations.'
   }
-];
-
-// Strict Whitelist of translation-capable model IDs
-const ALLOWED_TRANSLATION_IDS = [
-  'gemini-3.8-flash',
-  'gemini-3.7-flash',
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
-  'gemini-3.8-pro',
-  'gemini-1.5-pro'
 ];
 
 // In-Memory Fast LRU Cache (up to 300 entries)
@@ -108,15 +94,13 @@ export async function fetchLiveAvailableModels(apiKey) {
       return AVAILABLE_MODELS;
     }
 
-    // Filter strictly against the translation allowlist & reject any clutter keywords
+    // Filter strictly for models that support generateContent and are translation models
     const live = data.models
       .filter((m) => {
         const methods = m.supportedGenerationMethods || [];
         if (!methods.includes('generateContent')) return false;
 
         const rawName = (m.name || '').toLowerCase();
-        const cleanId = rawName.replace(/^models\//, '');
-
         // Strictly reject clutter, benchmarks, agents, and device-local models
         if (
           rawName.includes('nano') ||
@@ -136,8 +120,7 @@ export async function fetchLiveAvailableModels(apiKey) {
           return false;
         }
 
-        // Only allow recognized translation models
-        return ALLOWED_TRANSLATION_IDS.includes(cleanId) || cleanId.startsWith('gemini-3.8') || cleanId.startsWith('gemini-3.7') || cleanId.startsWith('gemini-2.0-flash');
+        return rawName.includes('flash') || rawName.includes('pro');
       })
       .map((m) => {
         const cleanId = m.name.replace(/^models\//, '');
@@ -150,32 +133,25 @@ export async function fetchLiveAvailableModels(apiKey) {
           name: m.displayName || cleanId,
           tag: isFlash ? '⚡ Fast Translation' : '🧠 Deep Nuance',
           badgeColor: isFlash ? '#10b981' : '#a855f7',
-          description: m.description || 'Google Gemini AI language model for translation and text generation.',
+          description: m.description || 'Google Gemini AI language model for translation.',
           bestFor: isFlash ? 'Instant low-latency translations.' : 'Idioms, slang, and cultural jargon.'
         };
       });
 
-    // Ensure our curated top models are always preserved
-    const result = [...AVAILABLE_MODELS];
-    for (const item of live) {
-      if (!result.some(r => r.id === item.id)) {
-        result.push(item);
-      }
-    }
-
-    return result;
+    return live.length > 0 ? live : AVAILABLE_MODELS;
   } catch (err) {
     console.warn('Could not query live models list from Google:', err);
     return AVAILABLE_MODELS;
   }
 }
 
-export async function testGeminiApiKey(apiKey, model = 'gemini-3.8-flash') {
+export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+  const targetModel = model || 'gemini-2.0-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey.trim()}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -193,23 +169,24 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-3.8-flash') {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const message = errorData.error?.message || `HTTP Error ${response.status}: ${response.statusText}`;
-      throw new Error(message);
+      throw new Error(`Model "${targetModel}": ${message}`);
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return { success: true, text, model };
+    return { success: true, text, model: targetModel };
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      throw new Error('Connection timed out. Please check your internet connection.');
+      throw new Error(`Connection to model "${targetModel}" timed out. Please check your internet connection.`);
     }
     throw err;
   }
 }
 
 /**
- * Ultra-Fast Direct Translation with Zero Pre-Flight Latency & Clean Translation Fallback
+ * Ultra-Fast Direct Translation
+ * Directly translates using the user's selected model and reports exact errors transparently.
  */
 export async function translateText({
   apiKey,
@@ -218,7 +195,7 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = 'gemini-3.8-flash',
+  model = 'gemini-2.0-flash',
   temperature = 0.1,
   onStreamChunk = null
 }) {
@@ -229,11 +206,7 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  // Sanitize model choice to ensure no clutter model is ever invoked
-  let targetModel = model || 'gemini-3.8-flash';
-  if (targetModel.includes('nano') || targetModel.includes('banana') || targetModel.includes('search')) {
-    targetModel = 'gemini-3.8-flash';
-  }
+  const targetModel = model || 'gemini-2.0-flash';
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
@@ -272,100 +245,90 @@ Respond ONLY in JSON format:
     systemInstructionText = `Translate from ${sourceName} into ${targetName}. Output the fluent translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
   }
 
-  // Clean fallback cascade strictly consisting of real translation models
-  const fallbackList = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-  const candidateModels = [targetModel, ...fallbackList].filter((m, idx, arr) => arr.indexOf(m) === idx);
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey.trim()}`;
+  const payload = {
+    systemInstruction: { parts: [{ text: systemInstructionText }] },
+    contents: [{ role: 'user', parts: [{ text: userText }] }],
+    generationConfig: {
+      temperature: parseFloat(temperature) ?? 0.1,
+      topP: 0.8,
+      topK: 20,
+      maxOutputTokens: explainJargon ? 2048 : 1024,
+      candidateCount: 1,
+      ...(explainJargon ? { responseMimeType: 'application/json' } : {})
+    }
+  };
 
-  let lastError = null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  for (const currentModel of candidateModels) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey.trim()}`;
-    const payload = {
-      systemInstruction: { parts: [{ text: systemInstructionText }] },
-      contents: [{ role: 'user', parts: [{ text: userText }] }],
-      generationConfig: {
-        temperature: parseFloat(temperature) ?? 0.1,
-        topP: 0.8,
-        topK: 20,
-        maxOutputTokens: explainJargon ? 2048 : 1024,
-        candidateCount: 1,
-        ...(explainJargon ? { responseMimeType: 'application/json' } : {})
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify(payload)
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.error?.message || `HTTP Error ${response.status}`;
+      throw new Error(`Model "${targetModel}" error: ${message}`);
+    }
+
+    const data = await response.json();
+    const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    if (!rawOutput) {
+      throw new Error(`Empty response from model "${targetModel}"`);
+    }
+
+    if (explainJargon) {
+      try {
+        const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        const result = {
+          isExplained: true,
+          translation: parsed.translation || rawOutput,
+          plainLanguageMeaning: parsed.plainLanguageMeaning || '',
+          detectedTone: parsed.detectedTone || '',
+          jargonBreakdown: parsed.jargonBreakdown || [],
+          culturalNotes: parsed.culturalNotes || '',
+          detectedSourceLanguage: parsed.detectedSourceLanguage || sourceLang
+        };
+        if (onStreamChunk) onStreamChunk(result.translation);
+        translationCache.set(cacheKey, result);
+        return result;
+      } catch {
+        const fallbackResult = {
+          isExplained: true,
+          translation: rawOutput,
+          plainLanguageMeaning: rawOutput,
+          detectedTone: 'Neutral',
+          jargonBreakdown: []
+        };
+        if (onStreamChunk) onStreamChunk(fallbackResult.translation);
+        translationCache.set(cacheKey, fallbackResult);
+        return fallbackResult;
       }
+    }
+
+    const standardResult = {
+      isExplained: false,
+      translation: rawOutput.trim()
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify(payload)
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const message = errorData.error?.message || `HTTP Error ${response.status}`;
-        lastError = new Error(message);
-        console.warn(`Model ${currentModel} error: ${message}. Trying next fallback...`);
-        continue;
-      }
-
-      const data = await response.json();
-      const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      if (!rawOutput) {
-        throw new Error('Empty response from model');
-      }
-
-      if (explainJargon) {
-        try {
-          const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, '').trim();
-          const parsed = JSON.parse(cleanJson);
-          const result = {
-            isExplained: true,
-            translation: parsed.translation || rawOutput,
-            plainLanguageMeaning: parsed.plainLanguageMeaning || '',
-            detectedTone: parsed.detectedTone || '',
-            jargonBreakdown: parsed.jargonBreakdown || [],
-            culturalNotes: parsed.culturalNotes || '',
-            detectedSourceLanguage: parsed.detectedSourceLanguage || sourceLang
-          };
-          if (onStreamChunk) onStreamChunk(result.translation);
-          translationCache.set(cacheKey, result);
-          return result;
-        } catch {
-          const fallbackResult = {
-            isExplained: true,
-            translation: rawOutput,
-            plainLanguageMeaning: rawOutput,
-            detectedTone: 'Neutral',
-            jargonBreakdown: []
-          };
-          if (onStreamChunk) onStreamChunk(fallbackResult.translation);
-          translationCache.set(cacheKey, fallbackResult);
-          return fallbackResult;
-        }
-      }
-
-      const standardResult = {
-        isExplained: false,
-        translation: rawOutput.trim()
-      };
-
-      if (onStreamChunk) {
-        onStreamChunk(standardResult.translation);
-      }
-      translationCache.set(cacheKey, standardResult);
-      return standardResult;
-    } catch (err) {
-      clearTimeout(timeoutId);
-      lastError = err.name === 'AbortError' ? new Error(`Request to ${currentModel} timed out.`) : err;
-      console.warn(`Attempt with ${currentModel} failed:`, lastError.message);
+    if (onStreamChunk) {
+      onStreamChunk(standardResult.translation);
     }
+    translationCache.set(cacheKey, standardResult);
+    return standardResult;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error(`Request to model "${targetModel}" timed out. Please check your network or try another model in Settings.`);
+    }
+    throw err;
   }
-
-  throw lastError || new Error('Translation failed. Please check your internet connection and API Key.');
 }
