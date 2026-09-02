@@ -12,6 +12,9 @@ const DEFAULT_SETTINGS = {
   autoSpeak: false,
   saveHistory: true,
   enableStreaming: true,
+  primaryTargetLanguage: 'uk',
+  secondaryTargetLanguage: 'en',
+  instantPopupMode: true,
   translateHotkey: 'CommandOrControl+Alt+T',
   explainHotkey: 'CommandOrControl+Alt+J'
 };

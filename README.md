@@ -14,13 +14,14 @@ A desktop application designed for multilingual communication across **Ukrainian
 - **Custom Translation Prompts & Tone Presets:**
   - Preset quick chips: *Natural & Fluent*, *Formal / Business*, *Casual / Chat*, *Explain Like I'm 5 (ELI5)*, *Technical / Exact*.
   - Custom instruction input for specific translation personas or domain-specific needs.
-- **Google Gemini Integration (Free Tier):**
-  - Curated exclusively for models that excel at multilingual translation:
-    - **`gemini-3.6-flash`** ⚡ *Ultra Fast (Default)*: Optimized for lowest latency, instant token streaming, and daily chat/hotkey usage.
-    - **`gemini-3.6-pro`** 🧠 *Deep Nuance & Slang Expert*: Advanced reasoning engine for difficult idioms, literary nuances, and complex jargon.
-    - **`gemini-2.0-flash`** 🔄 *Fast Multilingual Fallback*: High throughput multilingual translation.
-    - **`gemini-1.5-flash`** 📦 *Stable Legacy*: Stable legacy baseline.
-  - Built-in connection tester and temperature slider.
+- **Instant Floating Mini Window & Global Hotkeys:**
+  - Press your hotkey on highlighted text in any app to summon a sleek **compact floating translation widget**.
+  - Includes real-time streaming, **Copy (📋)**, **Text-to-Speech (🔊)**, **Jargon breakdown pills**, and a **1-click Expand to Full Window (↗️)** button.
+  - Press `Esc` or click `✕` to dismiss back to the tray.
+- **Customizable Primary Target Language:**
+  - Define your default target language (e.g. Ukrainian, English, Spanish, Russian) for all instant hotkey translations.
+- **Custom Global Hotkey Recorder:**
+  - Interactive key recorder with conflict detection. Record distinct hotkeys for *Quick Translation* vs *Translate & Explain Jargon*.
 - **Desktop Native Experience:**
   - Keyboard shortcuts (`Ctrl+Enter` to translate).
   - Text-To-Speech (TTS) voice playback for both original and translated text.

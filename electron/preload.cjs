@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readClipboard: () => ipcRenderer.invoke('clipboard:read'),
   hideToTray: () => ipcRenderer.invoke('window:hide-to-tray'),
   showWindow: () => ipcRenderer.invoke('window:show'),
+  setWindowMode: (mode) => ipcRenderer.invoke('window:set-mode', mode),
+  setWindowSize: (size) => ipcRenderer.invoke('window:set-size', size),
   getAutoStart: () => ipcRenderer.invoke('autostart:get'),
   setAutoStart: (enable) => ipcRenderer.invoke('autostart:set', enable),
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),

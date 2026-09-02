@@ -393,3 +393,24 @@ ipcMain.handle('hotkeys:update', async (event, { translateKey, explainKey }) => 
   registerGlobalHotkeys(translateKey, explainKey);
   return { success: true, translateHotkey, explainHotkey };
 });
+
+ipcMain.handle('window:set-mode', (event, mode) => {
+  if (!mainWindow) return false;
+  if (mode === 'mini') {
+    mainWindow.setMinimumSize(460, 280);
+    mainWindow.setSize(580, 400);
+    mainWindow.center();
+  } else {
+    mainWindow.setMinimumSize(800, 600);
+    mainWindow.setSize(1200, 820);
+    mainWindow.center();
+  }
+  return true;
+});
+
+ipcMain.handle('window:set-size', (event, { width, height }) => {
+  if (mainWindow) {
+    mainWindow.setSize(width, height);
+  }
+  return true;
+});

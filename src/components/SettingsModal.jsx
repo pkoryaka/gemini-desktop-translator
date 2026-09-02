@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen } from 'lucide-react';
-import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, AppWindow } from 'lucide-react';
+import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { HotkeyRecorder } from './HotkeyRecorder';
 
@@ -19,6 +19,10 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.2);
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
+
+  // Primary Target Language & Mini Modal Mode
+  const [primaryTargetLanguage, setPrimaryTargetLanguage] = useState(currentSettings.primaryTargetLanguage || 'uk');
+  const [instantPopupMode, setInstantPopupMode] = useState(currentSettings.instantPopupMode !== false);
 
   // Global Hotkeys (Customizable strings)
   const [translateHotkey, setTranslateHotkey] = useState(currentSettings.translateHotkey || 'CommandOrControl+Alt+T');
@@ -83,6 +87,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       ...currentSettings,
       model,
       temperature,
+      primaryTargetLanguage,
+      instantPopupMode,
       translateHotkey,
       explainHotkey
     });
@@ -103,11 +109,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Key size={20} color="#6366f1" />
-            <h2 className="modal-title">Settings & Shortcuts</h2>
+            <h2 className="modal-title">Settings & Preferences</h2>
           </div>
           <button className="btn-icon" onClick={onClose} aria-label="Close modal">
             <X size={18} />
@@ -159,6 +165,29 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </span>
         </div>
 
+        {/* Primary Target Language Selection */}
+        <div className="form-group">
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Languages size={15} color="#818cf8" />
+            <span>Primary Language to Translate Into</span>
+          </label>
+          <select
+            className="form-input"
+            value={primaryTargetLanguage}
+            onChange={(e) => setPrimaryTargetLanguage(e.target.value)}
+            style={{ cursor: 'pointer', fontWeight: 600 }}
+          >
+            {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.name} ({l.nativeName})
+              </option>
+            ))}
+          </select>
+          <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+            Global hotkey and instant translations will default to this language.
+          </span>
+        </div>
+
         {/* Translation Model Selection */}
         <div className="form-group">
           <label className="form-label">Active Translation Model</label>
@@ -205,7 +234,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           )}
         </div>
 
-        {/* Interactive Custom Global Hotkeys Section */}
+        {/* Global Hotkeys Customization Section */}
         <div style={{
           background: 'rgba(15, 23, 42, 0.8)',
           border: '1px solid rgba(99, 102, 241, 0.25)',
@@ -241,6 +270,54 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             icon={BookOpen}
             description="Highlight text & press this combination to de-jargonize and explain idioms in plain words."
           />
+        </div>
+
+        {/* Instant Mini Window Mode Toggle */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+              <AppWindow size={15} color="#818cf8" />
+              <span>Instant Floating Mini Window</span>
+            </div>
+            <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+              Show a compact floating popup when hotkey is pressed (can expand to full window anytime).
+            </span>
+          </div>
+          <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer', flexShrink: 0 }}>
+            <input
+              type="checkbox"
+              checked={instantPopupMode}
+              onChange={(e) => setInstantPopupMode(e.target.checked)}
+              style={{ opacity: 0, width: 0, height: 0 }}
+            />
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: instantPopupMode ? '#6366f1' : 'rgba(255,255,255,0.15)',
+              borderRadius: '999px',
+              transition: 'all 0.2s ease'
+            }}>
+              <span style={{
+                position: 'absolute',
+                content: '""',
+                height: '14px',
+                width: '14px',
+                left: instantPopupMode ? '21px' : '3px',
+                bottom: '3px',
+                backgroundColor: 'white',
+                borderRadius: '50%',
+                transition: 'all 0.2s ease'
+              }} />
+            </span>
+          </label>
         </div>
 
         {/* Temperature */}
@@ -281,7 +358,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             <Power size={15} color="#10b981" />
             <span>Launch with Windows (Start in Tray)</span>
           </div>
-          <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer' }}>
+          <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer', flexShrink: 0 }}>
             <input
               type="checkbox"
               checked={autoStart}
