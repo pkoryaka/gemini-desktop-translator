@@ -229,14 +229,36 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
         {/* Translation Model Selection */}
         <div className="form-group">
-          <label className="form-label">Active Translation Model</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>Active Translation Model</label>
+            <button
+              type="button"
+              onClick={() => handleRefreshModels()}
+              disabled={isRefreshingModels || !apiKey.trim()}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isRefreshingModels ? '#818cf8' : '#94a3b8',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600
+              }}
+              title="Query Google API for all active models supported by your key"
+            >
+              <RotateCw size={13} className={isRefreshingModels ? 'spinner' : ''} />
+              <span>{isRefreshingModels ? 'Refreshing from Google...' : 'Refresh Models from Google'}</span>
+            </button>
+          </div>
           <select
             className="form-input"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            style={{ cursor: 'pointer', fontWeight: 600 }}
+            style={{ cursor: 'pointer', fontWeight: 600, marginTop: '6px' }}
           >
-            {AVAILABLE_MODELS.map((m) => (
+            {modelsList.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name} — {m.tag}
               </option>

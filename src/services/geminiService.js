@@ -1,6 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Dynamically queries Google ModelService.ListModels so only active, supported models are used.
+ * Zero pre-flight overhead, ultra-low latency, and live models list refresh
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -15,41 +15,65 @@ export const AVAILABLE_MODELS = [
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    tag: '⚡ Ultra Fast',
+    tag: '⚡ Ultra Fast (Default)',
     badgeColor: '#10b981',
-    description: 'Ultra-low latency with real-time response. Recommended for instant selected-text hotkey translations.',
-    bestFor: 'Daily instant translations and chat.'
+    description: 'Ultra-low latency with instant response. Ideal for rapid selected-text hotkey translations and daily chatting.',
+    bestFor: 'Instant hotkeys, daily communication, lowest latency.'
+  },
+  {
+    id: 'gemini-2.0-flash-lite',
+    name: 'Gemini 2.0 Flash Lite',
+    tag: '⚡ Light & Fast',
+    badgeColor: '#10b981',
+    description: 'Lightweight high-efficiency model designed for maximum speed and minimal cost.',
+    bestFor: 'Quick single-sentence translations and short phrases.'
   },
   {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
-    tag: '📦 Stable Baseline',
+    tag: '📦 Stable Production',
     badgeColor: '#06b6d4',
-    description: 'Fast, dependable translation model with high rate limits.',
-    bestFor: 'General multilingual translation.'
+    description: 'Highly dependable general-purpose model with broad vocabulary and high rate limits.',
+    bestFor: 'General multilingual translation across all text sizes.'
+  },
+  {
+    id: 'gemini-1.5-flash-8b',
+    name: 'Gemini 1.5 Flash 8B',
+    tag: '🚀 Compact Fast',
+    badgeColor: '#3b82f6',
+    description: 'Compact 8-billion parameter model tuned for rapid text processing.',
+    bestFor: 'Fast translation of straightforward sentences.'
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    tag: '🧠 Deep Nuance & Slang Expert',
+    badgeColor: '#a855f7',
+    description: 'Advanced reasoning model with deep cultural awareness for idioms, humor, technical documentation, and complex jargon.',
+    bestFor: 'Demystifying complex slang, professional correspondence, difficult idioms.'
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    tag: '✨ Next-Gen Flash',
+    badgeColor: '#f59e0b',
+    description: 'Google’s latest 2.5 series flash model with enhanced multilingual accuracy and fluency.',
+    bestFor: 'High-accuracy nuanced translations.'
   }
 ];
 
 // In-Memory Fast LRU Cache (up to 300 entries)
 const translationCache = new Map();
-let cachedLiveModelIds = null;
-let lastModelFetchTime = 0;
 
 function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, model) {
   return `${model}::${sourceLang}->${targetLang}::${explainJargon}::${customPrompt.trim()}::${text.trim()}`;
 }
 
 /**
- * Queries Google's ModelService.ListModels endpoint to discover active models for this user's API key
+ * Queries Google's ModelService.ListModels endpoint directly from Google AI Studio
  */
 export async function fetchLiveAvailableModels(apiKey) {
   if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
-
-  // Cache live models for 5 minutes
-  const now = Date.now();
-  if (cachedLiveModelIds && now - lastModelFetchTime < 300000) {
-    return cachedLiveModelIds;
-  }
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
@@ -68,13 +92,13 @@ export async function fetchLiveAvailableModels(apiKey) {
       return AVAILABLE_MODELS;
     }
 
-    // Filter only models that support generateContent
+    // Filter only text generation models
     const live = data.models
       .filter((m) => {
         const methods = m.supportedGenerationMethods || [];
         const isGenerate = methods.includes('generateContent');
         const name = (m.name || '').toLowerCase();
-        const isExcluded = name.includes('embedding') || name.includes('aqa') || name.includes('imagen') || name.includes('tts') || name.includes('learnlm');
+        const isExcluded = name.includes('embedding') || name.includes('aqa') || name.includes('imagen') || name.includes('tts') || name.includes('learnlm') || name.includes('bison');
         return isGenerate && !isExcluded;
       })
       .map((m) => {
@@ -86,33 +110,25 @@ export async function fetchLiveAvailableModels(apiKey) {
           name: m.displayName || cleanId,
           tag: isFlash ? '⚡ Fast Translation' : isPro ? '🧠 Deep Nuance' : 'Active Model',
           badgeColor: isFlash ? '#10b981' : isPro ? '#a855f7' : '#06b6d4',
-          description: m.description || 'Google Gemini AI model for translation and text generation.',
+          description: m.description || 'Google Gemini AI language model for translation and text generation.',
           bestFor: isFlash ? 'Instant low-latency translations.' : 'Idioms, slang, and cultural jargon.'
         };
       });
 
-    if (live.length > 0) {
-      cachedLiveModelIds = live;
-      lastModelFetchTime = now;
-      return live;
-    }
-    return AVAILABLE_MODELS;
+    // Ensure our curated models are at top if present
+    return live.length > 0 ? live : AVAILABLE_MODELS;
   } catch (err) {
     console.warn('Could not query live models list from Google:', err);
     return AVAILABLE_MODELS;
   }
 }
 
-export async function testGeminiApiKey(apiKey, model = null) {
+export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }
 
-  // Get live models first to ensure we test an active model
-  const live = await fetchLiveAvailableModels(apiKey);
-  const modelToTest = model && live.some(m => m.id === model) ? model : live[0].id;
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${apiKey.trim()}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -135,7 +151,7 @@ export async function testGeminiApiKey(apiKey, model = null) {
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return { success: true, text, model: modelToTest };
+    return { success: true, text, model };
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
@@ -146,7 +162,7 @@ export async function testGeminiApiKey(apiKey, model = null) {
 }
 
 /**
- * Rock-Solid Translation using Live Models Discovered from Google API
+ * Ultra-Fast Direct Translation with Zero Pre-Flight Latency
  */
 export async function translateText({
   apiKey,
@@ -155,7 +171,7 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = null,
+  model = 'gemini-2.0-flash',
   temperature = 0.1,
   onStreamChunk = null
 }) {
@@ -166,39 +182,10 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  // 1. Fetch live models actively supported for this user's API key
-  const liveModels = await fetchLiveAvailableModels(apiKey);
-  const liveIds = liveModels.map(m => m.id);
+  const targetModel = model || 'gemini-2.0-flash';
 
-  // Determine candidate models in order of priority:
-  // (User selected model if in live list, then flash models, then any other live models)
-  const candidateModels = [];
-  if (model && liveIds.includes(model)) {
-    candidateModels.push(model);
-  }
-  
-  // Prioritize flash models from live list
-  for (const liveId of liveIds) {
-    if (liveId.includes('flash') && !candidateModels.includes(liveId)) {
-      candidateModels.push(liveId);
-    }
-  }
-
-  // Add remaining live models
-  for (const liveId of liveIds) {
-    if (!candidateModels.includes(liveId)) {
-      candidateModels.push(liveId);
-    }
-  }
-
-  if (candidateModels.length === 0) {
-    candidateModels.push('gemini-2.0-flash', 'gemini-1.5-flash');
-  }
-
-  const primaryModel = candidateModels[0];
-
-  // Check Local Memory Cache (0ms response)
-  const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, primaryModel);
+  // 1. Check Local Memory Cache (Instant 0ms response)
+  const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
   if (translationCache.has(cacheKey)) {
     const cachedResult = translationCache.get(cacheKey);
     if (onStreamChunk) {
@@ -234,6 +221,10 @@ Respond ONLY in JSON format:
     systemInstructionText = `Translate from ${sourceName} into ${targetName}. Output the fluent translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
   }
 
+  // Candidate models: Start IMMEDIATELY with target model, fallback to fast models only if error occurs
+  const fallbackList = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash'];
+  const candidateModels = [targetModel, ...fallbackList].filter((m, idx, arr) => arr.indexOf(m) === idx);
+
   let lastError = null;
 
   for (const currentModel of candidateModels) {
@@ -252,7 +243,7 @@ Respond ONLY in JSON format:
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 9000);
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
 
     try {
       const response = await fetch(endpoint, {
@@ -267,7 +258,7 @@ Respond ONLY in JSON format:
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.error?.message || `HTTP Error ${response.status}`;
         lastError = new Error(message);
-        console.warn(`Model ${currentModel} returned error: ${message}. Trying next fallback...`);
+        console.warn(`Model ${currentModel} error: ${message}. Trying next fallback...`);
         continue;
       }
 
