@@ -9,34 +9,43 @@ let isQuitting = false;
 
 let translateHotkey = 'CommandOrControl+Alt+T';
 let explainHotkey = 'CommandOrControl+Alt+J';
+let startMinimized = false;
 
-function getHotkeysConfigPath() {
+function getConfigPath() {
   const userData = app.getPath('userData');
-  return path.join(userData, 'hotkeys.json');
+  return path.join(userData, 'config.json');
 }
 
-function loadSavedHotkeys() {
+function loadSavedConfig() {
   try {
-    const configPath = getHotkeysConfigPath();
+    const configPath = getConfigPath();
     if (fs.existsSync(configPath)) {
       const data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       if (data.translateHotkey) translateHotkey = data.translateHotkey;
       if (data.explainHotkey) explainHotkey = data.explainHotkey;
+      if (data.startMinimized !== undefined) startMinimized = Boolean(data.startMinimized);
     }
   } catch (e) {
-    console.warn('Could not load saved hotkeys:', e);
+    console.warn('Could not load saved config:', e);
   }
 }
 
-function saveHotkeysConfig(transKey, explKey) {
+function saveConfig(updates) {
   try {
-    const configPath = getHotkeysConfigPath();
+    const configPath = getConfigPath();
+    let existing = {};
+    if (fs.existsSync(configPath)) {
+      try { existing = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch {}
+    }
     fs.writeFileSync(configPath, JSON.stringify({
-      translateHotkey: transKey,
-      explainHotkey: explKey
+      ...existing,
+      translateHotkey,
+      explainHotkey,
+      startMinimized,
+      ...updates
     }), 'utf8');
   } catch (e) {
-    console.warn('Could not save hotkeys config:', e);
+    console.warn('Could not save config:', e);
   }
 }
 
@@ -139,12 +148,14 @@ function getAppIcon() {
 
 function createWindow() {
   const icon = getAppIcon();
+  const shouldStartHidden = startMinimized || process.argv.includes('--hidden') || process.argv.includes('--minimized');
 
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
     minWidth: 460,
     minHeight: 280,
+    show: !shouldStartHidden,
     title: 'Gemini AI Desktop Translator',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
@@ -313,7 +324,7 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
   if (newTranslateKey) translateHotkey = newTranslateKey;
   if (newExplainKey) explainHotkey = newExplainKey;
 
-  saveHotkeysConfig(translateHotkey, explainHotkey);
+  saveConfig({ translateHotkey, explainHotkey });
 
   if (translateHotkey) {
     try {
@@ -341,7 +352,7 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
 }
 
 app.whenReady().then(() => {
-  loadSavedHotkeys();
+  loadSavedConfig();
   createWindow();
   createTray();
   registerGlobalHotkeys(translateHotkey, explainHotkey);
@@ -392,6 +403,16 @@ ipcMain.handle('autostart:get', async () => {
 
 ipcMain.handle('autostart:set', async (event, enable) => {
   return setAutoStartEnabled(enable);
+});
+
+ipcMain.handle('config:get-start-minimized', async () => {
+  return startMinimized;
+});
+
+ipcMain.handle('config:set-start-minimized', async (event, val) => {
+  startMinimized = Boolean(val);
+  saveConfig({ startMinimized });
+  return startMinimized;
 });
 
 ipcMain.handle('hotkeys:get', async () => {

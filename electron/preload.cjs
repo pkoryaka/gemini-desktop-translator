@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setWindowSize: (size) => ipcRenderer.invoke('window:set-size', size),
   getAutoStart: () => ipcRenderer.invoke('autostart:get'),
   setAutoStart: (enable) => ipcRenderer.invoke('autostart:set', enable),
+  getStartMinimized: () => ipcRenderer.invoke('config:get-start-minimized'),
+  setStartMinimized: (val) => ipcRenderer.invoke('config:set-start-minimized', val),
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
   updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
   onQuickTranslate: (callback) => {

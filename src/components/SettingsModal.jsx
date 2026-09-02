@@ -19,6 +19,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.2);
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
+  const [startMinimized, setStartMinimized] = useState(currentSettings.startMinimized || false);
 
   // Primary Target Language & Mini Modal Mode
   const [primaryTargetLanguage, setPrimaryTargetLanguage] = useState(currentSettings.primaryTargetLanguage || 'uk');
@@ -42,6 +43,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       window.electronAPI.getAutoStart().then((enabled) => {
         setAutoStart(Boolean(enabled));
       }).catch((e) => console.warn('Autostart check failed', e));
+    }
+
+    if (window.electronAPI?.getStartMinimized) {
+      window.electronAPI.getStartMinimized().then((val) => {
+        setStartMinimized(Boolean(val));
+      }).catch((e) => console.warn('StartMinimized check failed', e));
     }
 
     if (window.electronAPI?.getHotkeys) {
@@ -89,9 +96,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       temperature,
       primaryTargetLanguage,
       instantPopupMode,
+      startMinimized,
       translateHotkey,
       explainHotkey
     });
+
+    if (window.electronAPI?.setStartMinimized) {
+      window.electronAPI.setStartMinimized(startMinimized);
+    }
 
     // Update Electron Global Hotkeys
     if (window.electronAPI?.updateHotkeys) {
@@ -356,7 +368,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
             <Power size={15} color="#10b981" />
-            <span>Launch with Windows (Start in Tray)</span>
+            <span>Launch on Windows Startup</span>
           </div>
           <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer', flexShrink: 0 }}>
             <input
@@ -378,6 +390,54 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
                 height: '14px',
                 width: '14px',
                 left: autoStart ? '21px' : '3px',
+                bottom: '3px',
+                backgroundColor: 'white',
+                borderRadius: '50%',
+                transition: 'all 0.2s ease'
+              }} />
+            </span>
+          </label>
+        </div>
+
+        {/* Start Minimized to Tray Toggle */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+              <Monitor size={15} color="#38bdf8" />
+              <span>Start Minimized (in System Tray)</span>
+            </div>
+            <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+              When launched, start silently in background without popping up the main window until summoned.
+            </span>
+          </div>
+          <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px', cursor: 'pointer', flexShrink: 0 }}>
+            <input
+              type="checkbox"
+              checked={startMinimized}
+              onChange={(e) => setStartMinimized(e.target.checked)}
+              style={{ opacity: 0, width: 0, height: 0 }}
+            />
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: startMinimized ? '#6366f1' : 'rgba(255,255,255,0.15)',
+              borderRadius: '999px',
+              transition: 'all 0.2s ease'
+            }}>
+              <span style={{
+                position: 'absolute',
+                content: '""',
+                height: '14px',
+                width: '14px',
+                left: startMinimized ? '21px' : '3px',
                 bottom: '3px',
                 backgroundColor: 'white',
                 borderRadius: '50%',

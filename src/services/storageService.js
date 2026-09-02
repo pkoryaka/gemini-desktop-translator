@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   primaryTargetLanguage: 'uk',
   secondaryTargetLanguage: 'en',
   instantPopupMode: true,
+  startMinimized: false,
   translateHotkey: 'CommandOrControl+Alt+T',
   explainHotkey: 'CommandOrControl+Alt+J'
 };
