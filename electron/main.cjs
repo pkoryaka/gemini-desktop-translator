@@ -278,8 +278,6 @@ function focusAppWindow() {
 
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
-  focusAppWindow();
-
   if (process.platform === 'win32') {
     const copyExe = path.join(__dirname, 'copy_native.exe');
     const copyVbs = path.join(__dirname, 'copy.vbs');
@@ -287,13 +285,17 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
     const handleClipboardResult = () => {
       setTimeout(() => {
         const selectedText = clipboard.readText();
-        if (mainWindow && selectedText && selectedText.trim()) {
-          mainWindow.webContents.send('quick-translate', {
-            text: selectedText.trim(),
-            explainJargon
-          });
+        focusAppWindow();
+
+        if (mainWindow) {
+          if (selectedText && selectedText.trim()) {
+            mainWindow.webContents.send('quick-translate', {
+              text: selectedText.trim(),
+              explainJargon
+            });
+          }
         }
-      }, 25);
+      }, 40);
     };
 
     if (fs.existsSync(copyExe)) {
@@ -309,6 +311,7 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
     }
   } else {
     const text = clipboard.readText();
+    focusAppWindow();
     if (mainWindow && text && text.trim()) {
       mainWindow.webContents.send('quick-translate', {
         text: text.trim(),

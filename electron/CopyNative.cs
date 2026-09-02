@@ -15,19 +15,24 @@ public class CopyNative {
     private const byte VK_C = 0x43;
 
     public static void Main() {
-        // 1. Release modifier keys immediately
+        // 1. Brief pause to ensure physical modifier state settling
+        Thread.Sleep(20);
+
+        // 2. Force release modifier keys
         keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_RWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-        Thread.Sleep(5);
+        Thread.Sleep(15);
 
-        // 2. Synthesize fast Ctrl + C
+        // 3. Synthesize clean Ctrl + C keystroke
         keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
-        keybd_event(VK_C, 0, 0, UIntPtr.Zero);
         Thread.Sleep(10);
+        keybd_event(VK_C, 0, 0, UIntPtr.Zero);
+        Thread.Sleep(25);
         keybd_event(VK_C, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        Thread.Sleep(20);
     }
 }
