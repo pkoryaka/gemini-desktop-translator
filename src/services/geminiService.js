@@ -1,6 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Reliable Streaming & Fast Fallback
+ * Rock-Solid, High-Speed Translation with Multi-Model Fallback
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -17,7 +17,7 @@ export const AVAILABLE_MODELS = [
     name: 'Gemini 2.0 Flash',
     tag: '⚡ Ultra Fast',
     badgeColor: '#10b981',
-    description: 'Blazing fast real-time token streaming with lowest latency. Recommended for instant hotkey translation.',
+    description: 'Blazing fast real-time response with lowest latency. Recommended for instant hotkey translation.',
     bestFor: 'Instant hotkey translation, zero-lag daily chatting, high rate limits.'
   },
   {
@@ -64,27 +64,40 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: 'OK' }] }]
-    })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `HTTP Error ${response.status}: ${response.statusText}`;
-    throw new Error(message);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'OK' }] }]
+      })
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.error?.message || `HTTP Error ${response.status}: ${response.statusText}`;
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return { success: true, text };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Connection timed out. Please check your internet connection.');
+    }
+    throw err;
   }
-
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return { success: true, text };
 }
 
 /**
- * Fast Streaming Translation with Automatic Model Fallback
+ * Rock-Solid Translation with Automatic Multi-Model Fallback
  */
 export async function translateText({
   apiKey,
@@ -148,76 +161,6 @@ Respond ONLY in JSON format:
   let lastError = null;
 
   for (const currentModel of candidateModels) {
-    const isStreaming = Boolean(onStreamChunk) && !explainJargon;
-    
-    // First attempt: Streaming (without keepalive)
-    if (isStreaming) {
-      const streamEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`;
-      const payload = {
-        systemInstruction: { parts: [{ text: systemInstructionText }] },
-        contents: [{ role: 'user', parts: [{ text: userText }] }],
-        generationConfig: {
-          temperature: parseFloat(temperature) ?? 0.1,
-          topP: 0.8,
-          topK: 20,
-          maxOutputTokens: 1024,
-          candidateCount: 1
-        }
-      };
-
-      try {
-        const response = await fetch(streamEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok && response.body) {
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder('utf-8');
-          let accumulatedText = '';
-          let buffer = '';
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split(/\r?\n/);
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-              const trimmedLine = line.trim();
-              if (trimmedLine.startsWith('data:')) {
-                const jsonStr = trimmedLine.replace(/^data:\s*/, '').trim();
-                if (jsonStr) {
-                  try {
-                    const parsed = JSON.parse(jsonStr);
-                    const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    if (chunk) {
-                      accumulatedText += chunk;
-                      onStreamChunk(accumulatedText);
-                    }
-                  } catch {
-                    // Incomplete JSON chunk, wait for rest
-                  }
-                }
-              }
-            }
-          }
-
-          if (accumulatedText.trim()) {
-            const finalResult = { isExplained: false, translation: accumulatedText.trim() };
-            translationCache.set(cacheKey, finalResult);
-            return finalResult;
-          }
-        }
-      } catch (streamErr) {
-        console.warn(`Streaming attempt failed with ${currentModel}:`, streamErr);
-      }
-    }
-
-    // Direct (Non-Streaming) Fallback: Fast, dependable, zero buffering
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey.trim()}`;
     const payload = {
       systemInstruction: { parts: [{ text: systemInstructionText }] },
@@ -232,22 +175,32 @@ Respond ONLY in JSON format:
       }
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify(payload)
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.error?.message || `HTTP Error ${response.status}`;
         lastError = new Error(message);
+        console.warn(`Model ${currentModel} returned error: ${message}. Trying next fallback...`);
         continue;
       }
 
       const data = await response.json();
       const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      if (!rawOutput) {
+        throw new Error('Empty response from model');
+      }
 
       if (explainJargon) {
         try {
@@ -262,6 +215,7 @@ Respond ONLY in JSON format:
             culturalNotes: parsed.culturalNotes || '',
             detectedSourceLanguage: parsed.detectedSourceLanguage || sourceLang
           };
+          if (onStreamChunk) onStreamChunk(result.translation);
           translationCache.set(cacheKey, result);
           return result;
         } catch {
@@ -272,6 +226,7 @@ Respond ONLY in JSON format:
             detectedTone: 'Neutral',
             jargonBreakdown: []
           };
+          if (onStreamChunk) onStreamChunk(fallbackResult.translation);
           translationCache.set(cacheKey, fallbackResult);
           return fallbackResult;
         }
@@ -281,14 +236,16 @@ Respond ONLY in JSON format:
         isExplained: false,
         translation: rawOutput.trim()
       };
+
       if (onStreamChunk) {
         onStreamChunk(standardResult.translation);
       }
       translationCache.set(cacheKey, standardResult);
       return standardResult;
     } catch (err) {
-      lastError = err;
-      console.warn(`Direct request with ${currentModel} encountered error:`, err);
+      clearTimeout(timeoutId);
+      lastError = err.name === 'AbortError' ? new Error(`Request to ${currentModel} timed out.`) : err;
+      console.warn(`Attempt with ${currentModel} failed:`, lastError.message);
     }
   }
 
