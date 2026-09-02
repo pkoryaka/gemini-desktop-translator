@@ -9,7 +9,9 @@ import {
   BookOpen, 
   ArrowRight, 
   Loader2,
-  ChevronDown
+  ChevronDown,
+  AlertCircle,
+  Settings
 } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../services/geminiService';
 
@@ -21,7 +23,9 @@ export function MiniTranslatePopup({
   setTargetLang,
   explanationData,
   isLoading,
+  errorMessage,
   onExpandToFull,
+  onOpenSettings,
   onClose,
   onCopy
 }) {
@@ -206,39 +210,85 @@ export function MiniTranslatePopup({
         </div>
       )}
 
+      {/* Error Message Box (if any) */}
+      {errorMessage && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          borderRadius: '8px',
+          padding: '10px 12px',
+          color: '#fca5a5',
+          fontSize: '0.82rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+            <AlertCircle size={15} color="#f87171" />
+            <span>Translation Issue</span>
+          </div>
+          <div style={{ color: '#fecaca', lineHeight: 1.4 }}>{errorMessage}</div>
+          {onOpenSettings && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: '4px',
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <Settings size={12} /> Open Settings
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Main Translated Text Area */}
-      <div style={{
-        flex: 1,
-        fontSize: '1.05rem',
-        lineHeight: 1.5,
-        color: '#f8fafc',
-        fontFamily: 'var(--font-main)',
-        minHeight: '70px',
-        display: 'flex',
-        alignItems: isLoading && !translatedText ? 'center' : 'flex-start',
-        justifyContent: isLoading && !translatedText ? 'center' : 'flex-start'
-      }}>
-        {isLoading && !translatedText ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a5b4fc', fontSize: '0.9rem' }}>
-            <Loader2 size={18} className="spinner" />
-            <span>Translating into {targetLangObj?.name || targetLang}...</span>
-          </div>
-        ) : (
-          <div style={{
-            width: '100%',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'normal',
-            overflowWrap: 'break-word',
-            hyphens: 'none',
-            fontWeight: 500
-          }}>
-            {translatedText}
-          </div>
-        )}
-      </div>
+      {!errorMessage && (
+        <div style={{
+          flex: 1,
+          fontSize: '1.05rem',
+          lineHeight: 1.5,
+          color: '#f8fafc',
+          fontFamily: 'var(--font-main)',
+          minHeight: '70px',
+          display: 'flex',
+          alignItems: isLoading && !translatedText ? 'center' : 'flex-start',
+          justifyContent: isLoading && !translatedText ? 'center' : 'flex-start'
+        }}>
+          {isLoading && !translatedText ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a5b4fc', fontSize: '0.9rem' }}>
+              <Loader2 size={18} className="spinner" />
+              <span>Translating into {targetLangObj?.name || targetLang}...</span>
+            </div>
+          ) : (
+            <div style={{
+              width: '100%',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'normal',
+              overflowWrap: 'break-word',
+              hyphens: 'none',
+              fontWeight: 500
+            }}>
+              {translatedText}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Plain Language & Jargon Breakdown (if active) */}
-      {explanationData && (
+      {!errorMessage && explanationData && (
         <div style={{
           background: 'rgba(168, 85, 247, 0.12)',
           border: '1px solid rgba(168, 85, 247, 0.3)',

@@ -231,7 +231,12 @@ export function App() {
         setTargetLang={handleMiniTargetLangChange}
         explanationData={explanationData}
         isLoading={isLoading}
+        errorMessage={errorMessage}
         onExpandToFull={switchToFullMode}
+        onOpenSettings={() => {
+          switchToFullMode();
+          setIsSettingsOpen(true);
+        }}
         onClose={handleCloseMini}
       />
     );
