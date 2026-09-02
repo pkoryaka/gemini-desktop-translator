@@ -1,6 +1,6 @@
 /**
- * Gemini Translation & Jargon Explanation Service
- * Uses Google Gemini API (supporting latest Gemini models like gemini-3.6-flash / gemini-2.0-flash)
+ * Gemini Translation & Jargon Explanation Service (High-Speed Streaming & Caching)
+ * Uses Google Gemini API with native system instructions and streaming for near-zero latency.
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -12,15 +12,19 @@ export const SUPPORTED_LANGUAGES = [
 ];
 
 export const AVAILABLE_MODELS = [
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash (Latest & Recommended)', freeTier: true },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash (Ultra Fast & Recommended)', freeTier: true },
   { id: 'gemini-3.6-pro', name: 'Gemini 3.6 Pro (Advanced Reasoning)', freeTier: true },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast)', freeTier: true },
   { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)', freeTier: true }
 ];
 
-/**
- * Dynamically fetches all live supported models directly from Google Gemini API
- */
+// In-Memory Fast LRU Cache (up to 200 entries)
+const translationCache = new Map();
+
+function getCacheKey(text, sourceLang, targetLang, customPrompt, explainJargon, model) {
+  return `${model}::${sourceLang}->${targetLang}::${explainJargon}::${customPrompt.trim()}::${text.trim()}`;
+}
+
 export async function fetchLiveAvailableModels(apiKey) {
   if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
 
@@ -61,7 +65,7 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-3.6-flash') {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: 'Respond with "OK" if connection is successful.' }] }]
+      contents: [{ parts: [{ text: 'OK' }] }]
     })
   });
 
@@ -76,6 +80,9 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-3.6-flash') {
   return { success: true, text };
 }
 
+/**
+ * Fast Streaming Translation
+ */
 export async function translateText({
   apiKey,
   text,
@@ -84,79 +91,85 @@ export async function translateText({
   customPrompt = '',
   explainJargon = false,
   model = 'gemini-3.6-flash',
-  temperature = 0.3
+  temperature = 0.2,
+  onStreamChunk = null
 }) {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('API Key is missing. Please set your Gemini API Key in Settings.');
   }
 
-  if (!text || !text.trim()) {
-    return null;
+  const trimmedText = text ? text.trim() : '';
+  if (!trimmedText) return null;
+
+  // 1. Check Local Memory Cache
+  const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, model);
+  if (translationCache.has(cacheKey)) {
+    const cachedResult = translationCache.get(cacheKey);
+    if (onStreamChunk) {
+      onStreamChunk(cachedResult.translation);
+    }
+    return cachedResult;
   }
 
   const sourceLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang);
   const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
 
-  const sourceName = sourceLang === 'auto' ? 'the source language (auto-detect)' : `${sourceLangObj?.name || sourceLang} (${sourceLangObj?.nativeName || ''})`;
-  const targetName = `${targetLangObj?.name || targetLang} (${targetLangObj?.nativeName || ''})`;
+  const sourceName = sourceLang === 'auto' ? 'the source language (auto-detect)' : `${sourceLangObj?.name || sourceLang}`;
+  const targetName = `${targetLangObj?.name || targetLang}`;
 
-  let systemPrompt = '';
-  let userPrompt = '';
+  let systemInstructionText = '';
+  let userText = trimmedText;
 
   if (explainJargon) {
-    systemPrompt = `You are a world-class polyglot translator and cultural communication expert specializing in Ukrainian, Russian, Spanish, and English.
-Your task is to:
-1. Translate the provided text from ${sourceName} into ${targetName}.
-2. Accurately explain what the person meant in simple, plain, everyday language (demystify complex jargon, corporate speak, slang, idioms, proverbs, or emotional subtext).
-3. Identify specific slang, idioms, acronyms, or technical jargon, providing their literal vs. intended meaning.
-4. Detect the tone of the message (e.g., Casual, Sarcastic, Urgent, Warm, Formal, Passive-Aggressive).
-5. Add any brief cultural or context notes if relevant.
+    systemInstructionText = `You are a high-speed polyglot translator and cultural communication expert for Ukrainian, Russian, Spanish, and English.
+Task:
+1. Translate from ${sourceName} into ${targetName}.
+2. Explain clearly in plain, simple everyday language what the speaker meant.
+3. Identify any slang, idioms, or technical terms with literal vs intended meaning.
+4. Detect the tone.
+${customPrompt ? `Style Instruction: "${customPrompt}"` : ''}
 
-${customPrompt ? `ADDITIONAL TRANSLATION INSTRUCTION: "${customPrompt}"` : ''}
-
-You MUST respond strictly with a valid, clean JSON object in this exact schema (no markdown fences, no preamble):
+Respond ONLY with this JSON schema (no markdown formatting, no code blocks):
 {
-  "detectedSourceLanguage": "string (e.g. Ukrainian)",
-  "translation": "string (the primary high-quality translation)",
-  "plainLanguageMeaning": "string (1-3 sentences explaining in simple words what the speaker really meant)",
-  "detectedTone": "string (e.g. Friendly & Casual, Frustrated, Bureaucratic)",
+  "detectedSourceLanguage": "string",
+  "translation": "string",
+  "plainLanguageMeaning": "string",
+  "detectedTone": "string",
   "jargonBreakdown": [
     {
-      "term": "the exact word/idiom/slang from the source",
-      "literalMeaning": "what the words literally mean",
-      "intendedMeaning": "what it actually means in this context",
-      "nuance": "why the speaker used this specific phrasing"
+      "term": "string",
+      "literalMeaning": "string",
+      "intendedMeaning": "string",
+      "nuance": "string"
     }
   ],
-  "culturalNotes": "string or null (any relevant cultural context)"
+  "culturalNotes": "string or null"
 }`;
-
-    userPrompt = `Please translate and explain the following text into ${targetName}:
-"""
-${text}
-"""`;
   } else {
-    systemPrompt = `You are an expert multilingual translator specializing in Ukrainian, Russian, Spanish, and English.
-Translate the text from ${sourceName} into ${targetName}.
-Ensure natural fluency, appropriate register, and accurate idioms.
-${customPrompt ? `Specific Style/Persona Instruction: "${customPrompt}"` : 'Deliver a natural, fluent, and accurate translation.'}
-
-Respond ONLY with the final translated text. Do not add quotes, introductory phrases, or meta-commentary.`;
-
-    userPrompt = text;
+    systemInstructionText = `You are an ultra-fast professional translator. Translate from ${sourceName} into ${targetName}.
+Deliver ONLY the translation. No quotes, no markdown fences, no preamble, no explanations.
+${customPrompt ? `Style: "${customPrompt}"` : 'Deliver fluent, natural native phrasing.'}`;
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+  // Use Server-Sent Events (SSE) streaming endpoint for instantaneous token delivery
+  const isStreaming = Boolean(onStreamChunk) && !explainJargon;
+  const endpoint = isStreaming
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`
+    : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
 
   const payload = {
+    systemInstruction: {
+      parts: [{ text: systemInstructionText }]
+    },
     contents: [
       {
         role: 'user',
-        parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+        parts: [{ text: userText }]
       }
     ],
     generationConfig: {
-      temperature: parseFloat(temperature) || 0.3,
+      temperature: parseFloat(temperature) || 0.2,
+      topP: 0.95,
       ...(explainJargon ? { responseMimeType: 'application/json' } : {})
     }
   };
@@ -169,18 +182,69 @@ Respond ONLY with the final translated text. Do not add quotes, introductory phr
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `Translation failed with status ${response.status}`;
+    const message = errorData.error?.message || `Translation error (${response.status})`;
     throw new Error(message);
   }
 
+  // Handle Streaming Responses
+  if (isStreaming && response.body) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let accumulatedText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep remainder in buffer
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr) {
+              const parsed = JSON.parse(jsonStr);
+              const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              if (chunk) {
+                accumulatedText += chunk;
+                onStreamChunk(accumulatedText);
+              }
+            }
+          } catch (e) {
+            // Partial JSON chunk, continue
+          }
+        }
+      }
+    }
+
+    const finalResult = {
+      isExplained: false,
+      translation: accumulatedText.trim()
+    };
+
+    // Cache the result
+    if (translationCache.size > 200) {
+      const firstKey = translationCache.keys().next().value;
+      translationCache.delete(firstKey);
+    }
+    translationCache.set(cacheKey, finalResult);
+
+    return finalResult;
+  }
+
+  // Non-streaming / Jargon Mode
   const data = await response.json();
   const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
+  let finalResult;
   if (explainJargon) {
     try {
       const cleaned = rawResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned);
-      return {
+      finalResult = {
         isExplained: true,
         translation: parsed.translation || '',
         plainLanguageMeaning: parsed.plainLanguageMeaning || '',
@@ -189,21 +253,29 @@ Respond ONLY with the final translated text. Do not add quotes, introductory phr
         culturalNotes: parsed.culturalNotes || '',
         detectedSourceLanguage: parsed.detectedSourceLanguage || ''
       };
-    } catch (parseErr) {
-      console.warn('Failed to parse JSON response from Gemini, falling back to raw output:', parseErr);
-      return {
+    } catch {
+      finalResult = {
         isExplained: true,
-        translation: rawResponse,
-        plainLanguageMeaning: 'Could not structure breakdown automatically. See translation above.',
+        translation: rawResponse.trim(),
+        plainLanguageMeaning: 'Could not structure JSON breakdown automatically.',
         detectedTone: 'Unknown',
         jargonBreakdown: [],
         culturalNotes: ''
       };
     }
+  } else {
+    finalResult = {
+      isExplained: false,
+      translation: rawResponse.trim()
+    };
   }
 
-  return {
-    isExplained: false,
-    translation: rawResponse.trim()
-  };
+  // Cache result
+  if (translationCache.size > 200) {
+    const firstKey = translationCache.keys().next().value;
+    translationCache.delete(firstKey);
+  }
+  translationCache.set(cacheKey, finalResult);
+
+  return finalResult;
 }

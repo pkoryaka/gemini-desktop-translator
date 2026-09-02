@@ -61,8 +61,11 @@ export function App() {
         targetLang,
         customPrompt,
         explainJargon,
-        model: currentSettings.model || 'gemini-2.5-flash',
-        temperature: currentSettings.temperature ?? 0.3
+        model: currentSettings.model || 'gemini-3.6-flash',
+        temperature: currentSettings.temperature ?? 0.2,
+        onStreamChunk: (partialText) => {
+          setTranslatedText(partialText);
+        }
       });
 
       if (result) {
