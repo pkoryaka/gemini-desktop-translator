@@ -251,6 +251,63 @@ Respond ONLY in JSON format:
     ...(explainJargon ? { responseMimeType: 'application/json' } : {})
   };
 
+  // FASTEST PATH: Native Node.js Translation Engine (Direct libuv/Undici OS sockets, zero Chromium IPC overhead)
+  if (window.electronAPI?.nativeTranslate) {
+    try {
+      const nativeRes = await window.electronAPI.nativeTranslate({
+        apiKey: apiKey.trim(),
+        text: userText,
+        targetLang: targetName,
+        customPrompt,
+        explainJargon,
+        model: targetModel
+      });
+
+      if (nativeRes?.rawOutput) {
+        const rawOutput = nativeRes.rawOutput;
+        if (explainJargon) {
+          try {
+            const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, '').trim();
+            const parsed = JSON.parse(cleanJson);
+            const result = {
+              isExplained: true,
+              translation: parsed.translation || rawOutput,
+              plainLanguageMeaning: parsed.plainLanguageMeaning || '',
+              detectedTone: parsed.detectedTone || '',
+              jargonBreakdown: parsed.jargonBreakdown || [],
+              culturalNotes: parsed.culturalNotes || '',
+              detectedSourceLanguage: parsed.detectedSourceLanguage || sourceLang
+            };
+            if (onStreamChunk) onStreamChunk(result.translation);
+            translationCache.set(cacheKey, result);
+            return result;
+          } catch {
+            const fallbackResult = {
+              isExplained: true,
+              translation: rawOutput,
+              plainLanguageMeaning: rawOutput,
+              detectedTone: 'Neutral',
+              jargonBreakdown: []
+            };
+            if (onStreamChunk) onStreamChunk(fallbackResult.translation);
+            translationCache.set(cacheKey, fallbackResult);
+            return fallbackResult;
+          }
+        }
+
+        const standardResult = {
+          isExplained: false,
+          translation: rawOutput.trim()
+        };
+        if (onStreamChunk) onStreamChunk(standardResult.translation);
+        translationCache.set(cacheKey, standardResult);
+        return standardResult;
+      }
+    } catch (nativeErr) {
+      console.warn('Native translation encountered error, falling back to web fetch:', nativeErr);
+    }
+  }
+
   const isStreaming = Boolean(onStreamChunk) && !explainJargon;
 
   // FAST PATH: Real-time streaming for instant TTFT (<150ms)

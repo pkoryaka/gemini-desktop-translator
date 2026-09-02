@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setStartMinimized: (val) => ipcRenderer.invoke('config:set-start-minimized', val),
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
   updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
+  nativeTranslate: (options) => ipcRenderer.invoke('native:translate', options),
   onQuickTranslate: (callback) => {
     const subscription = (event, data) => callback(data);
     ipcRenderer.on('quick-translate', subscription);

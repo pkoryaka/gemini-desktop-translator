@@ -463,3 +463,52 @@ ipcMain.handle('window:set-size', (event, { width, height }) => {
   }
   return true;
 });
+
+// High-speed Native Node.js Translation Engine
+ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, customPrompt, explainJargon, model }) => {
+  const targetModel = model || 'gemini-2.0-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+
+  const systemInstructionText = explainJargon
+    ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
+    : `Translate into ${targetLang}. Output translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
+
+  const payload = {
+    systemInstruction: { parts: [{ text: systemInstructionText }] },
+    contents: [{ role: 'user', parts: [{ text }] }],
+    generationConfig: {
+      temperature: 0.0,
+      topP: 0.95,
+      maxOutputTokens: explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3)),
+      candidateCount: 1,
+      thinkingConfig: { thinkingBudget: 0 },
+      ...(explainJargon ? { responseMimeType: 'application/json' } : {})
+    }
+  };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify(payload)
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return { success: true, rawOutput };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+});
+
