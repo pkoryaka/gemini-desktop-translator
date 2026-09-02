@@ -1,6 +1,6 @@
 /**
  * Gemini Translation & Jargon Explanation Service
- * Uses Google Gemini API (free-tier models like gemini-2.5-flash / gemini-1.5-flash)
+ * Uses Google Gemini API (supporting latest Gemini models like gemini-3.6-flash / gemini-2.0-flash)
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -12,13 +12,46 @@ export const SUPPORTED_LANGUAGES = [
 ];
 
 export const AVAILABLE_MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Recommended - Fastest & Free Tier)', freeTier: true },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Free Tier)', freeTier: true },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Free Tier)', freeTier: true },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Deep Nuances & Advanced Reasoning)', freeTier: true }
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash (Latest & Recommended)', freeTier: true },
+  { id: 'gemini-3.6-pro', name: 'Gemini 3.6 Pro (Advanced Reasoning)', freeTier: true },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast)', freeTier: true },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)', freeTier: true }
 ];
 
-export async function testGeminiApiKey(apiKey, model = 'gemini-2.5-flash') {
+/**
+ * Dynamically fetches all live supported models directly from Google Gemini API
+ */
+export async function fetchLiveAvailableModels(apiKey) {
+  if (!apiKey || !apiKey.trim()) return AVAILABLE_MODELS;
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
+    const response = await fetch(endpoint);
+    if (!response.ok) return AVAILABLE_MODELS;
+
+    const data = await response.json();
+    if (data.models && Array.isArray(data.models)) {
+      const activeModels = data.models
+        .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
+        .map((m) => {
+          const id = m.name.replace(/^models\//, '');
+          return {
+            id,
+            name: `${m.displayName || id} (${id})`,
+            freeTier: true
+          };
+        });
+
+      return activeModels.length > 0 ? activeModels : AVAILABLE_MODELS;
+    }
+  } catch (err) {
+    console.warn('Could not fetch live models, using defaults:', err);
+  }
+
+  return AVAILABLE_MODELS;
+}
+
+export async function testGeminiApiKey(apiKey, model = 'gemini-3.6-flash') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }
@@ -50,7 +83,7 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = 'gemini-2.5-flash',
+  model = 'gemini-3.6-flash',
   temperature = 0.3
 }) {
   if (!apiKey || !apiKey.trim()) {
@@ -145,7 +178,6 @@ Respond ONLY with the final translated text. Do not add quotes, introductory phr
 
   if (explainJargon) {
     try {
-      // Clean possible json codeblocks if any
       const cleaned = rawResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned);
       return {

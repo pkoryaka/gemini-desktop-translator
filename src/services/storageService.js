@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_SETTINGS = {
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.6-flash',
   temperature: 0.3,
   autoDetectLanguage: true,
   autoSpeak: false,

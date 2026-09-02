@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, Keyboard } from 'lucide-react';
-import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
+import React, { useState, useEffect } from 'react';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw } from 'lucide-react';
+import { AVAILABLE_MODELS, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 
 export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
@@ -9,12 +9,47 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const currentSettings = storageService.getSettings();
   const currentKey = storageService.getApiKey();
 
+  // Auto-migrate old decommissioned model names if saved in local storage
+  const initialModel = (!currentSettings.model || currentSettings.model.includes('2.5')) 
+    ? 'gemini-3.6-flash' 
+    : currentSettings.model;
+
   const [apiKey, setApiKey] = useState(currentKey);
-  const [model, setModel] = useState(currentSettings.model || 'gemini-2.5-flash');
+  const [model, setModel] = useState(initialModel);
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.3);
   const [showKey, setShowKey] = useState(false);
 
+  const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
+
+  const handleRefreshModels = async (keyToUse) => {
+    const activeKey = keyToUse !== undefined ? keyToUse : apiKey;
+    if (!activeKey || !activeKey.trim()) return;
+
+    setIsFetchingModels(true);
+    try {
+      const liveModels = await fetchLiveAvailableModels(activeKey);
+      if (liveModels && liveModels.length > 0) {
+        setModelsList(liveModels);
+        // If current selected model not in list, pick the first one or gemini-3.6-flash
+        if (!liveModels.some((m) => m.id === model)) {
+          const defaultMatch = liveModels.find((m) => m.id.includes('3.6-flash') || m.id.includes('flash')) || liveModels[0];
+          if (defaultMatch) setModel(defaultMatch.id);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh models:', e);
+    } finally {
+      setIsFetchingModels(false);
+    }
+  };
+
+  useEffect(() => {
+    if (apiKey && apiKey.trim()) {
+      handleRefreshModels(apiKey);
+    }
+  }, []);
 
   const handleTestConnection = async () => {
     if (!apiKey.trim()) {
@@ -26,6 +61,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     try {
       await testGeminiApiKey(apiKey, model);
       setTestStatus({ success: true, message: 'Connection successful! Gemini is ready.' });
+      // Also refresh the models list dynamically
+      handleRefreshModels(apiKey);
     } catch (err) {
       setTestStatus({ success: false, message: err.message || 'Connection test failed.' });
     }
@@ -102,16 +139,38 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </span>
         </div>
 
-        {/* Model Selection */}
+        {/* Model Selection with Refresh Button */}
         <div className="form-group">
-          <label className="form-label">Gemini Model</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="form-label">Gemini Model</label>
+            <button
+              type="button"
+              onClick={() => handleRefreshModels(apiKey)}
+              disabled={isFetchingModels || !apiKey.trim()}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#a5b4fc',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Query Google API for live active models"
+            >
+              <RotateCw size={12} className={isFetchingModels ? 'spinner' : ''} />
+              <span>{isFetchingModels ? 'Fetching...' : 'Refresh Live Models'}</span>
+            </button>
+          </div>
+
           <select
             className="form-input"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             style={{ cursor: 'pointer' }}
           >
-            {AVAILABLE_MODELS.map((m) => (
+            {modelsList.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
               </option>
