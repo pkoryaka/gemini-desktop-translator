@@ -477,11 +477,9 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     contents: [{ role: 'user', parts: [{ text }] }],
     generationConfig: {
-      temperature: 0.0,
-      topP: 0.95,
+      temperature: 0.1,
       maxOutputTokens: explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3)),
       candidateCount: 1,
-      thinkingConfig: { thinkingBudget: 0 },
       ...(explainJargon ? { responseMimeType: 'application/json' } : {})
     }
   };

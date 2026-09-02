@@ -243,11 +243,9 @@ Respond ONLY in JSON format:
   // - thinkingBudget: 0 disables any reasoning pauses
   const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, userText.length * 3));
   const generationConfig = {
-    temperature: 0.0,
-    topP: 0.95,
+    temperature: 0.1,
     maxOutputTokens: maxTokens,
     candidateCount: 1,
-    thinkingConfig: { thinkingBudget: 0 },
     ...(explainJargon ? { responseMimeType: 'application/json' } : {})
   };
 
