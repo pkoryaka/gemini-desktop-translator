@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, clipboard, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 const fs = require('fs');
 
 let mainWindow = null;
@@ -254,24 +254,35 @@ function focusAppWindow() {
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
+    const copyExe = path.join(__dirname, 'copy_native.exe');
     const copyVbs = path.join(__dirname, 'copy.vbs');
-    
-    // Execute silent fast copy via VBScript SendKeys
-    exec(`wscript.exe "${copyVbs}"`, () => {
+
+    const handleClipboardResult = () => {
       setTimeout(() => {
         const selectedText = clipboard.readText();
         focusAppWindow();
 
-        if (mainWindow) {
-          if (selectedText && selectedText.trim()) {
-            mainWindow.webContents.send('quick-translate', {
-              text: selectedText.trim(),
-              explainJargon
-            });
-          }
+        if (mainWindow && selectedText && selectedText.trim()) {
+          mainWindow.webContents.send('quick-translate', {
+            text: selectedText.trim(),
+            explainJargon
+          });
         }
-      }, 100);
-    });
+      }, 80);
+    };
+
+    if (fs.existsSync(copyExe)) {
+      execFile(copyExe, (err) => {
+        if (err) {
+          // Fallback to VBS
+          exec(`wscript.exe "${copyVbs}"`, handleClipboardResult);
+        } else {
+          handleClipboardResult();
+        }
+      });
+    } else {
+      exec(`wscript.exe "${copyVbs}"`, handleClipboardResult);
+    }
   } else {
     const text = clipboard.readText();
     focusAppWindow();
