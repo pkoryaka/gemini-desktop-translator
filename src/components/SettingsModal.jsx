@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, AppWindow } from 'lucide-react';
-import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey } from '../services/geminiService';
+import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { HotkeyRecorder } from './HotkeyRecorder';
 
@@ -16,7 +16,9 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   const [apiKey, setApiKey] = useState(currentKey);
   const [model, setModel] = useState(initialModel);
-  const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.2);
+  const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
+  const [isRefreshingModels, setIsRefreshingModels] = useState(false);
+  const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.1);
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
   const [startMinimized, setStartMinimized] = useState(currentSettings.startMinimized || false);
@@ -35,7 +37,32 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     translateHotkey && explainHotkey && translateHotkey.toLowerCase() === explainHotkey.toLowerCase()
   );
 
-  const selectedModelInfo = AVAILABLE_MODELS.find((m) => m.id === model) || AVAILABLE_MODELS[0];
+  const selectedModelInfo = modelsList.find((m) => m.id === model) || modelsList[0] || AVAILABLE_MODELS[0];
+
+  const handleRefreshModels = async (keyToUse = apiKey) => {
+    const key = keyToUse || apiKey;
+    if (!key || !key.trim()) return;
+    setIsRefreshingModels(true);
+    try {
+      const live = await fetchLiveAvailableModels(key.trim());
+      if (live && live.length > 0) {
+        setModelsList(live);
+        if (!live.some((m) => m.id === model)) {
+          setModel(live[0].id);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to refresh models list:', err);
+    } finally {
+      setIsRefreshingModels(false);
+    }
+  };
+
+  useEffect(() => {
+    if (apiKey && apiKey.trim()) {
+      handleRefreshModels(apiKey.trim());
+    }
+  }, []);
 
   useEffect(() => {
     // Check autostart status
