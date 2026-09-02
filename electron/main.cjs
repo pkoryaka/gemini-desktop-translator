@@ -25,13 +25,14 @@ function setAutoStartEnabled(enable) {
   if (process.platform === 'win32') {
     const startupPath = getStartupShortcutPath();
     if (enable) {
-      const targetScript = path.join(__dirname, '..', 'start.bat');
+      const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const psCommand = `
         $WshShell = New-Object -comObject WScript.Shell;
         $Shortcut = $WshShell.CreateShortcut("${startupPath.replace(/\\/g, '\\\\')}");
-        $Shortcut.TargetPath = "${targetScript.replace(/\\/g, '\\\\')}";
+        $Shortcut.TargetPath = "wscript.exe";
+        $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
         $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
-        $Shortcut.Description = "Gemini AI Desktop Translator (Auto-start)";
+        $Shortcut.Description = "Gemini AI Desktop Translator (Silent Auto-start)";
         $Shortcut.Save();
       `;
       exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, ' ')}"`, (err) => {
@@ -56,20 +57,20 @@ function setAutoStartEnabled(enable) {
   return enable;
 }
 
-// Create Windows Start Menu Shortcut automatically
+// Create Windows Start Menu Shortcut automatically (Silent - No Terminal)
 function ensureStartMenuShortcut() {
   if (process.platform === 'win32') {
     try {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
       const shortcutPath = path.join(startMenuDir, 'Gemini Translator.lnk');
-      const targetScript = path.join(__dirname, '..', 'start.bat');
+      const vbsScript = path.join(__dirname, '..', 'launch.vbs');
 
-      // Use PowerShell to create or update the Start Menu shortcut
       const psCommand = `
         $WshShell = New-Object -comObject WScript.Shell;
         $Shortcut = $WshShell.CreateShortcut("${shortcutPath.replace(/\\/g, '\\\\')}");
-        $Shortcut.TargetPath = "${targetScript.replace(/\\/g, '\\\\')}";
+        $Shortcut.TargetPath = "wscript.exe";
+        $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
         $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
         $Shortcut.Description = "Gemini AI Desktop Translator";
         $Shortcut.Save();
