@@ -3,6 +3,12 @@ const path = require('path');
 const { exec, execFile } = require('child_process');
 const fs = require('fs');
 
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+  process.exit(0);
+}
+
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
@@ -353,6 +359,13 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
 
   updateTrayMenu();
 }
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    focusAppWindow();
+    mainWindow.webContents.send('show-full-window');
+  }
+});
 
 app.whenReady().then(() => {
   loadSavedConfig();
