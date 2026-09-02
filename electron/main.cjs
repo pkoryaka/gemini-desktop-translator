@@ -84,6 +84,10 @@ function ensureStartMenuShortcut() {
 }
 
 function getAppIcon() {
+  const iconPngPath = path.join(__dirname, 'app-icon.png');
+  if (fs.existsSync(iconPngPath)) {
+    return nativeImage.createFromPath(iconPngPath);
+  }
   const iconSvgPath = path.join(__dirname, 'icon.svg');
   if (fs.existsSync(iconSvgPath)) {
     return nativeImage.createFromPath(iconSvgPath);
