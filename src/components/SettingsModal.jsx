@@ -2,22 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen } from 'lucide-react';
 import { AVAILABLE_MODELS, testGeminiApiKey } from '../services/geminiService';
 import { storageService } from '../services/storageService';
-
-const HOTKEY_TRANSLATE_PRESETS = [
-  { label: 'Ctrl + Alt + T (Default)', value: 'CommandOrControl+Alt+T' },
-  { label: 'Ctrl + Shift + T', value: 'CommandOrControl+Shift+T' },
-  { label: 'Alt + T', value: 'Alt+T' },
-  { label: 'Alt + Q', value: 'Alt+Q' },
-  { label: 'Ctrl + Space', value: 'CommandOrControl+Space' }
-];
-
-const HOTKEY_EXPLAIN_PRESETS = [
-  { label: 'Ctrl + Alt + J (Default)', value: 'CommandOrControl+Alt+J' },
-  { label: 'Ctrl + Shift + J', value: 'CommandOrControl+Shift+J' },
-  { label: 'Ctrl + Alt + E', value: 'CommandOrControl+Alt+E' },
-  { label: 'Alt + J', value: 'Alt+J' },
-  { label: 'Alt + E', value: 'Alt+E' }
-];
+import { HotkeyRecorder } from './HotkeyRecorder';
 
 export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   if (!isOpen) return null;
@@ -35,11 +20,15 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [showKey, setShowKey] = useState(false);
   const [autoStart, setAutoStart] = useState(false);
 
-  // Global Hotkeys
+  // Global Hotkeys (Customizable strings)
   const [translateHotkey, setTranslateHotkey] = useState(currentSettings.translateHotkey || 'CommandOrControl+Alt+T');
   const [explainHotkey, setExplainHotkey] = useState(currentSettings.explainHotkey || 'CommandOrControl+Alt+J');
 
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
+
+  const hasConflict = Boolean(
+    translateHotkey && explainHotkey && translateHotkey.toLowerCase() === explainHotkey.toLowerCase()
+  );
 
   const selectedModelInfo = AVAILABLE_MODELS.find((m) => m.id === model) || AVAILABLE_MODELS[0];
 
@@ -87,6 +76,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   };
 
   const handleSave = () => {
+    if (hasConflict) return;
+
     storageService.setApiKey(apiKey.trim());
     storageService.saveSettings({
       ...currentSettings,
@@ -214,7 +205,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           )}
         </div>
 
-        {/* Global Hotkeys Customization Section */}
+        {/* Interactive Custom Global Hotkeys Section */}
         <div style={{
           background: 'rgba(15, 23, 42, 0.8)',
           border: '1px solid rgba(99, 102, 241, 0.25)',
@@ -222,54 +213,34 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           padding: '14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '14px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 700 }}>
             <Keyboard size={16} color="#6366f1" />
-            <span>Custom Global Hotkeys (Work Anywhere on Windows)</span>
+            <span>Custom Global Hotkeys (Press Keys to Record)</span>
           </div>
 
           {/* Hotkey 1: Quick Translation */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Zap size={14} color="#10b981" />
-              <span>1. Quick Translate Selected Text</span>
-            </label>
-            <select
-              className="form-input"
-              value={translateHotkey}
-              onChange={(e) => setTranslateHotkey(e.target.value)}
-              style={{ cursor: 'pointer', fontSize: '0.85rem' }}
-            >
-              {HOTKEY_TRANSLATE_PRESETS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              Highlight text & press hotkey to immediately translate.
-            </span>
-          </div>
+          <HotkeyRecorder
+            label="1. Quick Translate Selected Text"
+            value={translateHotkey}
+            onChange={setTranslateHotkey}
+            otherHotkey={explainHotkey}
+            defaultKey="CommandOrControl+Alt+T"
+            icon={Zap}
+            description="Highlight text in any app & press this combination to translate immediately."
+          />
 
           {/* Hotkey 2: Translate & Explain Jargon */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BookOpen size={14} color="#c084fc" />
-              <span>2. Translate & Explain Jargon / Slang</span>
-            </label>
-            <select
-              className="form-input"
-              value={explainHotkey}
-              onChange={(e) => setExplainHotkey(e.target.value)}
-              style={{ cursor: 'pointer', fontSize: '0.85rem' }}
-            >
-              {HOTKEY_EXPLAIN_PRESETS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              Highlight text & press hotkey to de-jargonize and explain slang in plain words.
-            </span>
-          </div>
+          <HotkeyRecorder
+            label="2. Translate & Explain Jargon / Slang"
+            value={explainHotkey}
+            onChange={setExplainHotkey}
+            otherHotkey={translateHotkey}
+            defaultKey="CommandOrControl+Alt+J"
+            icon={BookOpen}
+            description="Highlight text & press this combination to de-jargonize and explain idioms in plain words."
+          />
         </div>
 
         {/* Temperature */}
@@ -389,7 +360,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             type="button"
             className="btn-translate"
             onClick={handleSave}
-            style={{ padding: '8px 22px' }}
+            disabled={hasConflict}
+            style={{ padding: '8px 22px', opacity: hasConflict ? 0.5 : 1 }}
           >
             Save Settings
           </button>
