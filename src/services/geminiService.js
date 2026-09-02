@@ -1,5 +1,6 @@
 /**
- * Gemini Translation & Jargon Explanation Service (High-Speed Streaming & Automatic Fallback)
+ * Gemini Translation & Jargon Explanation Service
+ * Reliable Streaming & Fast Fallback
  */
 
 export const SUPPORTED_LANGUAGES = [
@@ -148,20 +149,79 @@ Respond ONLY in JSON format:
 
   for (const currentModel of candidateModels) {
     const isStreaming = Boolean(onStreamChunk) && !explainJargon;
-    const endpoint = isStreaming
-      ? `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`
-      : `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey.trim()}`;
-
-    const payload = {
-      systemInstruction: {
-        parts: [{ text: systemInstructionText }]
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: userText }]
+    
+    // First attempt: Streaming (without keepalive)
+    if (isStreaming) {
+      const streamEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`;
+      const payload = {
+        systemInstruction: { parts: [{ text: systemInstructionText }] },
+        contents: [{ role: 'user', parts: [{ text: userText }] }],
+        generationConfig: {
+          temperature: parseFloat(temperature) ?? 0.1,
+          topP: 0.8,
+          topK: 20,
+          maxOutputTokens: 1024,
+          candidateCount: 1
         }
-      ],
+      };
+
+      try {
+        const response = await fetch(streamEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok && response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let accumulatedText = '';
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split(/\r?\n/);
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (trimmedLine.startsWith('data:')) {
+                const jsonStr = trimmedLine.replace(/^data:\s*/, '').trim();
+                if (jsonStr) {
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+                    const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    if (chunk) {
+                      accumulatedText += chunk;
+                      onStreamChunk(accumulatedText);
+                    }
+                  } catch {
+                    // Incomplete JSON chunk, wait for rest
+                  }
+                }
+              }
+            }
+          }
+
+          if (accumulatedText.trim()) {
+            const finalResult = { isExplained: false, translation: accumulatedText.trim() };
+            translationCache.set(cacheKey, finalResult);
+            return finalResult;
+          }
+        }
+      } catch (streamErr) {
+        console.warn(`Streaming attempt failed with ${currentModel}:`, streamErr);
+      }
+    }
+
+    // Direct (Non-Streaming) Fallback: Fast, dependable, zero buffering
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey.trim()}`;
+    const payload = {
+      systemInstruction: { parts: [{ text: systemInstructionText }] },
+      contents: [{ role: 'user', parts: [{ text: userText }] }],
       generationConfig: {
         temperature: parseFloat(temperature) ?? 0.1,
         topP: 0.8,
@@ -175,7 +235,6 @@ Respond ONLY in JSON format:
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        keepalive: true,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -184,61 +243,9 @@ Respond ONLY in JSON format:
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.error?.message || `HTTP Error ${response.status}`;
         lastError = new Error(message);
-        console.warn(`Model ${currentModel} failed: ${message}. Trying next fallback...`);
         continue;
       }
 
-      // Handle Streaming Responses
-      if (isStreaming && response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let accumulatedText = '';
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const jsonStr = line.slice(6).trim();
-                if (jsonStr) {
-                  const parsed = JSON.parse(jsonStr);
-                  const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  if (chunk) {
-                    accumulatedText += chunk;
-                    onStreamChunk(accumulatedText);
-                  }
-                }
-              } catch {
-                // Incomplete chunk
-              }
-            }
-          }
-        }
-
-        const finalResult = {
-          isExplained: false,
-          translation: accumulatedText.trim()
-        };
-
-        if (finalResult.translation) {
-          translationCache.set(cacheKey, finalResult);
-          if (translationCache.size > 300) {
-            const firstKey = translationCache.keys().next().value;
-            translationCache.delete(firstKey);
-          }
-        }
-
-        return finalResult;
-      }
-
-      // Non-streaming mode
       const data = await response.json();
       const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
@@ -274,13 +281,16 @@ Respond ONLY in JSON format:
         isExplained: false,
         translation: rawOutput.trim()
       };
+      if (onStreamChunk) {
+        onStreamChunk(standardResult.translation);
+      }
       translationCache.set(cacheKey, standardResult);
       return standardResult;
     } catch (err) {
       lastError = err;
-      console.warn(`Attempt with ${currentModel} encountered error:`, err);
+      console.warn(`Direct request with ${currentModel} encountered error:`, err);
     }
   }
 
-  throw lastError || new Error('All model translation attempts failed. Please verify your internet connection and API Key.');
+  throw lastError || new Error('Translation failed. Please check your internet connection and API Key.');
 }
