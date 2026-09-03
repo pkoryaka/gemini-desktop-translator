@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
   updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
   nativeTranslate: (options) => ipcRenderer.invoke('native:translate', options),
+  fetchLiveModels: (apiKey) => ipcRenderer.invoke('models:fetch', apiKey),
   syncConfig: (cfg) => ipcRenderer.invoke('config:sync', cfg),
   onStreamChunk: (callback) => {
     const subscription = (event, data) => callback(data);

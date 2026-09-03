@@ -13,28 +13,12 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    tag: '⚡ Ultra Fast (Recommended)',
-    badgeColor: '#10b981',
-    description: 'Next-generation adaptive reasoning with ultra-low latency. Google\'s premier recommendation for fast, high-quality translation.',
-    bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
-  },
-  {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    tag: '🧠 Deep Nuance & Reasoning',
-    badgeColor: '#a855f7',
-    description: 'Premier flagship model for complex cultural nuances, literary prose, business contracts, and technical jargon.',
-    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
-  },
-  {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    tag: '⚡ Sub-second Streaming',
+    tag: '⚡ Ultra Fast (Recommended)',
     badgeColor: '#10b981',
-    description: 'Ultra-fast production model with instantaneous time-to-first-token streaming.',
-    bestFor: 'Real-time sentence streaming and everyday translation.'
+    description: 'Google\'s flagship next-gen speed model with sub-second streaming latency and high accuracy.',
+    bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
   },
   {
     id: 'gemini-2.0-flash-lite',
@@ -43,6 +27,30 @@ export const AVAILABLE_MODELS = [
     badgeColor: '#06b6d4',
     description: 'Lightweight high-efficiency model designed for maximum throughput and instantaneous lookups.',
     bestFor: 'Single-sentence hotkey lookups.'
+  },
+  {
+    id: 'gemini-2.0-pro-exp-02-05',
+    name: 'Gemini 2.0 Pro Experimental',
+    tag: '🧠 Deep Nuance & Reasoning',
+    badgeColor: '#a855f7',
+    description: 'Premier flagship model for complex cultural nuances, literary prose, business contracts, and technical jargon.',
+    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
+  },
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Gemini 1.5 Flash',
+    tag: '📦 Stable Production',
+    badgeColor: '#6366f1',
+    description: 'Proven production model with broad vocabulary and high rate limits.',
+    bestFor: 'Universal reliability across all text lengths.'
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    tag: '🧠 Deep Context & Slang',
+    badgeColor: '#8b5cf6',
+    description: 'Advanced reasoning model for difficult cultural nuances, complex idioms, and jargon.',
+    bestFor: 'Demystifying complex cultural slang and literary nuance.'
   }
 ];
 
@@ -62,20 +70,24 @@ export async function fetchLiveAvailableModels(apiKey) {
     return AVAILABLE_MODELS;
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
-
   try {
-    const response = await fetch(endpoint, { signal: controller.signal });
-    clearTimeout(timeoutId);
+    let data;
+    if (window.electronAPI?.fetchLiveModels) {
+      data = await window.electronAPI.fetchLiveModels(apiKey.trim());
+    } else {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(endpoint, { signal: controller.signal });
+      clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Google API returned HTTP ${response.status}`);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Google API returned HTTP ${response.status}`);
+      }
+      data = await response.json();
     }
 
-    const data = await response.json();
     if (!data.models || !Array.isArray(data.models)) {
       throw new Error('Google API returned no models for this API key.');
     }

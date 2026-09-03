@@ -673,6 +673,20 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
   }
 });
 
+ipcMain.handle('models:fetch', async (event, apiKey) => {
+  const key = (apiKey && apiKey.trim()) || savedApiKey;
+  if (!key) {
+    throw new Error('Please enter a Gemini API Key.');
+  }
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key.trim()}`;
+  const response = await fetch(endpoint);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${response.status}`);
+  }
+  return await response.json();
+});
+
 ipcMain.handle('config:sync', (event, { apiKey, primaryTargetLanguage, model }) => {
   if (apiKey !== undefined) savedApiKey = apiKey;
   if (primaryTargetLanguage !== undefined) savedTargetLang = primaryTargetLanguage;
