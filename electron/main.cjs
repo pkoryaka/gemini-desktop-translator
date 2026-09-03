@@ -273,13 +273,45 @@ function createTray() {
   });
 }
 
-function focusAppWindow() {
+let isMiniWindowMode = false;
+
+function positionWindowAtCursor() {
+  if (!mainWindow) return;
+  try {
+    const cursor = screen.getCursorScreenPoint();
+    const currentDisplay = screen.getDisplayNearestPoint(cursor);
+    const bounds = currentDisplay.workArea;
+    const [winWidth, winHeight] = mainWindow.getSize();
+
+    let targetX = cursor.x + 12;
+    let targetY = cursor.y + 16;
+
+    if (targetX + winWidth > bounds.x + bounds.width) {
+      targetX = bounds.x + bounds.width - winWidth - 12;
+    }
+    if (targetY + winHeight > bounds.y + bounds.height) {
+      targetY = cursor.y - winHeight - 16;
+    }
+
+    if (targetX < bounds.x) targetX = bounds.x + 12;
+    if (targetY < bounds.y) targetY = bounds.y + 12;
+
+    mainWindow.setPosition(Math.round(targetX), Math.round(targetY));
+  } catch (err) {
+    console.warn('Could not position window at cursor:', err);
+    mainWindow.center();
+  }
+}
+
+function focusAppWindow(isMini = false) {
   if (!mainWindow) return;
   if (mainWindow.isMinimized()) mainWindow.restore();
+  if (isMini || isMiniWindowMode) {
+    positionWindowAtCursor();
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+  }
   mainWindow.show();
-  mainWindow.setAlwaysOnTop(true);
   mainWindow.focus();
-  mainWindow.setAlwaysOnTop(false);
 }
 
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
@@ -445,11 +477,14 @@ ipcMain.handle('hotkeys:update', async (event, { translateKey, explainKey }) => 
 
 ipcMain.handle('window:set-mode', (event, mode) => {
   if (!mainWindow) return false;
+  isMiniWindowMode = (mode === 'mini');
   if (mode === 'mini') {
-    mainWindow.setMinimumSize(460, 280);
-    mainWindow.setSize(580, 400);
-    mainWindow.center();
+    mainWindow.setMinimumSize(420, 240);
+    mainWindow.setSize(540, 360);
+    positionWindowAtCursor();
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
   } else {
+    mainWindow.setAlwaysOnTop(false);
     mainWindow.setMinimumSize(800, 600);
     mainWindow.setSize(1200, 820);
     mainWindow.center();
