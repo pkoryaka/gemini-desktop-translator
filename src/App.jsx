@@ -64,6 +64,10 @@ export function App() {
     if (window.electronAPI?.hideToTray) {
       window.electronAPI.hideToTray();
     }
+    setTranslatedText('');
+    setExplanationData(null);
+    setErrorMessage('');
+    setIsLoading(false);
   };
 
   const executeTranslationWithMode = useCallback(async (textToTranslate, explicitTargetLang, explicitExplainMode) => {
@@ -94,7 +98,7 @@ export function App() {
         targetLang: effectiveTarget,
         customPrompt,
         explainJargon: mode,
-        model: currentSettings.model || 'gemini-2.0-flash',
+        model: currentSettings.model || 'gemini-3.8-flash',
         temperature: currentSettings.temperature ?? 0.1,
         onStreamChunk: (partialText) => {
           if (!mode) {
@@ -149,6 +153,12 @@ export function App() {
         const shouldExplain = typeof payload === 'object' ? Boolean(payload.explainJargon) : false;
 
         if (text && text.trim()) {
+          // Immediately wipe old translation so the new text appears completely fresh!
+          setTranslatedText('');
+          setExplanationData(null);
+          setErrorMessage('');
+          setIsLoading(true);
+
           const currentSettings = storageService.getSettings();
           const target = currentSettings.primaryTargetLanguage || 'uk';
           
@@ -184,6 +194,18 @@ export function App() {
       const unsubscribe = window.electronAPI.onOpenSettings(() => {
         switchToFullMode();
         setIsSettingsOpen(true);
+      });
+      return () => unsubscribe && unsubscribe();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.electronAPI?.onWindowHidden) {
+      const unsubscribe = window.electronAPI.onWindowHidden(() => {
+        setTranslatedText('');
+        setExplanationData(null);
+        setErrorMessage('');
+        setIsLoading(false);
       });
       return () => unsubscribe && unsubscribe();
     }

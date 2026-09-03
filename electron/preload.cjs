@@ -35,5 +35,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const subscription = () => callback();
     ipcRenderer.on('show-full-window', subscription);
     return () => ipcRenderer.removeListener('show-full-window', subscription);
+  },
+  onWindowHidden: (callback) => {
+    const subscription = () => callback();
+    ipcRenderer.on('window-hidden', subscription);
+    return () => ipcRenderer.removeListener('window-hidden', subscription);
   }
 });

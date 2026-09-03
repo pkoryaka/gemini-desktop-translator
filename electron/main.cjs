@@ -217,6 +217,12 @@ function createWindow() {
       return false;
     }
   });
+
+  mainWindow.on('hide', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-hidden');
+    }
+  });
 }
 
 function updateTrayMenu() {
@@ -429,21 +435,24 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
         if (!selectedText || !selectedText.trim()) return;
 
         const trimmed = selectedText.trim();
-        focusAppWindow();
 
         if (mainWindow) {
+          // 1. Tell React to reset state and load the new snippet FIRST
           mainWindow.webContents.send('quick-translate', {
             text: trimmed,
             explainJargon
           });
 
-          // Instant Native Prefetch Streaming directly from Node.js (Zero UI lag)
+          // 2. Position and show the window immediately with a clean, fresh UI
+          focusAppWindow(true);
+
+          // 3. Instant Native Prefetch Streaming directly from Node.js (Zero UI lag)
           if (savedApiKey && savedApiKey.trim()) {
             startNativeStream({
               text: trimmed,
               targetLang: savedTargetLang || 'uk',
               apiKey: savedApiKey.trim(),
-              model: savedModel || 'gemini-2.0-flash',
+              model: savedModel || 'gemini-3.8-flash',
               explainJargon,
               onChunk: (chunk) => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
