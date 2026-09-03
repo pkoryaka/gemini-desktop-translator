@@ -5,6 +5,7 @@
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
+    "start": "electron .",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

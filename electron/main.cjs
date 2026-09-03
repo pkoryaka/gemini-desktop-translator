@@ -4,9 +4,7 @@ const { exec, execFile } = require('child_process');
 const fs = require('fs');
 
 const gotTheLock = app.requestSingleInstanceLock();
-console.log('main.cjs started, gotTheLock:', gotTheLock, 'pid:', process.pid);
 if (!gotTheLock) {
-  console.log('Did not get single instance lock! Quitting.');
   app.quit();
   process.exit(0);
 }
@@ -174,8 +172,7 @@ function getAppIcon() {
 function createWindow() {
   const icon = getAppIcon();
   const loginSettings = app.getLoginItemSettings();
-  const shouldStartHidden = startMinimized || 
-    process.argv.includes('--hidden') || 
+  const shouldStartHidden = process.argv.includes('--hidden') || 
     process.argv.includes('--minimized') ||
     Boolean(loginSettings.wasOpenedAsHidden) ||
     Boolean(loginSettings.wasOpenedAtLogin);
@@ -520,7 +517,11 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
 
 app.on('second-instance', () => {
   if (mainWindow) {
-    focusAppWindow();
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.focus();
+    mainWindow.setAlwaysOnTop(false);
     mainWindow.webContents.send('show-full-window');
   }
 });
