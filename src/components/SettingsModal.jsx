@@ -14,7 +14,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
 
   const [apiKey, setApiKey] = useState(currentKey);
   const [model, setModel] = useState(initialModel);
-  const [modelsList, setModelsList] = useState(AVAILABLE_MODELS);
+  const [modelsList, setModelsList] = useState(() => storageService.getCachedModels() || AVAILABLE_MODELS);
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
   const [refreshMsg, setRefreshMsg] = useState(null);
   const [temperature, setTemperature] = useState(currentSettings.temperature ?? 0.1);
@@ -39,7 +39,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const selectedModelInfo = modelsList.find((m) => m.id === model) || modelsList[0] || AVAILABLE_MODELS[0];
 
   const handleRefreshModels = async (keyToUse = apiKey) => {
-    const key = keyToUse || apiKey;
+    const key = keyToUse || apiKey || storageService.getApiKey();
     if (!key || !key.trim()) {
       setRefreshMsg({ error: true, text: 'Please enter an API key above first.' });
       return;
@@ -50,6 +50,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       const live = await fetchLiveAvailableModels(key.trim());
       if (live && live.length > 0) {
         setModelsList(live);
+        storageService.setCachedModels(live);
         if (!live.some((m) => m.id === model)) {
           setModel(live[0].id);
         }
@@ -65,8 +66,9 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   };
 
   useEffect(() => {
-    if (apiKey && apiKey.trim()) {
-      handleRefreshModels(apiKey.trim());
+    const key = (apiKey && apiKey.trim()) || storageService.getApiKey();
+    if (key && key.trim()) {
+      handleRefreshModels(key.trim());
     }
   }, []);
 
@@ -185,7 +187,13 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
               className="form-input"
               placeholder="Paste your Gemini API key (e.g. AIzaSy...)"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setApiKey(val);
+                if (val.trim().length >= 30) {
+                  handleRefreshModels(val.trim());
+                }
+              }}
               style={{ paddingRight: '70px', fontFamily: 'var(--font-mono)' }}
             />
             <button

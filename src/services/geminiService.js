@@ -13,36 +13,36 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
     tag: '⚡ Ultra Fast (Recommended)',
     badgeColor: '#10b981',
-    description: 'Fastest real-time streaming model with sub-second response times. Universally available on Google AI Studio.',
+    description: 'Next-generation adaptive reasoning with ultra-low latency. Google\'s premier recommendation for fast, high-quality translation.',
     bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    tag: '🧠 Deep Nuance & Reasoning',
+    badgeColor: '#a855f7',
+    description: 'Premier flagship model for complex cultural nuances, literary prose, business contracts, and technical jargon.',
+    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
+  },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    tag: '⚡ Sub-second Streaming',
+    badgeColor: '#10b981',
+    description: 'Ultra-fast production model with instantaneous time-to-first-token streaming.',
+    bestFor: 'Real-time sentence streaming and everyday translation.'
   },
   {
     id: 'gemini-2.0-flash-lite',
     name: 'Gemini 2.0 Flash Lite',
-    tag: '⚡ Lightweight Fast',
+    tag: '⚡ High Efficiency Lite',
     badgeColor: '#06b6d4',
     description: 'Lightweight high-efficiency model designed for maximum throughput and instantaneous lookups.',
     bestFor: 'Single-sentence hotkey lookups.'
-  },
-  {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    tag: '📦 Stable Production',
-    badgeColor: '#6366f1',
-    description: 'Reliable general-purpose model with broad vocabulary and high rate limits.',
-    bestFor: 'Universal reliability across all text lengths.'
-  },
-  {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    tag: '🧠 Deep Nuance & Slang Expert',
-    badgeColor: '#a855f7',
-    description: 'Advanced reasoning model for difficult cultural nuances, complex idioms, business contracts, and technical jargon.',
-    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
   }
 ];
 
@@ -137,7 +137,15 @@ export async function fetchLiveAvailableModels(apiKey) {
       return b.id.localeCompare(a.id, undefined, { numeric: true });
     });
 
-    return valid.length > 0 ? valid : AVAILABLE_MODELS;
+    if (valid.length > 0) {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('gemini_translator_cached_models', JSON.stringify(valid));
+        }
+      } catch (e) {}
+      return valid;
+    }
+    return AVAILABLE_MODELS;
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn('Error fetching live models from Google:', err);

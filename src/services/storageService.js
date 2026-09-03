@@ -2,7 +2,8 @@ const STORAGE_KEYS = {
   API_KEY: 'gemini_translator_api_key',
   SETTINGS: 'gemini_translator_settings',
   HISTORY: 'gemini_translator_history',
-  CUSTOM_PRESETS: 'gemini_translator_custom_presets'
+  CUSTOM_PRESETS: 'gemini_translator_custom_presets',
+  CACHED_MODELS: 'gemini_translator_cached_models'
 };
 
 const DEFAULT_SETTINGS = {
@@ -55,6 +56,27 @@ export const storageService = {
   saveSettings: (settings) => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     storageService.syncToElectron();
+  },
+
+  getCachedModels: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CACHED_MODELS);
+      if (!data) return null;
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    } catch {
+      return null;
+    }
+  },
+
+  setCachedModels: (models) => {
+    try {
+      if (Array.isArray(models) && models.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.CACHED_MODELS, JSON.stringify(models));
+      }
+    } catch (e) {
+      console.warn('Failed to cache models', e);
+    }
   },
 
   syncToElectron: () => {
