@@ -80,52 +80,61 @@ export async function fetchLiveAvailableModels(apiKey) {
       throw new Error('Google API returned no models for this API key.');
     }
 
-    const valid = data.models
-      .filter((m) => {
-        const methods = m.supportedGenerationMethods || [];
-        if (!methods.includes('generateContent')) return false;
+    // Comprehensive rejection list for non-text / non-translation modalities
+    const REJECT_KEYWORDS = [
+      'image', 'banana', 'imagen', 'veo', 'high-res',
+      'tts', 'audio', 'transcribe', 'lyria', 'music', 'voice', 'bidi',
+      'robot', 'computer-use', 'antigravity', 'deep-research', 'research',
+      'customtools', 'tools', 'embedding', 'aqa', 'tuning', 'gemma'
+    ];
 
-        const name = (m.name || '').toLowerCase();
-        if (
-          name.includes('embedding') ||
-          name.includes('imagen') ||
-          name.includes('aqa') ||
-          name.includes('tts') ||
-          name.includes('audio') ||
-          name.includes('nano') ||
-          name.includes('banana') ||
-          name.includes('bison') ||
-          name.includes('search') ||
-          name.includes('research') ||
-          name.includes('tuning') ||
-          name.includes('robot') ||
-          name.includes('computer-use')
-        ) {
-          return false;
-        }
+    const seenIds = new Set();
+    const seenDisplayNames = new Set();
+    const valid = [];
 
-        return true;
-      })
-      .map((m) => {
-        const cleanId = m.name.replace(/^models\//, '');
-        const isFlash = cleanId.includes('flash');
-        const isPro = cleanId.includes('pro');
+    for (const m of data.models) {
+      // 1. Must support text generation
+      const methods = m.supportedGenerationMethods || [];
+      if (!methods.includes('generateContent')) continue;
 
-        return {
-          id: cleanId,
-          name: m.displayName || cleanId,
-          tag: isFlash ? '⚡ Fast Translation' : isPro ? '🧠 Deep Nuance' : 'Active Model',
-          badgeColor: isFlash ? '#10b981' : isPro ? '#a855f7' : '#06b6d4',
-          description: m.description || 'Google Gemini AI language model.',
-          bestFor: isFlash ? 'Instant low-latency translations.' : 'Idioms, slang, and cultural jargon.'
-        };
+      const id = (m.name || '').replace(/^models\//, '').toLowerCase();
+      const displayName = (m.displayName || '').toLowerCase();
+
+      // 2. Reject non-translation keywords across both ID and Display Name
+      const isIrrelevant = REJECT_KEYWORDS.some((kw) => id.includes(kw) || displayName.includes(kw));
+      if (isIrrelevant) continue;
+
+      // 3. Must be a Gemini text model
+      if (!id.startsWith('gemini-')) continue;
+
+      // 4. Deduplicate across clean IDs and Display Names
+      const cleanId = m.name.replace(/^models\//, '');
+      const cleanName = m.displayName || cleanId;
+      if (seenIds.has(cleanId) || seenDisplayNames.has(cleanName)) continue;
+      seenIds.add(cleanId);
+      seenDisplayNames.add(cleanName);
+
+      const isLite = cleanId.includes('lite');
+      const isFlash = cleanId.includes('flash');
+      const isPro = cleanId.includes('pro');
+
+      valid.push({
+        id: cleanId,
+        name: cleanName,
+        tag: isLite ? '⚡ Ultra-Fast Lite' : isFlash ? '⚡ Fast Translation' : isPro ? '🧠 Deep Nuance' : 'General Translation',
+        badgeColor: isLite ? '#06b6d4' : isFlash ? '#10b981' : isPro ? '#a855f7' : '#6366f1',
+        isFlash,
+        isPro,
+        description: m.description || 'Google Gemini language model for high-accuracy translation.',
+        bestFor: isLite ? 'Instant single-word & short sentence lookup.' : isFlash ? 'Sub-second real-time streaming translation.' : 'Idioms, cultural slang, and technical contracts.'
       });
+    }
 
+    // 5. Intelligent Ordering: Flash models first (sorted numerically descending by version), then Pro
     valid.sort((a, b) => {
-      if (a.id.includes('2.0-flash') && !b.id.includes('2.0-flash')) return -1;
-      if (a.id.includes('flash') && !b.id.includes('flash')) return -1;
-      if (!a.id.includes('flash') && b.id.includes('flash')) return 1;
-      return 0;
+      if (a.isFlash && !b.isFlash) return -1;
+      if (!a.isFlash && b.isFlash) return 1;
+      return b.id.localeCompare(a.id, undefined, { numeric: true });
     });
 
     return valid.length > 0 ? valid : AVAILABLE_MODELS;
