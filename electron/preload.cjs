@@ -14,6 +14,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
   updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
   nativeTranslate: (options) => ipcRenderer.invoke('native:translate', options),
+  syncConfig: (cfg) => ipcRenderer.invoke('config:sync', cfg),
+  onStreamChunk: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('quick-translate-chunk', subscription);
+    return () => ipcRenderer.removeListener('quick-translate-chunk', subscription);
+  },
   onQuickTranslate: (callback) => {
     const subscription = (event, data) => callback(data);
     ipcRenderer.on('quick-translate', subscription);

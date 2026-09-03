@@ -35,6 +35,7 @@ export const storageService = {
 
   setApiKey: (key) => {
     localStorage.setItem(STORAGE_KEYS.API_KEY, key.trim());
+    storageService.syncToElectron();
   },
 
   getSettings: () => {
@@ -43,7 +44,7 @@ export const storageService = {
       if (!data) return DEFAULT_SETTINGS;
       const parsed = JSON.parse(data);
       if (parsed.model && parsed.model.includes('3.6')) {
-        parsed.model = 'gemini-3.8-flash';
+        parsed.model = 'gemini-2.0-flash';
       }
       return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
@@ -53,6 +54,19 @@ export const storageService = {
 
   saveSettings: (settings) => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    storageService.syncToElectron();
+  },
+
+  syncToElectron: () => {
+    if (window.electronAPI?.syncConfig) {
+      const apiKey = localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+      const settings = storageService.getSettings();
+      window.electronAPI.syncConfig({
+        apiKey,
+        primaryTargetLanguage: settings.primaryTargetLanguage || 'uk',
+        model: settings.model || 'gemini-2.0-flash'
+      });
+    }
   },
 
   getPresets: () => {

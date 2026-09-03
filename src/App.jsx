@@ -83,7 +83,6 @@ export function App() {
     const effectiveTarget = explicitTargetLang || targetLang || currentSettings.primaryTargetLanguage || 'uk';
 
     setIsLoading(true);
-    setTranslatedText(''); // Clear stale previous text
     setErrorMessage('');
     setExplanationData(null);
 
@@ -95,11 +94,12 @@ export function App() {
         targetLang: effectiveTarget,
         customPrompt,
         explainJargon: mode,
-        model: currentSettings.model || 'gemini-3.6-flash',
-        temperature: currentSettings.temperature ?? 0.2,
+        model: currentSettings.model || 'gemini-2.0-flash',
+        temperature: currentSettings.temperature ?? 0.1,
         onStreamChunk: (partialText) => {
           if (!mode) {
             setTranslatedText(partialText);
+            setIsLoading(false);
           }
         }
       });
@@ -186,6 +186,20 @@ export function App() {
         setIsSettingsOpen(true);
       });
       return () => unsubscribe && unsubscribe();
+    }
+  }, []);
+
+  useEffect(() => {
+    storageService.syncToElectron();
+
+    if (window.electronAPI?.onStreamChunk) {
+      const unsubChunk = window.electronAPI.onStreamChunk((chunk) => {
+        if (chunk) {
+          setTranslatedText(chunk);
+          setIsLoading(false);
+        }
+      });
+      return () => unsubChunk && unsubChunk();
     }
   }, []);
 

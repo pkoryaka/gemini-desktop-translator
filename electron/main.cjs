@@ -16,10 +16,17 @@ let isQuitting = false;
 let translateHotkey = 'CommandOrControl+Alt+T';
 let explainHotkey = 'CommandOrControl+Alt+J';
 let startMinimized = false;
+let savedApiKey = '';
+let savedTargetLang = 'uk';
+let savedModel = 'gemini-2.0-flash';
 
 function getConfigPath() {
   const userData = app.getPath('userData');
   return path.join(userData, 'config.json');
+}
+
+function prewarmGoogleSocket() {
+  fetch('https://generativelanguage.googleapis.com', { method: 'HEAD' }).catch(() => {});
 }
 
 function loadSavedConfig() {
@@ -30,6 +37,9 @@ function loadSavedConfig() {
       if (data.translateHotkey) translateHotkey = data.translateHotkey;
       if (data.explainHotkey) explainHotkey = data.explainHotkey;
       if (data.startMinimized !== undefined) startMinimized = Boolean(data.startMinimized);
+      if (data.apiKey) savedApiKey = data.apiKey;
+      if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
+      if (data.model) savedModel = data.model;
     }
   } catch (e) {
     console.warn('Could not load saved config:', e);
@@ -48,6 +58,9 @@ function saveConfig(updates) {
       translateHotkey,
       explainHotkey,
       startMinimized,
+      apiKey: savedApiKey,
+      primaryTargetLanguage: savedTargetLang,
+      model: savedModel,
       ...updates
     }), 'utf8');
   } catch (e) {
@@ -314,6 +327,88 @@ function focusAppWindow(isMini = false) {
   mainWindow.focus();
 }
 
+let activeStreamController = null;
+
+async function startNativeStream({ text, targetLang, apiKey, model, explainJargon, onChunk, onError }) {
+  if (activeStreamController) {
+    try { activeStreamController.abort(); } catch {}
+  }
+  activeStreamController = new AbortController();
+
+  const targetModel = model || 'gemini-2.0-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+  const systemInstructionText = explainJargon
+    ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
+    : `Translate into ${targetLang}. Output translation only.`;
+
+  const payload = {
+    systemInstruction: { parts: [{ text: systemInstructionText }] },
+    contents: [{ role: 'user', parts: [{ text }] }],
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3)),
+      candidateCount: 1,
+      ...(explainJargon ? { responseMimeType: 'application/json' } : {})
+    }
+  };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: activeStreamController.signal,
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      onError(new Error(err.error?.message || `HTTP ${response.status}`));
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let accumulated = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data:')) {
+          const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+          if (jsonStr) {
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const candidate = parsed.candidates?.[0];
+              const chunk = candidate?.content?.parts?.[0]?.text || '';
+              if (chunk) {
+                accumulated += chunk;
+                onChunk(accumulated);
+              }
+              if (candidate?.finishReason) {
+                try { reader.cancel(); } catch {}
+                return;
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      onError(err);
+    }
+  }
+}
+
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
@@ -323,17 +418,37 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
     const handleClipboardResult = () => {
       setTimeout(() => {
         const selectedText = clipboard.readText();
+        if (!selectedText || !selectedText.trim()) return;
+
+        const trimmed = selectedText.trim();
         focusAppWindow();
 
         if (mainWindow) {
-          if (selectedText && selectedText.trim()) {
-            mainWindow.webContents.send('quick-translate', {
-              text: selectedText.trim(),
-              explainJargon
+          mainWindow.webContents.send('quick-translate', {
+            text: trimmed,
+            explainJargon
+          });
+
+          // Instant Native Prefetch Streaming directly from Node.js (Zero UI lag)
+          if (savedApiKey && savedApiKey.trim()) {
+            startNativeStream({
+              text: trimmed,
+              targetLang: savedTargetLang || 'uk',
+              apiKey: savedApiKey.trim(),
+              model: savedModel || 'gemini-2.0-flash',
+              explainJargon,
+              onChunk: (chunk) => {
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                  mainWindow.webContents.send('quick-translate-chunk', chunk);
+                }
+              },
+              onError: (err) => {
+                console.warn('Native prefetch stream warning:', err.message);
+              }
             });
           }
         }
-      }, 40);
+      }, 10);
     };
 
     if (fs.existsSync(copyExe)) {
@@ -405,6 +520,7 @@ app.whenReady().then(() => {
   createTray();
   registerGlobalHotkeys(translateHotkey, explainHotkey);
   ensureStartMenuShortcut();
+  prewarmGoogleSocket();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -544,4 +660,13 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
     throw err;
   }
 });
+
+ipcMain.handle('config:sync', (event, { apiKey, primaryTargetLanguage, model }) => {
+  if (apiKey !== undefined) savedApiKey = apiKey;
+  if (primaryTargetLanguage !== undefined) savedTargetLang = primaryTargetLanguage;
+  if (model !== undefined) savedModel = model;
+  saveConfig({ apiKey: savedApiKey, primaryTargetLanguage: savedTargetLang, model: savedModel });
+  return true;
+});
+
 
