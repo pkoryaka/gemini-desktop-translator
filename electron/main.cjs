@@ -4,7 +4,9 @@ const { exec, execFile } = require('child_process');
 const fs = require('fs');
 
 const gotTheLock = app.requestSingleInstanceLock();
+console.log('main.cjs started, gotTheLock:', gotTheLock, 'pid:', process.pid);
 if (!gotTheLock) {
+  console.log('Did not get single instance lock! Quitting.');
   app.quit();
   process.exit(0);
 }
@@ -94,19 +96,21 @@ function setAutoStartEnabled(enable) {
   if (process.platform === 'win32') {
     const startupPath = getStartupShortcutPath();
     if (enable) {
+      if (fs.existsSync(startupPath)) return true;
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const iconFile = getIconPath();
-      const psCommand = `
-        $WshShell = New-Object -comObject WScript.Shell;
-        $Shortcut = $WshShell.CreateShortcut("${startupPath.replace(/\\/g, '\\\\')}");
-        $Shortcut.TargetPath = "wscript.exe";
-        $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
-        $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
-        $Shortcut.IconLocation = "${iconFile.replace(/\\/g, '\\\\')}";
-        $Shortcut.Description = "Gemini AI Desktop Translator (Silent Auto-start)";
-        $Shortcut.Save();
-      `;
-      exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, ' ')}"`, (err) => {
+      const psScript = [
+        '$WshShell = New-Object -comObject WScript.Shell',
+        `$Shortcut = $WshShell.CreateShortcut('${startupPath.replace(/'/g, "''")}')`,
+        `$Shortcut.TargetPath = 'wscript.exe'`,
+        `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\" --hidden'`,
+        `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
+        `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
+        `$Shortcut.Description = 'Gemini AI Desktop Translator (Silent Auto-start)'`,
+        '$Shortcut.Save()'
+      ].join('; ');
+
+      execFile('powershell', ['-NoProfile', '-Command', psScript], (err) => {
         if (err) console.warn('Autostart shortcut creation warning:', err);
       });
     } else {
@@ -135,20 +139,22 @@ function ensureStartMenuShortcut() {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
       const shortcutPath = path.join(startMenuDir, 'Gemini Translator.lnk');
+      if (fs.existsSync(shortcutPath)) return;
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const iconFile = getIconPath();
 
-      const psCommand = `
-        $WshShell = New-Object -comObject WScript.Shell;
-        $Shortcut = $WshShell.CreateShortcut("${shortcutPath.replace(/\\/g, '\\\\')}");
-        $Shortcut.TargetPath = "wscript.exe";
-        $Shortcut.Arguments = "\\"${vbsScript.replace(/\\/g, '\\\\')}\\"";
-        $Shortcut.WorkingDirectory = "${path.join(__dirname, '..').replace(/\\/g, '\\\\')}";
-        $Shortcut.IconLocation = "${iconFile.replace(/\\/g, '\\\\')}";
-        $Shortcut.Description = "Gemini AI Desktop Translator";
-        $Shortcut.Save();
-      `;
-      exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, ' ')}"`, (err) => {
+      const psScript = [
+        '$WshShell = New-Object -comObject WScript.Shell',
+        `$Shortcut = $WshShell.CreateShortcut('${shortcutPath.replace(/'/g, "''")}')`,
+        `$Shortcut.TargetPath = 'wscript.exe'`,
+        `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\"'`,
+        `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
+        `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
+        `$Shortcut.Description = 'Gemini AI Desktop Translator'`,
+        '$Shortcut.Save()'
+      ].join('; ');
+
+      execFile('powershell', ['-NoProfile', '-Command', psScript], (err) => {
         if (err) console.warn('Start menu shortcut creation warning:', err);
       });
     } catch (e) {
@@ -167,7 +173,12 @@ function getAppIcon() {
 
 function createWindow() {
   const icon = getAppIcon();
-  const shouldStartHidden = startMinimized || process.argv.includes('--hidden') || process.argv.includes('--minimized');
+  const loginSettings = app.getLoginItemSettings();
+  const shouldStartHidden = startMinimized || 
+    process.argv.includes('--hidden') || 
+    process.argv.includes('--minimized') ||
+    Boolean(loginSettings.wasOpenedAsHidden) ||
+    Boolean(loginSettings.wasOpenedAtLogin);
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -195,11 +206,11 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+  const distHtml = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(distHtml) && process.env.VITE_DEV !== 'true') {
+    mainWindow.loadFile(distHtml);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    mainWindow.loadURL('http://localhost:5173');
   }
 
   mainWindow.on('close', (event) => {
