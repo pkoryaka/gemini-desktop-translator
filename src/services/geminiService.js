@@ -13,44 +13,60 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    tag: '⚡ Ultra Fast (Recommended)',
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    tag: '⚡ Ultra Fast Frontier (Recommended)',
     badgeColor: '#10b981',
-    description: 'Google\'s flagship next-gen speed model with sub-second streaming latency and high accuracy.',
-    bestFor: 'Instant hotkey translation, daily chatting, zero latency.'
+    description: 'Google\'s newest frontier workhorse model. Exceptional multi-lingual speed, adaptive reasoning, and zero translation latency.',
+    bestFor: 'Instant hotkey translation, everyday chatting, technical documentation.'
   },
   {
-    id: 'gemini-2.0-flash-lite',
-    name: 'Gemini 2.0 Flash Lite',
-    tag: '⚡ High Efficiency Lite',
+    id: 'gemini-3.7-flash',
+    name: 'Gemini 3.7 Flash',
+    tag: '⚡ High Speed & Accuracy',
     badgeColor: '#06b6d4',
-    description: 'Lightweight high-efficiency model designed for maximum throughput and instantaneous lookups.',
-    bestFor: 'Single-sentence hotkey lookups.'
+    description: 'High-speed Gemini 3 series model with low token latency and precise translation fidelity.',
+    bestFor: 'Real-time sentence streaming and everyday translation.'
   },
   {
-    id: 'gemini-2.0-pro-exp-02-05',
-    name: 'Gemini 2.0 Pro Experimental',
-    tag: '🧠 Deep Nuance & Reasoning',
+    id: 'gemini-3.6-flash',
+    name: 'Gemini 3.6 Flash',
+    tag: '⚡ Fast Multilingual',
+    badgeColor: '#3b82f6',
+    description: 'Optimized efficiency model designed for fast phrasing and conversational flow.',
+    bestFor: 'Quick lookups and conversational translations.'
+  },
+  {
+    id: 'gemini-3.5-flash',
+    name: 'Gemini 3.5 Flash',
+    tag: '⚡ High Efficiency',
+    badgeColor: '#6366f1',
+    description: 'Stable Gemini 3 architecture model with broad multi-language support.',
+    bestFor: 'General sentence and paragraph translation.'
+  },
+  {
+    id: 'gemini-3.1-pro',
+    name: 'Gemini 3.1 Pro',
+    tag: '🧠 Frontier Flagship Reasoning',
     badgeColor: '#a855f7',
-    description: 'Premier flagship model for complex cultural nuances, literary prose, business contracts, and technical jargon.',
+    description: 'Premier flagship model for complex cultural nuances, literary prose, legal contracts, and deep technical jargon.',
     bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
   },
   {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    tag: '📦 Stable Production',
-    badgeColor: '#6366f1',
-    description: 'Proven production model with broad vocabulary and high rate limits.',
-    bestFor: 'Universal reliability across all text lengths.'
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    tag: '⚡ Stable Fast 2.5',
+    badgeColor: '#10b981',
+    description: 'High-speed 2.5 generation translation model with consistent rate limits.',
+    bestFor: 'Standard document and chat translation.'
   },
   {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    tag: '🧠 Deep Context & Slang',
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    tag: '🧠 Deep Nuance 2.5',
     badgeColor: '#8b5cf6',
-    description: 'Advanced reasoning model for difficult cultural nuances, complex idioms, and jargon.',
-    bestFor: 'Demystifying complex cultural slang and literary nuance.'
+    description: 'High capability 2.5 series model for complex linguistic context.',
+    bestFor: 'Idiomatic and slang translation.'
   }
 ];
 
