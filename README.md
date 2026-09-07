@@ -1,32 +1,29 @@
-# 🌐 Gemini AI Desktop Translator
+# ⚡ Gemini AI Text & Translation Assistant
 
-A desktop application designed for multilingual communication across **Ukrainian (Українська)**, **Russian (Русский)**, **Spanish (Español)**, and **English (English)** with intelligent **Jargon Demystification & Plain Language Breakdown**, powered directly by **Google Gemini API** (Free Tier supported).
+A fast, intelligent Windows desktop assistant powered directly by **Google Gemini API** (Free Tier supported). It combines **Instant In-Place Text Rewriting & Quick Prompt Actions**, **Jargon Demystification & Slang Explanation**, and **Multilingual Translation** across **Ukrainian, English, Spanish, and Russian**.
 
 ---
 
-## ✨ Features
+## ✨ Core Features
 
-- **Multilingual Hub:**
+- **⚡ 3 Quick Action Prompt Slots & In-Place Paste-Back:**
+  - Highlight text anywhere (Word, Slack, browser, IDE, email, Notepad) and press a dedicated shortcut:
+    - `Ctrl + Alt + 1` &rarr; **Fix Grammar & Polish** (Corrects spelling, typos, and phrasing; replaces text in-place).
+    - `Ctrl + Alt + 2` &rarr; **Professional Business Tone** (Rewrites into polite, executive corporate communication).
+    - `Ctrl + Alt + 3` &rarr; **Translate to English & Replace** (Translates foreign text into English and replaces in-place).
+  - Fully customizable names, prompts, templates, and shortcuts in Settings.
+- **🌐 Multilingual Translation Hub:**
   - Full bidirectional support for **Ukrainian, Russian, Spanish, and English** with Auto-Detection and 1-click language swapping.
-- **Explain Jargon & Plain Language Breakdown:**
-  - Deconstructs slang, idioms, metaphors, colloquialisms, and acronyms into clear, everyday language.
+- **💡 Explain Jargon & Plain Language Breakdown:**
+  - Deconstructs slang, idioms, metaphors, and technical jargon into clear, everyday language.
   - Returns a clean translation, **what the person actually meant**, a detailed table of slang/idioms with **literal vs intended meaning**, and detected **tone/nuance**.
-- **Custom Translation Prompts & Tone Presets:**
-  - Preset quick chips: *Natural & Fluent*, *Formal / Business*, *Casual / Chat*, *Explain Like I'm 5 (ELI5)*, *Technical / Exact*.
-  - Custom instruction input for specific translation personas or domain-specific needs.
-- **Instant Floating Mini Window & Global Hotkeys:**
-  - Press your hotkey on highlighted text in any app to summon a sleek **compact floating translation widget**.
-  - Includes real-time streaming, **Copy (📋)**, **Text-to-Speech (🔊)**, **Jargon breakdown pills**, and a **1-click Expand to Full Window (↗️)** button.
-  - Press `Esc` or click `✕` to dismiss back to the tray.
-- **Customizable Primary Target Language:**
-  - Define your default target language (e.g. Ukrainian, English, Spanish, Russian) for all instant hotkey translations.
-- **Custom Global Hotkey Recorder:**
-  - Interactive key recorder with conflict detection. Record distinct hotkeys for *Quick Translation* vs *Translate & Explain Jargon*.
-- **Desktop Native Experience:**
-  - Keyboard shortcuts (`Ctrl+Enter` to translate).
-  - Text-To-Speech (TTS) voice playback for both original and translated text.
-  - Instant clipboard actions (Copy, Paste).
-  - Local persistent translation history with search and star/favoriting.
+- **🪟 Instant Floating Mini Window HUD:**
+  - Press `Ctrl + Alt + T` on highlighted text in any app to summon a sleek compact floating widget near your cursor.
+  - Includes sub-150ms streaming, **Copy (📋)**, **Text-to-Speech (🔊)**, **Jargon breakdown pills**, and **1-click Expand (↗️)**.
+- **🚀 Ultra-Fast Windows Native Integration:**
+  - Sub-15ms Win32 text capture and in-place paste synthesis (`CopyNative.exe`).
+  - Silent Windows startup directly into the System Tray with zero popup delay.
+
 
 ---
 

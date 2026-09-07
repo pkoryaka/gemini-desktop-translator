@@ -109,7 +109,7 @@ function getIconPath() {
 
 function getStartupShortcutPath() {
   const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
-  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini Translator.lnk');
+  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini AI Assistant.lnk');
 }
 
 function isAutoStartEnabled() {
@@ -135,7 +135,7 @@ function setAutoStartEnabled(enable) {
         `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\" --hidden'`,
         `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Desktop Translator (Silent Auto-start)'`,
+        `$Shortcut.Description = 'Gemini AI Text & Translation Assistant (Silent Auto-start)'`,
         '$Shortcut.Save()'
       ].join('; ');
 
@@ -167,7 +167,7 @@ function ensureStartMenuShortcut() {
     try {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-      const shortcutPath = path.join(startMenuDir, 'Gemini Translator.lnk');
+      const shortcutPath = path.join(startMenuDir, 'Gemini AI Assistant.lnk');
       if (fs.existsSync(shortcutPath)) return;
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const iconFile = getIconPath();
@@ -179,7 +179,7 @@ function ensureStartMenuShortcut() {
         `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\"'`,
         `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Desktop Translator'`,
+        `$Shortcut.Description = 'Gemini AI Text & Translation Assistant'`,
         '$Shortcut.Save()'
       ].join('; ');
 
@@ -191,6 +191,7 @@ function ensureStartMenuShortcut() {
     }
   }
 }
+
 
 function getAppIcon() {
   const iconPath = getIconPath();
@@ -218,7 +219,7 @@ function createWindow() {
     minWidth: 460,
     minHeight: 280,
     show: !shouldStartHidden,
-    title: 'Gemini AI Desktop Translator',
+    title: 'Gemini AI Text & Translation Assistant',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
     icon: icon,
@@ -274,7 +275,7 @@ function updateTrayMenu() {
 
   const menuTemplate = [
     {
-      label: 'Open Gemini Translator (Full Window)',
+      label: 'Open Gemini Assistant (Full Window)',
       click: () => {
         focusAppWindow();
         if (mainWindow) {
@@ -316,7 +317,7 @@ function updateTrayMenu() {
     },
     { type: 'separator' },
     {
-      label: 'Quit Translator',
+      label: 'Quit Assistant',
       click: () => {
         isQuitting = true;
         app.quit();
@@ -325,7 +326,7 @@ function updateTrayMenu() {
   );
 
   const contextMenu = Menu.buildFromTemplate(menuTemplate);
-  tray.setToolTip(`Gemini Translator (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
+  tray.setToolTip(`Gemini AI Assistant (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
   tray.setContextMenu(contextMenu);
 }
 

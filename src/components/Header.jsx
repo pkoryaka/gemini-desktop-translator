@@ -7,14 +7,15 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey 
       <div className="brand-section">
         <img 
           src="/app-icon.png" 
-          alt="Gemini Translator Logo" 
+          alt="Gemini AI Assistant Logo" 
           className="brand-logo" 
           style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }}
         />
         <div>
-          <h1 className="brand-title">Gemini Translator</h1>
-          <p className="brand-subtitle">Ukrainian • Russian • Spanish • English</p>
+          <h1 className="brand-title">Gemini AI Assistant</h1>
+          <p className="brand-subtitle">AI Rewriter • Jargon Demystifier • Multilingual Translator</p>
         </div>
+
       </div>
 
       <div className="header-actions">

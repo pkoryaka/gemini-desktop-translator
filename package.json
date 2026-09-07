@@ -1,9 +1,10 @@
 {
-  "name": "gemini-desktop-translator",
+  "name": "gemini-ai-assistant",
   "version": "1.0.0",
-  "description": "Desktop AI Translator supporting Ukrainian, Russian, Spanish, and English with custom prompts and jargon explanation using Gemini.",
+  "description": "Desktop AI Text & Translation Assistant supporting instant clipboard rewriting, in-place prompt actions, jargon explanation, and multi-language translation using Google Gemini.",
   "main": "electron/main.cjs",
   "type": "module",
+
   "scripts": {
     "start": "electron .",
     "dev": "vite",
