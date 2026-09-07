@@ -1,21 +1,66 @@
-MIT License
+SOFTWARE LICENSE AND TERMS OF USE
+Gemini AI Text & Translation Assistant
 
-Copyright (c) 2026 pkoryaka
+Copyright (c) 2026 pkoryaka. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+================================================================================
+1. GRANT OF LICENSE
+================================================================================
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This Software is licensed, not sold. By downloading, installing, or using this 
+Software, you agree to be bound by the terms and conditions of this Agreement.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+A. PERSONAL & NON-COMMERCIAL USE (FREE):
+   Permission is hereby granted, free of charge, to any individual person to use, 
+   copy, and execute this Software solely for personal, educational, non-profit, 
+   and individual productivity purposes, without limitation of time.
+
+B. COMMERCIAL & ENTERPRISE USE (COMMERCIAL LICENSE REQUIRED):
+   Any use of this Software by or on behalf of a commercial entity, corporation, 
+   business, partnership, government agency, or for-profit enterprise for commercial, 
+   business, or revenue-generating operations requires an authorized Commercial 
+   License from the copyright holder.
+
+   - Evaluation Period: Commercial entities are granted a temporary 30-day trial 
+     period to evaluate the Software free of charge.
+   - Post-Evaluation: Following the 30-day evaluation period, continued deployment 
+     or usage within an organizational or commercial environment requires acquiring 
+     a valid Commercial License.
+
+================================================================================
+2. RESTRICTIONS
+================================================================================
+
+You may not:
+- Sublicense, rent, lease, resell, or distribute the Software for standalone commercial gain without explicit written authorization.
+- Remove, alter, or obscure any copyright notices, branding, or proprietary markings on the Software.
+- Reverse engineer or decompile parts of the Software beyond what is permitted by applicable open-source component licenses.
+
+================================================================================
+3. THIRD-PARTY COMPONENTS & API USAGE
+================================================================================
+
+This Software interfaces with the Google Gemini API. Users provide their own API 
+credentials and remain subject to Google's applicable terms of service and usage quotas. 
+Third-party libraries bundled within this Software remain subject to their respective 
+open-source licenses.
+
+================================================================================
+4. DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION 
+OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+================================================================================
+5. COMMERCIAL LICENSING & INQUIRIES
+================================================================================
+
+For commercial licensing, enterprise volume deployment, custom feature integrations, 
+or corporate inquiries, please contact the author via the GitHub repository:
+https://github.com/pkoryaka/gemini-desktop-translator
+
