@@ -1,4 +1,8 @@
 @echo off
-title Gemini AI Desktop Translator
 cd /d "%~dp0"
-call npm start -- %*
+if exist "node_modules\electron\dist\electron.exe" (
+    start "" "node_modules\electron\dist\electron.exe" . %*
+) else (
+    call npm start -- %*
+)
+

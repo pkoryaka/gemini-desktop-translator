@@ -172,10 +172,14 @@ function getAppIcon() {
 function createWindow() {
   const icon = getAppIcon();
   const loginSettings = app.getLoginItemSettings();
-  const shouldStartHidden = process.argv.includes('--hidden') || 
-    process.argv.includes('--minimized') ||
+  const isHiddenArg = process.argv.some(arg => 
+    typeof arg === 'string' && (arg.includes('hidden') || arg.includes('minimized'))
+  );
+  const shouldStartHidden = isHiddenArg || 
     Boolean(loginSettings.wasOpenedAsHidden) ||
-    Boolean(loginSettings.wasOpenedAtLogin);
+    Boolean(loginSettings.wasOpenedAtLogin) ||
+    Boolean(startMinimized);
+
 
   mainWindow = new BrowserWindow({
     width: 1200,
