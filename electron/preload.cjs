@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setStartMinimized: (val) => ipcRenderer.invoke('config:set-start-minimized', val),
   getHotkeys: () => ipcRenderer.invoke('hotkeys:get'),
   updateHotkeys: (config) => ipcRenderer.invoke('hotkeys:update', config),
+  getQuickSlots: () => ipcRenderer.invoke('slots:get'),
+  updateQuickSlots: (slots) => ipcRenderer.invoke('slots:update', slots),
   nativeTranslate: (options) => ipcRenderer.invoke('native:translate', options),
   fetchLiveModels: (apiKey) => ipcRenderer.invoke('models:fetch', apiKey),
   syncConfig: (cfg) => ipcRenderer.invoke('config:sync', cfg),

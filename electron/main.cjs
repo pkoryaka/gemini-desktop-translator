@@ -18,7 +18,34 @@ let explainHotkey = 'CommandOrControl+Alt+J';
 let startMinimized = false;
 let savedApiKey = '';
 let savedTargetLang = 'uk';
-let savedModel = 'gemini-2.0-flash';
+let savedModel = 'gemini-3.8-flash';
+
+let quickPromptSlots = [
+  {
+    id: 1,
+    name: 'Fix Grammar & Polish',
+    prompt: 'Fix grammar, spelling, typos, and phrasing. Keep the exact same language and meaning intact. Output ONLY the polished text without any introduction, explanations, or quotes.',
+    hotkey: 'CommandOrControl+Alt+1',
+    pasteBack: true,
+    enabled: true
+  },
+  {
+    id: 2,
+    name: 'Professional Business Tone',
+    prompt: 'Rewrite the text into clear, polite, concise, and professional corporate tone. Output ONLY the rewritten text without any introduction, explanations, or quotes.',
+    hotkey: 'CommandOrControl+Alt+2',
+    pasteBack: true,
+    enabled: true
+  },
+  {
+    id: 3,
+    name: 'Translate to English & Replace',
+    prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.',
+    hotkey: 'CommandOrControl+Alt+3',
+    pasteBack: true,
+    enabled: true
+  }
+];
 
 function getConfigPath() {
   const userData = app.getPath('userData');
@@ -40,6 +67,9 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) savedModel = data.model;
+      if (data.quickPromptSlots && Array.isArray(data.quickPromptSlots)) {
+        quickPromptSlots = data.quickPromptSlots;
+      }
     }
   } catch (e) {
     console.warn('Could not load saved config:', e);
@@ -57,6 +87,7 @@ function saveConfig(updates) {
       ...existing,
       translateHotkey,
       explainHotkey,
+      quickPromptSlots,
       startMinimized,
       apiKey: savedApiKey,
       primaryTargetLanguage: savedTargetLang,
@@ -232,7 +263,16 @@ function createWindow() {
 function updateTrayMenu() {
   if (!tray) return;
 
-  const contextMenu = Menu.buildFromTemplate([
+  const slotMenuItems = (quickPromptSlots || [])
+    .filter((s) => s && s.enabled && s.name)
+    .map((slot) => ({
+      label: `⚡ ${slot.name} (${(slot.hotkey || '').replace('CommandOrControl', 'Ctrl')})`,
+      click: () => {
+        triggerQuickSlotAction(slot.id);
+      }
+    }));
+
+  const menuTemplate = [
     {
       label: 'Open Gemini Translator (Full Window)',
       click: () => {
@@ -253,7 +293,16 @@ function updateTrayMenu() {
       click: () => {
         triggerGlobalSelectionTranslation(true);
       }
-    },
+    }
+  ];
+
+  if (slotMenuItems.length > 0) {
+    menuTemplate.push({ type: 'separator' });
+    menuTemplate.push({ label: '— Quick Prompt Actions —', enabled: false });
+    menuTemplate.push(...slotMenuItems);
+  }
+
+  menuTemplate.push(
     { type: 'separator' },
     {
       label: 'Settings',
@@ -273,8 +322,9 @@ function updateTrayMenu() {
         app.quit();
       }
     }
-  ]);
+  );
 
+  const contextMenu = Menu.buildFromTemplate(menuTemplate);
   tray.setToolTip(`Gemini Translator (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
   tray.setContextMenu(contextMenu);
 }
@@ -495,13 +545,126 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
   }
 }
 
-function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
+// Quick Action Slot Execution (In-place rewrite & paste back OR open HUD)
+function triggerQuickSlotAction(slotId) {
+  const slot = (quickPromptSlots || []).find((s) => s.id === slotId);
+  if (!slot) return;
+
+  if (process.platform === 'win32') {
+    const copyExe = path.join(__dirname, 'copy_native.exe');
+    const copyVbs = path.join(__dirname, 'copy.vbs');
+
+    const handleSlotClipboard = () => {
+      setTimeout(async () => {
+        const selectedText = clipboard.readText();
+        if (!selectedText || !selectedText.trim()) return;
+
+        const trimmed = selectedText.trim();
+
+        if (slot.pasteBack) {
+          // Direct In-Place Text Processing & Replacement
+          if (!savedApiKey || !savedApiKey.trim()) {
+            focusAppWindow(true);
+            if (mainWindow) {
+              mainWindow.webContents.send('quick-translate', {
+                text: trimmed,
+                customPrompt: slot.prompt,
+                slotName: slot.name
+              });
+            }
+            return;
+          }
+
+          try {
+            const targetModel = savedModel || 'gemini-3.8-flash';
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${savedApiKey.trim()}`;
+
+            const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Output ONLY the transformed text directly. Do NOT add conversational preamble, markdown meta commentary, or quotes wrapping unless specifically requested.`;
+
+            const payload = {
+              systemInstruction: { parts: [{ text: systemInstructionText }] },
+              contents: [{ role: 'user', parts: [{ text: trimmed }] }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: Math.max(256, Math.min(2048, trimmed.length * 4)),
+                candidateCount: 1
+              }
+            };
+
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.error?.message || `HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (outputText && outputText.trim()) {
+              const cleanOutput = outputText.trim();
+              clipboard.writeText(cleanOutput);
+
+              // Synthesize in-place Paste (Ctrl + V)
+              setTimeout(() => {
+                if (fs.existsSync(copyExe)) {
+                  execFile(copyExe, ['paste'], (err) => {
+                    if (err) console.warn('Native paste execution error:', err);
+                  });
+                }
+              }, 25);
+            }
+          } catch (err) {
+            console.error(`Slot ${slotId} execution error:`, err);
+            // Fallback to window so user can see error
+            if (mainWindow) {
+              mainWindow.webContents.send('quick-translate', {
+                text: trimmed,
+                customPrompt: slot.prompt,
+                slotName: slot.name
+              });
+              focusAppWindow(true);
+            }
+          }
+        } else {
+          // Open Floating HUD
+          if (mainWindow) {
+            mainWindow.webContents.send('quick-translate', {
+              text: trimmed,
+              customPrompt: slot.prompt,
+              slotName: slot.name
+            });
+            focusAppWindow(true);
+          }
+        }
+      }, 15);
+    };
+
+    if (fs.existsSync(copyExe)) {
+      execFile(copyExe, (err) => {
+        if (err) {
+          exec(`wscript.exe "${copyVbs}"`, handleSlotClipboard);
+        } else {
+          handleSlotClipboard();
+        }
+      });
+    } else {
+      exec(`wscript.exe "${copyVbs}"`, handleSlotClipboard);
+    }
+  }
+}
+
+function registerGlobalHotkeys(newTranslateKey, newExplainKey, newSlots) {
   globalShortcut.unregisterAll();
 
   if (newTranslateKey) translateHotkey = newTranslateKey;
   if (newExplainKey) explainHotkey = newExplainKey;
+  if (newSlots && Array.isArray(newSlots)) quickPromptSlots = newSlots;
 
-  saveConfig({ translateHotkey, explainHotkey });
+  saveConfig({ translateHotkey, explainHotkey, quickPromptSlots });
 
   if (translateHotkey) {
     try {
@@ -523,6 +686,21 @@ function registerGlobalHotkeys(newTranslateKey, newExplainKey) {
     } catch (e) {
       console.warn(`Error registering ${explainHotkey}:`, e);
     }
+  }
+
+  if (Array.isArray(quickPromptSlots)) {
+    quickPromptSlots.forEach((slot) => {
+      if (slot && slot.enabled && slot.hotkey) {
+        try {
+          const ok = globalShortcut.register(slot.hotkey, () => {
+            triggerQuickSlotAction(slot.id);
+          });
+          if (!ok) console.warn(`Failed to register slot ${slot.id} (${slot.hotkey})`);
+        } catch (e) {
+          console.warn(`Error registering slot ${slot.id} hotkey (${slot.hotkey}):`, e);
+        }
+      }
+    });
   }
 
   updateTrayMenu();
@@ -607,13 +785,23 @@ ipcMain.handle('config:set-start-minimized', async (event, val) => {
 ipcMain.handle('hotkeys:get', async () => {
   return {
     translateHotkey,
-    explainHotkey
+    explainHotkey,
+    slots: quickPromptSlots
   };
 });
 
-ipcMain.handle('hotkeys:update', async (event, { translateKey, explainKey }) => {
-  registerGlobalHotkeys(translateKey, explainKey);
-  return { success: true, translateHotkey, explainHotkey };
+ipcMain.handle('hotkeys:update', async (event, { translateKey, explainKey, slots }) => {
+  registerGlobalHotkeys(translateKey, explainKey, slots);
+  return { success: true, translateHotkey, explainHotkey, slots: quickPromptSlots };
+});
+
+ipcMain.handle('slots:get', async () => {
+  return quickPromptSlots;
+});
+
+ipcMain.handle('slots:update', async (event, newSlots) => {
+  registerGlobalHotkeys(translateHotkey, explainHotkey, newSlots);
+  return { success: true, slots: quickPromptSlots };
 });
 
 ipcMain.handle('window:set-mode', (event, mode) => {

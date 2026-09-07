@@ -13,8 +13,11 @@ public class CopyNative {
     private const byte VK_LWIN = 0x5B;
     private const byte VK_RWIN = 0x5C;
     private const byte VK_C = 0x43;
+    private const byte VK_V = 0x56;
 
-    public static void Main() {
+    public static void Main(string[] args) {
+        bool isPaste = (args.Length > 0 && args[0].ToLower() == "paste");
+
         // 1. Brief pause to ensure physical modifier state settling
         Thread.Sleep(20);
 
@@ -26,13 +29,16 @@ public class CopyNative {
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         Thread.Sleep(15);
 
-        // 3. Synthesize clean Ctrl + C keystroke
+        byte targetKey = isPaste ? VK_V : VK_C;
+
+        // 3. Synthesize clean Ctrl + C or Ctrl + V keystroke
         keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
         Thread.Sleep(10);
-        keybd_event(VK_C, 0, 0, UIntPtr.Zero);
+        keybd_event(targetKey, 0, 0, UIntPtr.Zero);
         Thread.Sleep(25);
-        keybd_event(VK_C, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(targetKey, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         Thread.Sleep(20);
     }
 }
+

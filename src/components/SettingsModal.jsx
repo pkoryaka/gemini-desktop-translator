@@ -30,11 +30,23 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [translateHotkey, setTranslateHotkey] = useState(currentSettings.translateHotkey || 'CommandOrControl+Alt+T');
   const [explainHotkey, setExplainHotkey] = useState(currentSettings.explainHotkey || 'CommandOrControl+Alt+J');
 
+  // 3 Custom Prompt Slots
+  const [quickSlots, setQuickSlots] = useState(() => storageService.getQuickSlots());
+
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
 
-  const hasConflict = Boolean(
-    translateHotkey && explainHotkey && translateHotkey.toLowerCase() === explainHotkey.toLowerCase()
+  // Detect any hotkey conflicts across all 5 hotkeys
+  const allHotkeys = [
+    { key: translateHotkey, label: 'Quick Translate' },
+    { key: explainHotkey, label: 'Explain Jargon' },
+    ...quickSlots.map((s, idx) => ({ key: s.hotkey, label: `Slot ${idx + 1} (${s.name || 'Quick Action'})` }))
+  ].filter((item) => item.key && item.key.trim());
+
+  const duplicateKey = allHotkeys.find(
+    (item, index) => allHotkeys.findIndex((other, otherIdx) => otherIdx !== index && other.key.toLowerCase() === item.key.toLowerCase()) !== -1
   );
+
+  const hasConflict = Boolean(duplicateKey);
 
   const selectedModelInfo = modelsList.find((m) => m.id === model) || modelsList[0] || AVAILABLE_MODELS[0];
 
@@ -90,6 +102,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       window.electronAPI.getHotkeys().then((keys) => {
         if (keys?.translateHotkey) setTranslateHotkey(keys.translateHotkey);
         if (keys?.explainHotkey) setExplainHotkey(keys.explainHotkey);
+        if (keys?.slots && Array.isArray(keys.slots)) setQuickSlots(keys.slots);
       }).catch((e) => console.warn('Failed to load hotkeys', e));
     }
   }, []);
@@ -104,6 +117,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
         console.warn('Failed to set autostart', err);
       }
     }
+  };
+
+  const handleSlotChange = (slotId, updates) => {
+    setQuickSlots((prev) =>
+      prev.map((slot) => (slot.id === slotId ? { ...slot, ...updates } : slot))
+    );
   };
 
   const handleTestConnection = async () => {
@@ -136,15 +155,18 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       explainHotkey
     });
 
+    storageService.saveQuickSlots(quickSlots);
+
     if (window.electronAPI?.setStartMinimized) {
       window.electronAPI.setStartMinimized(startMinimized);
     }
 
-    // Update Electron Global Hotkeys
+    // Update Electron Global Hotkeys & Slots
     if (window.electronAPI?.updateHotkeys) {
       window.electronAPI.updateHotkeys({
         translateKey: translateHotkey,
-        explainKey: explainHotkey
+        explainKey: explainHotkey,
+        slots: quickSlots
       });
     }
 
@@ -153,6 +175,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     }
     onClose();
   };
+
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -339,7 +362,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             label="1. Quick Translate Selected Text"
             value={translateHotkey}
             onChange={setTranslateHotkey}
-            otherHotkey={explainHotkey}
+            otherHotkey={[explainHotkey, ...quickSlots.map((s) => s.hotkey)].filter(Boolean)}
             defaultKey="CommandOrControl+Alt+T"
             icon={Zap}
             description="Highlight text in any app & press this combination to translate immediately."
@@ -350,12 +373,174 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
             label="2. Translate & Explain Jargon / Slang"
             value={explainHotkey}
             onChange={setExplainHotkey}
-            otherHotkey={translateHotkey}
+            otherHotkey={[translateHotkey, ...quickSlots.map((s) => s.hotkey)].filter(Boolean)}
             defaultKey="CommandOrControl+Alt+J"
             icon={BookOpen}
             description="Highlight text & press this combination to de-jargonize and explain idioms in plain words."
           />
         </div>
+
+        {/* 3 Quick Action Custom Prompt Slots (In-Place Rewrite & Paste Back) */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.8)',
+          border: '1px solid rgba(99, 102, 241, 0.35)',
+          borderRadius: 'var(--radius-md)',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '0.88rem', fontWeight: 700 }}>
+              <Sparkles size={17} color="#a855f7" />
+              <span>3 Quick Prompt Actions (In-Place Rewrite & Hotkeys)</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#c084fc', background: 'rgba(168, 85, 247, 0.12)', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
+              ⚡ Auto Paste-Back
+            </span>
+          </div>
+
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.4 }}>
+            Highlight text anywhere in Windows and press the slot's shortcut. The AI will transform the text according to your prompt and <strong>automatically paste it back in-place</strong> into your active app!
+          </span>
+
+          {quickSlots.map((slot, index) => {
+            const otherKeys = [
+              translateHotkey,
+              explainHotkey,
+              ...quickSlots.filter((s) => s.id !== slot.id).map((s) => s.hotkey)
+            ].filter(Boolean);
+
+            const defaultKeys = ['CommandOrControl+Alt+1', 'CommandOrControl+Alt+2', 'CommandOrControl+Alt+3'];
+            const defKey = defaultKeys[index] || '';
+
+            return (
+              <div
+                key={slot.id}
+                style={{
+                  background: 'rgba(30, 41, 59, 0.6)',
+                  border: slot.enabled ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  opacity: slot.enabled ? 1 : 0.65,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {/* Slot Header: Toggle & Title */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                    <input
+                      type="checkbox"
+                      id={`slot-enable-${slot.id}`}
+                      checked={slot.enabled !== false}
+                      onChange={(e) => handleSlotChange(slot.id, { enabled: e.target.checked })}
+                      style={{ accentColor: '#6366f1', cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <label htmlFor={`slot-enable-${slot.id}`} style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f8fafc', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>Slot {index + 1}:</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={slot.name || ''}
+                      onChange={(e) => handleSlotChange(slot.id, { name: e.target.value })}
+                      placeholder={`e.g. Action ${index + 1}`}
+                      style={{ padding: '4px 8px', fontSize: '0.8rem', fontWeight: 600, height: '28px', flex: 1 }}
+                    />
+                  </div>
+
+                  {/* Paste Back vs Window Badge */}
+                  <button
+                    type="button"
+                    onClick={() => handleSlotChange(slot.id, { pasteBack: !slot.pasteBack })}
+                    style={{
+                      background: slot.pasteBack ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+                      border: slot.pasteBack ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)',
+                      color: slot.pasteBack ? '#34d399' : '#a5b4fc',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '4px 10px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    title="Click to toggle between in-place replacement vs popup window"
+                  >
+                    {slot.pasteBack ? '⚡ In-Place Paste' : '🪟 Show in HUD'}
+                  </button>
+                </div>
+
+                {/* Prompt Input & Quick Templates */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>
+                      AI Instructions / Prompt:
+                    </label>
+                    {/* Quick Template Fillers */}
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleSlotChange(slot.id, {
+                          name: 'Fix Grammar & Polish',
+                          prompt: 'Fix grammar, spelling, typos, and phrasing. Keep the exact same language and meaning intact. Output ONLY the polished text without any introduction, explanations, or quotes.'
+                        })}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: '#cbd5e1', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
+                      >
+                        Grammar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSlotChange(slot.id, {
+                          name: 'Professional Business Tone',
+                          prompt: 'Rewrite the text into clear, polite, concise, and professional corporate tone. Output ONLY the rewritten text without any introduction, explanations, or quotes.'
+                        })}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: '#cbd5e1', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
+                      >
+                        Formal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSlotChange(slot.id, {
+                          name: 'Translate to English',
+                          prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.'
+                        })}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: '#cbd5e1', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
+                      >
+                        To English
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    className="form-input"
+                    rows={2}
+                    value={slot.prompt || ''}
+                    onChange={(e) => handleSlotChange(slot.id, { prompt: e.target.value })}
+                    placeholder="Enter instructions for what Gemini should do with selected text..."
+                    style={{ fontSize: '0.78rem', resize: 'vertical', minHeight: '44px', lineHeight: 1.3 }}
+                  />
+                </div>
+
+                {/* Hotkey Recorder for Slot */}
+                <HotkeyRecorder
+                  label={`Slot ${index + 1} Shortcut`}
+                  value={slot.hotkey || ''}
+                  onChange={(newKey) => handleSlotChange(slot.id, { hotkey: newKey })}
+                  otherHotkey={otherKeys}
+                  defaultKey={defKey}
+                  icon={Keyboard}
+                  description={slot.pasteBack ? 'Highlights & replaces selection in-place.' : 'Opens floating HUD with prompt applied.'}
+                />
+              </div>
+            );
+          })}
+        </div>
+
 
         {/* Instant Mini Window Mode Toggle */}
         <div style={{

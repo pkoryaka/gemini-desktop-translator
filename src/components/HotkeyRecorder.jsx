@@ -90,7 +90,14 @@ export function HotkeyRecorder({
   const [currentPressed, setCurrentPressed] = useState('');
   const buttonRef = useRef(null);
 
-  const isConflict = value && otherHotkey && value.toLowerCase() === otherHotkey.toLowerCase();
+  const isConflict = Boolean(
+    value &&
+    otherHotkey &&
+    (Array.isArray(otherHotkey)
+      ? otherHotkey.some((k) => k && typeof k === 'string' && k.toLowerCase() === value.toLowerCase())
+      : value.toLowerCase() === otherHotkey.toLowerCase())
+  );
+
 
   const handleKeyDown = (e) => {
     if (!isRecording) return;

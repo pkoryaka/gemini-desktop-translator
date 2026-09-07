@@ -3,8 +3,36 @@ const STORAGE_KEYS = {
   SETTINGS: 'gemini_translator_settings',
   HISTORY: 'gemini_translator_history',
   CUSTOM_PRESETS: 'gemini_translator_custom_presets',
-  CACHED_MODELS: 'gemini_translator_cached_models'
+  CACHED_MODELS: 'gemini_translator_cached_models',
+  QUICK_SLOTS: 'gemini_translator_quick_slots'
 };
+
+export const DEFAULT_QUICK_SLOTS = [
+  {
+    id: 1,
+    name: 'Fix Grammar & Polish',
+    prompt: 'Fix grammar, spelling, typos, and phrasing. Keep the exact same language and meaning intact. Output ONLY the polished text without any introduction, explanations, or quotes.',
+    hotkey: 'CommandOrControl+Alt+1',
+    pasteBack: true,
+    enabled: true
+  },
+  {
+    id: 2,
+    name: 'Professional Business Tone',
+    prompt: 'Rewrite the text into clear, polite, concise, and professional corporate tone. Output ONLY the rewritten text without any introduction, explanations, or quotes.',
+    hotkey: 'CommandOrControl+Alt+2',
+    pasteBack: true,
+    enabled: true
+  },
+  {
+    id: 3,
+    name: 'Translate to English & Replace',
+    prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.',
+    hotkey: 'CommandOrControl+Alt+3',
+    pasteBack: true,
+    enabled: true
+  }
+];
 
 const DEFAULT_SETTINGS = {
   model: 'gemini-3.8-flash',
@@ -28,6 +56,7 @@ const DEFAULT_PRESETS = [
   { id: 'eli5', label: 'Explain Like I\'m 5', prompt: 'Translate into the simplest possible wording, easy to understand for anyone.' },
   { id: 'technical', label: 'Technical / Exact', prompt: 'Preserve technical precision, industry terminology, and literal fidelity where appropriate.' }
 ];
+
 
 export const storageService = {
   getApiKey: () => {
@@ -100,6 +129,35 @@ export const storageService = {
   savePresets: (presets) => {
     localStorage.setItem(STORAGE_KEYS.CUSTOM_PRESETS, JSON.stringify(presets));
   },
+
+  getQuickSlots: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.QUICK_SLOTS);
+      if (!data) return DEFAULT_QUICK_SLOTS;
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return DEFAULT_QUICK_SLOTS.map((defSlot) => {
+          const found = parsed.find((p) => p.id === defSlot.id);
+          return found ? { ...defSlot, ...found } : defSlot;
+        });
+      }
+      return DEFAULT_QUICK_SLOTS;
+    } catch {
+      return DEFAULT_QUICK_SLOTS;
+    }
+  },
+
+  saveQuickSlots: (slots) => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.QUICK_SLOTS, JSON.stringify(slots));
+      if (window.electronAPI?.updateQuickSlots) {
+        window.electronAPI.updateQuickSlots(slots);
+      }
+    } catch (e) {
+      console.warn('Failed to save quick slots', e);
+    }
+  },
+
 
   getHistory: () => {
     try {

@@ -70,13 +70,13 @@ export function App() {
     setIsLoading(false);
   };
 
-  const executeTranslationWithMode = useCallback(async (textToTranslate, explicitTargetLang, explicitExplainMode) => {
-    const text = (textToTranslate !== undefined ? textToTranslate : sourceText).trim();
-    if (!text) return;
+  const executeTranslationWithMode = useCallback(async (textToTranslate, explicitTargetLang, explicitExplainMode, explicitCustomPrompt) => {
+    const text = textToTranslate !== undefined ? textToTranslate : sourceText;
+    if (!text || !text.trim()) return;
 
     const currentKey = storageService.getApiKey();
     if (!currentKey) {
-      setErrorMessage('Please set your free Google Gemini API Key in Settings first.');
+      setErrorMessage('Please configure your Gemini API Key in Settings.');
       switchToFullMode();
       setIsSettingsOpen(true);
       return;
@@ -85,6 +85,7 @@ export function App() {
     const currentSettings = storageService.getSettings();
     const mode = explicitExplainMode !== undefined ? explicitExplainMode : explainJargon;
     const effectiveTarget = explicitTargetLang || targetLang || currentSettings.primaryTargetLanguage || 'uk';
+    const effectivePrompt = explicitCustomPrompt !== undefined ? explicitCustomPrompt : customPrompt;
 
     setIsLoading(true);
     setErrorMessage('');
@@ -96,7 +97,7 @@ export function App() {
         text,
         sourceLang,
         targetLang: effectiveTarget,
-        customPrompt,
+        customPrompt: effectivePrompt,
         explainJargon: mode,
         model: currentSettings.model || 'gemini-3.8-flash',
         temperature: currentSettings.temperature ?? 0.1,
@@ -122,7 +123,7 @@ export function App() {
             sourceLang,
             targetLang: effectiveTarget,
             isExplained: result.isExplained,
-            customPrompt
+            customPrompt: effectivePrompt
           });
         }
       }
@@ -151,6 +152,8 @@ export function App() {
       const unsubscribe = window.electronAPI.onQuickTranslate((payload) => {
         const text = typeof payload === 'string' ? payload : payload?.text;
         const shouldExplain = typeof payload === 'object' ? Boolean(payload.explainJargon) : false;
+        const slotPrompt = typeof payload === 'object' ? payload?.customPrompt : '';
+        const slotName = typeof payload === 'object' ? payload?.slotName : '';
 
         if (text && text.trim()) {
           // Immediately wipe old translation so the new text appears completely fresh!
@@ -165,6 +168,9 @@ export function App() {
           setTargetLang(target);
           setSourceText(text);
           setExplainJargon(shouldExplain);
+          if (slotPrompt) {
+            setCustomPrompt(slotPrompt);
+          }
 
           // If Instant Mini Popup mode is enabled
           if (currentSettings.instantPopupMode !== false) {
@@ -175,14 +181,16 @@ export function App() {
 
           setQuickTranslateToast(true);
           setQuickToastMessage(
-            shouldExplain 
+            slotName
+              ? `⚡ ${slotName}`
+              : shouldExplain 
               ? '💡 Translated & Explained Jargon' 
               : '⚡ Quick Translated Selected Text'
           );
           setTimeout(() => setQuickTranslateToast(false), 3000);
 
-          // Trigger execution immediately with current text & target
-          executeTranslationWithMode(text, target, shouldExplain);
+          // Trigger execution immediately with current text & target & prompt
+          executeTranslationWithMode(text, target, shouldExplain, slotPrompt);
         }
       });
       return () => unsubscribe && unsubscribe();
