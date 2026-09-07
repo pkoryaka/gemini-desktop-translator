@@ -20,6 +20,13 @@ let savedApiKey = '';
 let savedTargetLang = 'uk';
 let savedModel = 'gemini-3.8-flash';
 
+// BYOM (Bring Your Own Model) state
+let savedAiProvider = 'gemini'; // 'gemini' | 'openai_compatible'
+let savedCustomGeminiModel = '';
+let savedCustomEndpoint = 'http://localhost:11434/v1';
+let savedCustomApiKey = '';
+let savedCustomModel = 'llama3.2';
+
 let quickPromptSlots = [
   {
     id: 1,
@@ -53,7 +60,9 @@ function getConfigPath() {
 }
 
 function prewarmGoogleSocket() {
-  fetch('https://generativelanguage.googleapis.com', { method: 'HEAD' }).catch(() => {});
+  if (savedAiProvider === 'gemini') {
+    fetch('https://generativelanguage.googleapis.com', { method: 'HEAD' }).catch(() => {});
+  }
 }
 
 function loadSavedConfig() {
@@ -67,6 +76,11 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) savedModel = data.model;
+      if (data.aiProvider) savedAiProvider = data.aiProvider;
+      if (data.customGeminiModel) savedCustomGeminiModel = data.customGeminiModel;
+      if (data.customEndpoint) savedCustomEndpoint = data.customEndpoint;
+      if (data.customApiKey) savedCustomApiKey = data.customApiKey;
+      if (data.customModel) savedCustomModel = data.customModel;
       if (data.quickPromptSlots && Array.isArray(data.quickPromptSlots)) {
         quickPromptSlots = data.quickPromptSlots;
       }
@@ -92,6 +106,11 @@ function saveConfig(updates) {
       apiKey: savedApiKey,
       primaryTargetLanguage: savedTargetLang,
       model: savedModel,
+      aiProvider: savedAiProvider,
+      customGeminiModel: savedCustomGeminiModel,
+      customEndpoint: savedCustomEndpoint,
+      customApiKey: savedCustomApiKey,
+      customModel: savedCustomModel,
       ...updates
     }), 'utf8');
   } catch (e) {
@@ -109,7 +128,7 @@ function getIconPath() {
 
 function getStartupShortcutPath() {
   const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
-  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini AI Assistant.lnk');
+  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini AI Clipboard Assistant.lnk');
 }
 
 function isAutoStartEnabled() {
@@ -135,7 +154,7 @@ function setAutoStartEnabled(enable) {
         `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\" --hidden'`,
         `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Text & Translation Assistant (Silent Auto-start)'`,
+        `$Shortcut.Description = 'Gemini AI Clipboard Assistant (Silent Auto-start)'`,
         '$Shortcut.Save()'
       ].join('; ');
 
@@ -167,7 +186,7 @@ function ensureStartMenuShortcut() {
     try {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-      const shortcutPath = path.join(startMenuDir, 'Gemini AI Assistant.lnk');
+      const shortcutPath = path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk');
       if (fs.existsSync(shortcutPath)) return;
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const iconFile = getIconPath();
@@ -179,7 +198,7 @@ function ensureStartMenuShortcut() {
         `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\"'`,
         `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Text & Translation Assistant'`,
+        `$Shortcut.Description = 'Gemini AI Clipboard Assistant'`,
         '$Shortcut.Save()'
       ].join('; ');
 
@@ -219,7 +238,7 @@ function createWindow() {
     minWidth: 460,
     minHeight: 280,
     show: !shouldStartHidden,
-    title: 'Gemini AI Text & Translation Assistant',
+    title: 'Gemini AI Clipboard Assistant',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
     icon: icon,
@@ -275,7 +294,7 @@ function updateTrayMenu() {
 
   const menuTemplate = [
     {
-      label: 'Open Gemini Assistant (Full Window)',
+      label: 'Open Gemini AI Clipboard Assistant',
       click: () => {
         focusAppWindow();
         if (mainWindow) {
@@ -317,7 +336,7 @@ function updateTrayMenu() {
     },
     { type: 'separator' },
     {
-      label: 'Quit Assistant',
+      label: 'Quit Gemini AI Clipboard Assistant',
       click: () => {
         isQuitting = true;
         app.quit();
@@ -326,7 +345,7 @@ function updateTrayMenu() {
   );
 
   const contextMenu = Menu.buildFromTemplate(menuTemplate);
-  tray.setToolTip(`Gemini AI Assistant (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
+  tray.setToolTip(`Gemini AI Clipboard Assistant (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
   tray.setContextMenu(contextMenu);
 }
 
@@ -546,6 +565,87 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
   }
 }
 
+async function runAiGeneration({ text, systemInstructionText, isJson = false, maxTokens = 1024, model, apiKey }) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    if (savedAiProvider === 'openai_compatible') {
+      const baseUrl = (savedCustomEndpoint || 'http://localhost:11434/v1').replace(/\/+$/, '');
+      const endpoint = `${baseUrl}/chat/completions`;
+      const bearer = savedCustomApiKey ? `Bearer ${savedCustomApiKey.trim()}` : 'Bearer ollama';
+
+      const payload = {
+        model: savedCustomModel || 'llama3.2',
+        messages: [
+          { role: 'system', content: systemInstructionText },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.1,
+        max_tokens: maxTokens,
+        ...(isJson ? { response_format: { type: 'json_object' } } : {})
+      };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': bearer
+        },
+        signal: controller.signal,
+        body: JSON.stringify(payload)
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Endpoint returned HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    } else {
+      // Google Gemini Provider
+      const targetModel = savedCustomGeminiModel || model || savedModel || 'gemini-3.8-flash';
+      const key = (apiKey && apiKey.trim()) || savedApiKey;
+      if (!key) {
+        throw new Error('Please configure your Google Gemini API Key.');
+      }
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${key.trim()}`;
+
+      const payload = {
+        systemInstruction: { parts: [{ text: systemInstructionText }] },
+        contents: [{ role: 'user', parts: [{ text }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: maxTokens,
+          candidateCount: 1,
+          ...(isJson ? { responseMimeType: 'application/json' } : {})
+        }
+      };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify(payload)
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
 // Quick Action Slot Execution (In-place rewrite & paste back OR open HUD)
 function triggerQuickSlotAction(slotId) {
   const slot = (quickPromptSlots || []).find((s) => s.id === slotId);
@@ -564,7 +664,7 @@ function triggerQuickSlotAction(slotId) {
 
         if (slot.pasteBack) {
           // Direct In-Place Text Processing & Replacement
-          if (!savedApiKey || !savedApiKey.trim()) {
+          if (savedAiProvider === 'gemini' && (!savedApiKey || !savedApiKey.trim())) {
             focusAppWindow(true);
             if (mainWindow) {
               mainWindow.webContents.send('quick-translate', {
@@ -577,34 +677,15 @@ function triggerQuickSlotAction(slotId) {
           }
 
           try {
-            const targetModel = savedModel || 'gemini-3.8-flash';
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${savedApiKey.trim()}`;
-
             const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Output ONLY the transformed text directly. Do NOT add conversational preamble, markdown meta commentary, or quotes wrapping unless specifically requested.`;
 
-            const payload = {
-              systemInstruction: { parts: [{ text: systemInstructionText }] },
-              contents: [{ role: 'user', parts: [{ text: trimmed }] }],
-              generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: Math.max(256, Math.min(2048, trimmed.length * 4)),
-                candidateCount: 1
-              }
-            };
-
-            const response = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+            const outputText = await runAiGeneration({
+              text: trimmed,
+              systemInstructionText,
+              isJson: false,
+              maxTokens: Math.max(256, Math.min(2048, trimmed.length * 4))
             });
 
-            if (!response.ok) {
-              const err = await response.json().catch(() => ({}));
-              throw new Error(err.error?.message || `HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (outputText && outputText.trim()) {
               const cleanOutput = outputText.trim();
               clipboard.writeText(cleanOutput);
@@ -620,7 +701,6 @@ function triggerQuickSlotAction(slotId) {
             }
           } catch (err) {
             console.error(`Slot ${slotId} execution error:`, err);
-            // Fallback to window so user can see error
             if (mainWindow) {
               mainWindow.webContents.send('quick-translate', {
                 text: trimmed,
@@ -657,6 +737,7 @@ function triggerQuickSlotAction(slotId) {
     }
   }
 }
+
 
 function registerGlobalHotkeys(newTranslateKey, newExplainKey, newSlots) {
   globalShortcut.unregisterAll();
@@ -829,50 +910,24 @@ ipcMain.handle('window:set-size', (event, { width, height }) => {
   return true;
 });
 
-// High-speed Native Node.js Translation Engine
+// High-speed Native Translation Engine (Gemini Cloud OR Local BYOM)
 ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, customPrompt, explainJargon, model }) => {
-  const targetModel = model || 'gemini-2.0-flash';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
-
   const systemInstructionText = explainJargon
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
     : `Translate into ${targetLang}. Output translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
 
-  const payload = {
-    systemInstruction: { parts: [{ text: systemInstructionText }] },
-    contents: [{ role: 'user', parts: [{ text }] }],
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3)),
-      candidateCount: 1,
-      ...(explainJargon ? { responseMimeType: 'application/json' } : {})
-    }
-  };
+  const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const rawOutput = await runAiGeneration({
+    text,
+    systemInstructionText,
+    isJson: Boolean(explainJargon),
+    maxTokens,
+    model,
+    apiKey
+  });
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify(payload)
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return { success: true, rawOutput };
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
+  return { success: true, rawOutput };
 });
 
 ipcMain.handle('models:fetch', async (event, apiKey) => {
@@ -889,12 +944,49 @@ ipcMain.handle('models:fetch', async (event, apiKey) => {
   return await response.json();
 });
 
-ipcMain.handle('config:sync', (event, { apiKey, primaryTargetLanguage, model }) => {
-  if (apiKey !== undefined) savedApiKey = apiKey;
-  if (primaryTargetLanguage !== undefined) savedTargetLang = primaryTargetLanguage;
-  if (model !== undefined) savedModel = model;
-  saveConfig({ apiKey: savedApiKey, primaryTargetLanguage: savedTargetLang, model: savedModel });
+ipcMain.handle('endpoint:test', async (event, { endpoint, model, apiKey }) => {
+  const url = `${(endpoint || 'http://localhost:11434/v1').replace(/\/+$/, '')}/chat/completions`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey || 'ollama'}`
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: model || 'llama3.2',
+        messages: [{ role: 'user', content: 'Say OK' }],
+        max_tokens: 10
+      })
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    return { success: true, text: data.choices?.[0]?.message?.content || 'OK' };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+});
+
+ipcMain.handle('config:sync', (event, cfg = {}) => {
+  if (cfg.apiKey !== undefined) savedApiKey = cfg.apiKey;
+  if (cfg.primaryTargetLanguage !== undefined) savedTargetLang = cfg.primaryTargetLanguage;
+  if (cfg.model !== undefined) savedModel = cfg.model;
+  if (cfg.aiProvider !== undefined) savedAiProvider = cfg.aiProvider;
+  if (cfg.customGeminiModel !== undefined) savedCustomGeminiModel = cfg.customGeminiModel;
+  if (cfg.customEndpoint !== undefined) savedCustomEndpoint = cfg.customEndpoint;
+  if (cfg.customApiKey !== undefined) savedCustomApiKey = cfg.customApiKey;
+  if (cfg.customModel !== undefined) savedCustomModel = cfg.customModel;
+  saveConfig({});
   return true;
 });
+
 
 

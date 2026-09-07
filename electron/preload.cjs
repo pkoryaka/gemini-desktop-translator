@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateQuickSlots: (slots) => ipcRenderer.invoke('slots:update', slots),
   nativeTranslate: (options) => ipcRenderer.invoke('native:translate', options),
   fetchLiveModels: (apiKey) => ipcRenderer.invoke('models:fetch', apiKey),
+  testEndpoint: (cfg) => ipcRenderer.invoke('endpoint:test', cfg),
   syncConfig: (cfg) => ipcRenderer.invoke('config:sync', cfg),
   onStreamChunk: (callback) => {
     const subscription = (event, data) => callback(data);

@@ -46,8 +46,15 @@ const DEFAULT_SETTINGS = {
   instantPopupMode: true,
   startMinimized: false,
   translateHotkey: 'CommandOrControl+Alt+T',
-  explainHotkey: 'CommandOrControl+Alt+J'
+  explainHotkey: 'CommandOrControl+Alt+J',
+  // BYOM (Bring Your Own Model) Settings
+  aiProvider: 'gemini', // 'gemini' | 'openai_compatible'
+  customGeminiModel: '',
+  customEndpoint: 'http://localhost:11434/v1',
+  customApiKey: '',
+  customModel: 'llama3.2'
 };
+
 
 const DEFAULT_PRESETS = [
   { id: 'natural', label: 'Natural & Fluent', prompt: 'Translate naturally as a native speaker, maintaining the original emotion and intent.' },
@@ -112,10 +119,16 @@ export const storageService = {
       window.electronAPI.syncConfig({
         apiKey,
         primaryTargetLanguage: settings.primaryTargetLanguage || 'uk',
-        model: settings.model || 'gemini-2.0-flash'
+        model: settings.model || 'gemini-3.8-flash',
+        aiProvider: settings.aiProvider || 'gemini',
+        customGeminiModel: settings.customGeminiModel || '',
+        customEndpoint: settings.customEndpoint || 'http://localhost:11434/v1',
+        customApiKey: settings.customApiKey || '',
+        customModel: settings.customModel || 'llama3.2'
       });
     }
   },
+
 
   getPresets: () => {
     try {

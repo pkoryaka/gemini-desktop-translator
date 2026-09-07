@@ -1,7 +1,7 @@
 {
-  "name": "gemini-ai-assistant",
+  "name": "gemini-ai-clipboard-assistant",
   "version": "1.0.0",
-  "description": "Desktop AI Text & Translation Assistant supporting instant clipboard rewriting, in-place prompt actions, jargon explanation, and multi-language translation using Google Gemini.",
+  "description": "Desktop AI Clipboard Assistant with Bring Your Own Model (BYOM) support — instant in-place rewriting, custom hotkeys, translation, and jargon breakdown with Gemini, Ollama, LM Studio & local LLMs.",
   "main": "electron/main.cjs",
   "type": "module",
 

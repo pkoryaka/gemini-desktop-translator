@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, AppWindow } from 'lucide-react';
+import { X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, AppWindow, Cpu, Server } from 'lucide-react';
 import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { HotkeyRecorder } from './HotkeyRecorder';
@@ -22,6 +22,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [autoStart, setAutoStart] = useState(false);
   const [startMinimized, setStartMinimized] = useState(currentSettings.startMinimized || false);
 
+  // BYOM (Bring Your Own Model) state
+  const [aiProvider, setAiProvider] = useState(currentSettings.aiProvider || 'gemini');
+  const [customGeminiModel, setCustomGeminiModel] = useState(currentSettings.customGeminiModel || '');
+  const [customEndpoint, setCustomEndpoint] = useState(currentSettings.customEndpoint || 'http://localhost:11434/v1');
+  const [customApiKey, setCustomApiKey] = useState(currentSettings.customApiKey || '');
+  const [customModel, setCustomModel] = useState(currentSettings.customModel || 'llama3.2');
+  const [endpointTestStatus, setEndpointTestStatus] = useState(null);
+
   // Primary Target Language & Mini Modal Mode
   const [primaryTargetLanguage, setPrimaryTargetLanguage] = useState(currentSettings.primaryTargetLanguage || 'uk');
   const [instantPopupMode, setInstantPopupMode] = useState(currentSettings.instantPopupMode !== false);
@@ -34,6 +42,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
   const [quickSlots, setQuickSlots] = useState(() => storageService.getQuickSlots());
 
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
+
 
   // Detect any hotkey conflicts across all 5 hotkeys
   const allHotkeys = [
@@ -140,6 +149,38 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
     }
   };
 
+  const handleTestCustomEndpoint = async () => {
+    setEndpointTestStatus({ loading: true, message: `Connecting to ${customEndpoint}...` });
+    try {
+      if (window.electronAPI?.testEndpoint) {
+        await window.electronAPI.testEndpoint({
+          endpoint: customEndpoint,
+          model: customModel,
+          apiKey: customApiKey
+        });
+        setEndpointTestStatus({ success: true, message: `✓ Connected to ${customModel || 'model'} successfully!` });
+      } else {
+        const url = `${customEndpoint.replace(/\/+$/, '')}/chat/completions`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${customApiKey || 'ollama'}`
+          },
+          body: JSON.stringify({
+            model: customModel || 'llama3.2',
+            messages: [{ role: 'user', content: 'Say OK' }],
+            max_tokens: 10
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setEndpointTestStatus({ success: true, message: `✓ Connected to ${customModel || 'model'} successfully!` });
+      }
+    } catch (err) {
+      setEndpointTestStatus({ success: false, message: err.message || 'Connection to custom endpoint failed.' });
+    }
+  };
+
   const handleSave = () => {
     if (hasConflict) return;
 
@@ -152,10 +193,16 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
       instantPopupMode,
       startMinimized,
       translateHotkey,
-      explainHotkey
+      explainHotkey,
+      aiProvider,
+      customGeminiModel,
+      customEndpoint,
+      customApiKey,
+      customModel
     });
 
     storageService.saveQuickSlots(quickSlots);
+
 
     if (window.electronAPI?.setStartMinimized) {
       window.electronAPI.setStartMinimized(startMinimized);
@@ -190,157 +237,292 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated }) {
           </button>
         </div>
 
-        {/* Gemini API Key */}
-        <div className="form-group">
+        {/* AI Engine & BYOM Provider Switcher */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.75)',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+          borderRadius: 'var(--radius-md)',
+          padding: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="form-label">Google Gemini API Key (Free Tier)</label>
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer"
-              style={{ fontSize: '0.75rem', color: '#818cf8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              Get Free Key from Google AI Studio <ExternalLink size={12} />
-            </a>
+            <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Cpu size={16} color="#6366f1" />
+              <span>AI Engine / Model Provider</span>
+            </label>
+            <span style={{ fontSize: '0.72rem', color: '#a5b4fc', fontWeight: 600, background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '4px' }}>
+              BYOM Enabled
+            </span>
           </div>
 
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <input
-              type={showKey ? 'text' : 'password'}
-              className="form-input"
-              placeholder="Paste your Gemini API key (e.g. AIzaSy...)"
-              value={apiKey}
-              onChange={(e) => {
-                const val = e.target.value;
-                setApiKey(val);
-                if (val.trim().length >= 30) {
-                  handleRefreshModels(val.trim());
-                }
-              }}
-              style={{ paddingRight: '70px', fontFamily: 'var(--font-mono)' }}
-            />
+          {/* Provider Selection Tabs */}
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
-              onClick={() => setShowKey(!showKey)}
+              onClick={() => setAiProvider('gemini')}
               style={{
-                position: 'absolute',
-                right: '10px',
-                background: 'none',
-                border: 'none',
-                color: '#94a3b8',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              {showKey ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-            Your key is stored locally on your device and used only for translation requests.
-          </span>
-        </div>
-
-        {/* Primary Target Language Selection */}
-        <div className="form-group">
-          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Languages size={15} color="#818cf8" />
-            <span>Primary Language to Translate Into</span>
-          </label>
-          <select
-            className="form-input"
-            value={primaryTargetLanguage}
-            onChange={(e) => setPrimaryTargetLanguage(e.target.value)}
-            style={{ cursor: 'pointer', fontWeight: 600 }}
-          >
-            {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.name} ({l.nativeName})
-              </option>
-            ))}
-          </select>
-          <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
-            Global hotkey and instant translations will default to this language.
-          </span>
-        </div>
-
-        {/* Translation Model Selection */}
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>Active Translation Model</label>
-            <button
-              type="button"
-              onClick={() => handleRefreshModels()}
-              disabled={isRefreshingModels || !apiKey.trim()}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: isRefreshingModels ? '#818cf8' : '#94a3b8',
-                fontSize: '0.75rem',
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: aiProvider === 'gemini' ? '1px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.1)',
+                background: aiProvider === 'gemini' ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                color: aiProvider === 'gemini' ? '#fff' : '#94a3b8',
+                fontWeight: 600,
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontWeight: 600
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease'
               }}
-              title="Query Google API for all active models supported by your key"
             >
-              <RotateCw size={13} className={isRefreshingModels ? 'spinner' : ''} />
-              <span>{isRefreshingModels ? 'Querying Google API...' : 'Refresh Models from Google'}</span>
+              <Sparkles size={14} color={aiProvider === 'gemini' ? '#818cf8' : '#64748b'} />
+              <span>Google Gemini (Cloud)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAiProvider('openai_compatible')}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: aiProvider === 'openai_compatible' ? '1px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.1)',
+                background: aiProvider === 'openai_compatible' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                color: aiProvider === 'openai_compatible' ? '#fff' : '#94a3b8',
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Server size={14} color={aiProvider === 'openai_compatible' ? '#c084fc' : '#64748b'} />
+              <span>BYOM / Local AI (Ollama, LM Studio)</span>
             </button>
           </div>
-          {refreshMsg && (
-            <div style={{
-              fontSize: '0.74rem',
-              color: refreshMsg.error ? '#f87171' : '#34d399',
-              marginTop: '2px',
-              fontWeight: 500
-            }}>
-              {refreshMsg.text}
-            </div>
-          )}
-          <select
-            className="form-input"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            style={{ cursor: 'pointer', fontWeight: 600, marginTop: '6px' }}
-          >
-            {modelsList.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} — {m.tag}
-              </option>
-            ))}
-          </select>
 
-          {/* Model Explanatory Card */}
-          {selectedModelInfo && (
-            <div style={{
-              background: 'rgba(99, 102, 241, 0.08)',
-              border: '1px solid rgba(99, 102, 241, 0.25)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              marginTop: '4px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e0e7ff' }}>
-                  {selectedModelInfo.name}
-                </span>
-                <span style={{ fontSize: '0.75rem', color: selectedModelInfo.badgeColor, fontWeight: 600 }}>
-                  {selectedModelInfo.tag}
-                </span>
+          {/* Option A: Google Gemini */}
+          {aiProvider === 'gemini' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Gemini API Key */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 0 }}>Google Gemini API Key (Free Tier)</label>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    Get Free Key <ExternalLink size={11} />
+                  </a>
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="AIzaSy..."
+                    value={apiKey}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setApiKey(val);
+                      if (val.trim().length >= 30) handleRefreshModels(val.trim());
+                    }}
+                    style={{ paddingRight: '70px', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.72rem', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    {showKey ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
-              <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.4 }}>
-                {selectedModelInfo.description}
+
+              {/* Gemini Model Selection */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 0 }}>Active Model</label>
+                  <button
+                    type="button"
+                    onClick={() => handleRefreshModels()}
+                    disabled={isRefreshingModels || !apiKey.trim()}
+                    style={{ background: 'none', border: 'none', color: isRefreshingModels ? '#818cf8' : '#94a3b8', fontSize: '0.72rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}
+                  >
+                    <RotateCw size={11} className={isRefreshingModels ? 'spinner' : ''} />
+                    <span>{isRefreshingModels ? 'Querying Google...' : 'Refresh Models'}</span>
+                  </button>
+                </div>
+                <select
+                  className="form-input"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                >
+                  {modelsList.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} — {m.tag}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
-                💡 <strong>Best for:</strong> {selectedModelInfo.bestFor}
+
+              {/* Optional Custom Gemini Model Override (BYOM) */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '2px' }}>
+                  Custom Gemini Model ID (Optional Override)
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. tunedModels/my-custom-model or gemini-2.0-flash-thinking-exp"
+                  value={customGeminiModel}
+                  onChange={(e) => setCustomGeminiModel(e.target.value.trim())}
+                  style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+
+              {/* Model Explanatory Card */}
+              {selectedModelInfo && (
+                <div style={{
+                  background: 'rgba(99, 102, 241, 0.08)',
+                  border: '1px solid rgba(99, 102, 241, 0.25)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  marginTop: '4px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e0e7ff' }}>
+                      {selectedModelInfo.name}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: selectedModelInfo.badgeColor, fontWeight: 600 }}>
+                      {selectedModelInfo.tag}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.4 }}>
+                    {selectedModelInfo.description}
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
+                    💡 <strong>Best for:</strong> {selectedModelInfo.bestFor}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Option B: BYOM / Local LLM (Ollama, LM Studio, OpenRouter) */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Preset Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomEndpoint('http://localhost:11434/v1');
+                    setCustomModel('llama3.2');
+                  }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer' }}
+                >
+                  🦙 Ollama (11434)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomEndpoint('http://localhost:1234/v1');
+                    setCustomModel('local-model');
+                  }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer' }}
+                >
+                  💻 LM Studio (1234)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomEndpoint('https://openrouter.ai/api/v1');
+                    setCustomModel('google/gemini-2.5-flash');
+                  }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer' }}
+                >
+                  🌐 OpenRouter
+                </button>
+              </div>
+
+              {/* Custom Base URL */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px' }}>
+                  OpenAI-Compatible Base URL
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="http://localhost:11434/v1"
+                  value={customEndpoint}
+                  onChange={(e) => setCustomEndpoint(e.target.value)}
+                  style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+
+              {/* Custom Model Name */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px' }}>
+                  Model Name / Tag
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. llama3.2, mistral, deepseek-r1:8b, qwen2.5"
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                  style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+
+              {/* Optional API Key */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px' }}>
+                  API Key (Optional / Leave blank for local Ollama / LM Studio)
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Bearer token (if required by provider)"
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+
+              {/* Test Custom Endpoint Button */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                <button
+                  type="button"
+                  className="preset-chip"
+                  onClick={handleTestCustomEndpoint}
+                  disabled={endpointTestStatus?.loading}
+                  style={{ padding: '6px 14px', fontSize: '0.75rem' }}
+                >
+                  {endpointTestStatus?.loading ? 'Testing...' : 'Test Endpoint Connection'}
+                </button>
+                {endpointTestStatus && (
+                  <span style={{ fontSize: '0.75rem', color: endpointTestStatus.success ? '#34d399' : '#f87171', fontWeight: 600 }}>
+                    {endpointTestStatus.message}
+                  </span>
+                )}
               </div>
             </div>
           )}
         </div>
+
 
         {/* Global Hotkeys Customization Section */}
         <div style={{
