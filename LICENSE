@@ -1,264 +1,678 @@
 ================================================================================
-END USER LICENSE AGREEMENT (EULA) FOR NATIVELINGO™
+NATIVELINGO
+END USER LICENSE AGREEMENT AND COMMERCIAL LICENSING TERMS
 ================================================================================
 
-IMPORTANT — READ CAREFULLY BEFORE DOWNLOADING, INSTALLING, COPYING, OR USING:
+Copyright (c) 2026 pkoryaka. All rights reserved.
 
-This End User License Agreement ("Agreement" or "EULA") is a legally binding 
-contract between you (either an individual person or a single corporate entity, 
-organization, or business establishment, hereinafter referred to as "Licensee" 
-or "You") and the copyright holder, pkoryaka ("Licensor" or "Author"), for the 
-software product known as NativeLingo™ ("Software"), including all associated 
-binaries, scripts, compiled native utilities (e.g., CopyNative executable), 
-documentation, graphics, and interface assets.
+IMPORTANT: READ THIS AGREEMENT BEFORE INSTALLING OR USING THE SOFTWARE.
 
-BY DOWNLOADING, INSTALLING, COPYING, ACCESSING, OR OTHERWISE USING THE SOFTWARE, 
-YOU AGREE TO BE UNCONDITIONALLY BOUND BY ALL TERMS AND CONDITIONS OF THIS 
-AGREEMENT. IF YOU DO NOT AGREE TO THESE TERMS, DO NOT INSTALL, COPY, OR USE 
-THE SOFTWARE.
+This End User License Agreement and Commercial Licensing Terms ("Agreement")
+governs your installation, use, and permitted redistribution of NativeLingo.
+It is a legal agreement between pkoryaka, the copyright holder and licensor
+("Licensor"), and the individual or legal entity accepting this Agreement
+("Licensee" or "you").
+
+By accepting this Agreement electronically, or by installing or using the
+Software after being given an opportunity to review this Agreement, you agree
+to its terms. If you act for an organization, you represent that you have
+authority to bind that organization. If you do not have that authority, or do
+not agree to these terms, do not install or use the Software.
+
+The Software is licensed, not sold. Individual Personal and Non-Commercial
+Use is free of charge. Commercial Use is permitted for a fully functional
+40-day evaluation period; continued Commercial Use requires a paid license.
+
+Mandatory rights under applicable law are not excluded or restricted by this
+Agreement.
 
 ================================================================================
 1. DEFINITIONS
 ================================================================================
 
-1.1. "Software" means the computer software application known as NativeLingo, 
-     including executable files, scripts, dynamic libraries, user interface 
-     components, and documentation, in both object code and source forms.
+1.1. "Licensor" means the copyright holder operating under the name pkoryaka,
+     whose official contact channel is identified in Section 16.
 
-1.2. "Commercial Entity" means any corporation, partnership, limited liability 
-     company, sole proprietorship, association, governmental agency, or other 
-     for-profit or enterprise organization, including contractors or individuals 
-     operating on behalf of such organizations.
+1.2. "Licensee" means the individual accepting this Agreement personally, or
+     the single legal entity on whose behalf this Agreement is accepted.
+     Affiliates are not automatically included within that legal entity.
 
-1.3. "Personal & Non-Commercial Use" means usage strictly by an individual 
-     human user on personal computing devices exclusively for non-profit, 
-     educational, academic research, or individual personal productivity 
-     purposes where no direct or indirect commercial gain or corporate remuneration 
-     is derived from such usage.
+1.3. "Software" means NativeLingo as distributed by Licensor, including its
+     executable files, scripts, proprietary source code where supplied,
+     native utilities, including CopyNative, libraries, interface assets,
+     documentation, and accompanying updates. Third-Party Components are
+     subject to Section 8.
 
-1.4. "Commercial Use" means any deployment, execution, or utilization of the 
-     Software in connection with business operations, work-for-hire, corporate 
-     workflows, commercial translation, revenue-generating activities, or within 
-     an enterprise environment.
+1.4. "Personal and Non-Commercial Use" means use by an individual human being
+     for private personal productivity, personal communication, unpaid
+     nonprofit or charitable activities, study, learning, teaching, or
+     non-commercial academic research, and not for the business operations
+     of a Commercial Entity or the provision of paid services.
 
-1.5. "Evaluation Version" means an unregistered installation of the Software 
-     utilized within a Commercial Entity solely for testing and verification 
-     purposes as set forth in Section 2.
+     Ordinary payment of an educator's salary or a student's scholarship
+     does not, by itself, disqualify otherwise eligible educational use
+     under Section 3.
 
-1.6. "Registered Version" means an installation of the Software covered by an 
-     authorized, fully paid Commercial License Certificate or registration key 
-     issued directly by the Licensor.
+1.5. "Commercial Entity" means a corporation, partnership, sole
+     proprietorship, governmental body, association, or other organization
+     using the Software for business, professional, administrative, or
+     institutional operations. It includes a self-employed individual and
+     any employee or contractor acting for such an organization. An
+     organization's nonprofit status does not, by itself, exempt its
+     operational deployment from commercial licensing.
 
-================================================================================
-2. EVALUATION (SHAREWARE / TRIAL) LICENSE FOR COMMERCIAL ENTITIES
-================================================================================
+1.6. "Commercial Use" means use for business operations, employment-related
+     business productivity, paid professional services, work for hire,
+     commercial translation, revenue-generating activities, or organizational
+     administration, except for use expressly exempted under Section 3.
+     Classification depends on the purpose of use, not device ownership,
+     the user's location, or whether a particular activity earns a profit.
 
-2.1. 40-Day Evaluation Period:
-     The Software is distributed on a "try-before-you-buy" evaluation model for 
-     commercial and enterprise users. A Commercial Entity is granted a temporary, 
-     revocable, non-exclusive, non-transferable evaluation license to deploy and 
-     test the Software on its systems for an evaluation period of up to forty (40) 
-     consecutive calendar days commencing from the initial date of installation.
+1.7. "Evaluation Version" means the official, unregistered Software used by a
+     Commercial Entity under the temporary evaluation license in Section 2.
+     The same distribution may also be used without registration for the
+     free uses authorized in Section 3.
 
-2.2. Purpose of Evaluation:
-     The sole purpose of the evaluation period is to permit the Commercial Entity 
-     to determine whether the Software satisfies its operational, security, and 
-     technical requirements.
+1.8. "Registered Version" means the Software to the extent its Commercial
+     Use is covered by a valid, paid commercial entitlement issued or
+     expressly authorized by Licensor. Registration need not involve a
+     separate executable or different functionality.
 
-2.3. Mandatory Registration Upon Expiration:
-     Upon expiration of the forty (40) day evaluation period, if the Commercial 
-     Entity desires to continue using the Software, it MUST purchase a valid 
-     Commercial License as provided in Section 4. Continued commercial deployment 
-     or execution of the Software beyond the 40-day trial without acquiring a 
-     valid Commercial License is strictly prohibited and constitutes a direct 
-     infringement of the Author's copyright.
+1.9. "Order" means a quotation, order form, license certificate, or other
+     commercial licensing instrument accepted in writing by Licensor that
+     identifies the Licensee, license tier, quantity, scope, fees, and any
+     applicable license term.
 
-================================================================================
-3. GRANT OF PERSONAL & NON-COMMERCIAL LICENSE (FREE)
-================================================================================
+1.10. "Authorized User" means an individual permitted to use the Software
+      within the scope of Licensee's entitlement. Licensee is responsible
+      for Authorized Users' compliance when acting on Licensee's behalf.
 
-3.1. Perpetual Free Individual License:
-     The Licensor hereby grants to individual private persons a free, non-exclusive, 
-     perpetual license to download, install, execute, and use the Software solely 
-     for Personal & Non-Commercial Use on an unlimited number of personal computers 
-     owned or operated by such individuals.
+1.11. "Affiliate" means an entity that controls, is controlled by, or is under
+      common control with Licensee, where control means ownership of more
+      than fifty percent of voting interests or equivalent governing power.
 
-3.2. Community & Academic Exemption:
-     Students, educators, and academic institutions may utilize the Software free 
-     of charge for strictly non-commercial classroom instruction and educational 
-     learning.
+1.12. "Third-Party Components" means software, libraries, models, or other
+      materials owned by third parties and supplied under separate license
+      terms, including open-source licenses.
 
 ================================================================================
-4. COMMERCIAL & ENTERPRISE LICENSING TIERS
+2. COMMERCIAL EVALUATION: FULLY FUNCTIONAL 40-DAY TRIAL
 ================================================================================
 
-Following the 40-day evaluation period, commercial and organizational usage 
-requires the acquisition of one of the following licensing options:
+2.1. Evaluation Grant.
+     Licensor grants each Commercial Entity a non-exclusive,
+     non-transferable license to install and use the fully functional
+     Evaluation Version for forty (40) consecutive calendar days solely
+     to evaluate its suitability for that entity's internal requirements.
 
-4.1. Single-User Commercial License:
-     Grants one designated named employee, contractor, or workstation within a 
-     Commercial Entity the right to install and execute the Software on up to two 
-     (2) computing devices (e.g., a primary office PC and a mobile laptop), 
-     provided that both devices are operated exclusively by the same licensed 
-     individual.
+     Reasonable internal pilot use is permitted for evaluation. The
+     evaluation license does not authorize resale, public hosting, or
+     provision of the Software as a service to third parties.
 
-4.2. Multi-User Corporate Volume License:
-     Grants a Commercial Entity the right to deploy the Software across a fixed 
-     number of authorized seats, endpoints, or concurrent users as specified in 
-     the applicable commercial purchase order or invoice.
+2.2. Beginning and Scope of Evaluation.
+     The evaluation period begins on the date of the first installation
+     for that Commercial Entity, including installation by an employee or
+     contractor acting on its behalf. The period applies to the entity,
+     not separately to each user, device, department, or office.
 
-4.3. Enterprise Site License:
-     Grants a Commercial Entity the unrestricted right to deploy and operate the 
-     Software across all workstations, virtual desktops, and computing devices 
-     situated within specified corporate facilities, legal subsidiaries, or worldwide 
-     divisions, as mutually agreed upon in writing with the Licensor.
+     Prior use solely under Section 3 does not consume a later commercial
+     evaluation period; in that case, the period begins when Commercial
+     Use first occurs.
 
-================================================================================
-5. REDISTRIBUTION & SHARING TERMS
-================================================================================
+2.3. No Restart or Extension by Technical Means.
+     Reinstallation, upgrades, replacement devices, new accounts, virtual
+     machines, snapshots, or changes to system clocks do not restart or
+     extend the evaluation period. Only Licensor may authorize an
+     extension or an additional evaluation, in writing.
 
-5.1. Redistribution of Evaluation Package:
-     You are granted a non-exclusive license to redistribute unmodified copies of 
-     the official NativeLingo evaluation distribution package (including official 
-     installers, zip archives, or release packages) via the Internet, cover media, 
-     software repositories, or corporate intranets, provided that:
-     (a) The original distribution archive is delivered in its entirety, without 
-         modification, addition, deletion, or bundling with unauthorized toolbars, 
-         malware, adware, or third-party installers;
-     (b) No separate fee or surcharge is demanded for the Software itself (reasonable 
-         media production or download bandwidth fees are permitted);
-     (c) The Author's copyright notices, trademarks, and documentation are retained intact;
-     (d) You do not claim or imply endorsement, sponsorship, or official affiliation 
-         with the Author.
+2.4. Purchase or Discontinue.
+     Before continuing Commercial Use after the evaluation period,
+     Licensee must purchase sufficient commercial license coverage for
+     its deployment. Otherwise, Licensee must cease Commercial Use and
+     remove the Software from commercially deployed devices and images.
 
-5.2. Prohibition on Sharing License Credentials:
-     Any commercial registration keys, license certificates, activation tokens, 
-     or custom enterprise configuration files issued by the Licensor are strictly 
-     confidential and proprietary to the designated licensee. You may NOT publish, 
-     distribute, rent, lease, sublicense, resell, or share such credentials with 
-     any third party or outside the authorized scope of your organization.
+     Copies used exclusively under Section 3 may be retained. An
+     inaccessible backup may remain until deleted in the ordinary backup
+     cycle, provided it is not restored for unauthorized use.
 
-================================================================================
-6. RESTRICTIONS & PROHIBITED CONDUCT
-================================================================================
+2.5. No Implied Extension.
+     Continued operation of the Software, absence of a reminder, or lack
+     of technical enforcement does not extend the evaluation license.
+     Unauthorized use is a breach of this Agreement and may also
+     constitute infringement under applicable law.
 
-Except as expressly authorized under this Agreement or mandatory statutory law, 
-Licensee shall not:
-(a) Decompile, disassemble, reverse engineer, or attempt to derive the proprietary 
-    algorithms of the Software, except to the extent permitted by applicable law 
-    or open-source dependencies;
-(b) Modify, disable, or circumvent any licensing enforcement mechanisms, trial 
-    timers, registration dialogs, or security features;
-(c) Remove, obscure, or alter any copyright, trademark, logo, or legal notices 
-    affixed to or embedded within the Software;
-(d) Use the Software to translate, generate, or transmit unlawful, defamatory, 
-    harassing, or harmful materials, or to violate any local, national, or 
-    international privacy or export control regulations;
-(e) Sublicense, lease, lend, host as a commercial cloud service bureau, or 
-    resell the Software to third parties without prior written consent from the Licensor.
+     The evaluation does not automatically convert into a paid
+     subscription, and no purchase obligation arises merely from
+     evaluating and timely discontinuing the Software.
 
 ================================================================================
-7. THIRD-PARTY APIS, BYOM ARCHITECTURE & PRIVACY GUARANTEE
+3. FREE PERSONAL, NONPROFIT, AND EDUCATIONAL USE
 ================================================================================
 
-7.1. Bring-Your-Own-Model (BYOM) Independence:
-     NativeLingo is built as an independent client interface and local assistant. 
-     The Software connects directly to third-party language model providers 
-     (such as Google Gemini, OpenAI-compatible APIs) or local offline inference 
-     servers (such as Ollama or LM Studio) designated by the Licensee.
+3.1. Free Perpetual Individual License.
+     Subject to this Agreement, Licensor grants each individual human
+     user a non-exclusive, royalty-free, perpetual license to install
+     and use the Software for Personal and Non-Commercial Use on an
+     unlimited number of devices that the individual is authorized to use.
 
-7.2. End User API Obligations:
-     Licensee acknowledges that access to third-party cloud AI APIs may require 
-     separate API keys, accounts, and fee arrangements directly with such providers. 
-     Licensor does not provide, resell, or guarantee third-party cloud API services, 
-     token quotas, or service availability.
+     This license is 100 percent free, does not require commercial
+     registration, and is not subject to the 40-day evaluation limit.
+     "Perpetual" means without a fixed expiration date, subject to
+     termination for breach under Section 13.
 
-7.3. Privacy and Local Data Confidentiality:
-     NativeLingo contains zero built-in behavioral tracking, zero background telemetry, 
-     and zero cloud intermediary proxy servers. When operating in local BYOM mode 
-     (e.g., via Ollama or LM Studio), 100% of text processing and translation remains 
-     strictly confined to the Licensee's local hardware memory. Licensor never has 
-     access to, collects, inspects, or stores Licensee's clipboard content, prompts, 
-     or translation outputs.
+3.2. Student and Educational Exemption.
+     Students and educators may use the Software without charge for
+     learning, classroom instruction, and non-commercial academic
+     research. Schools and academic institutions may install the
+     Software on classroom or laboratory devices for those purposes,
+     including shared educational workstations.
 
-================================================================================
-8. TITLE & INTELLECTUAL PROPERTY RIGHTS
-================================================================================
+     This exemption does not cover institutional administration,
+     commercial consulting, paid translation services, or research
+     conducted primarily to deliver proprietary commercial results
+     to a business customer.
 
-All title, copyright, industrial property rights, trademarks, and intellectual 
-property rights in and to the Software, the accompanying documentation, and any 
-derivative works thereof remain the sole and exclusive property of pkoryaka. 
-This Agreement grants Licensee only specific, limited contractual rights to use 
-the Software in accordance with this EULA. All rights not expressly granted are 
-reserved by the Author.
+3.3. Nonprofit Activities.
+     Individual unpaid charitable and nonprofit activities qualify
+     under Section 3.1. General organizational deployment by a charity,
+     nonprofit organization, or government body requires a commercial
+     license unless covered by Section 3.2 or separately authorized
+     by Licensor in writing.
 
-================================================================================
-9. DISCLAIMER OF WARRANTY
-================================================================================
-
-THE SOFTWARE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITH ALL 
-FAULTS AND WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY 
-APPLICABLE LAW, THE AUTHOR AND CONTRIBUTORS DISCLAIM ALL WARRANTIES, EXPRESS, 
-IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
-WARRANTIES OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A PARTICULAR 
-PURPOSE, ACCURACY OF TRANSLATION OR AI-GENERATED TEXT, TIMELINESS, NON-INFRINGEMENT, 
-AND FREEDOM FROM PROGRAM ERRORS, DEFECTS, OR SYSTEM INTERRUPTIONS.
-
-LICENSEE ASSUMES THE ENTIRE RISK AS TO THE QUALITY, PERFORMANCE, AND USEFULNESS 
-OF THE SOFTWARE, AND THE ENTIRE RESPONSIBILITY FOR VERIFYING THE ACCURACY OF 
-ANY REWRITTEN, TRANSLATED, OR GENERATED CONTENT BEFORE RELYING UPON OR 
-PUBLISHING SUCH OUTPUT.
+3.4. Mixed Use.
+     Personal eligibility does not exempt business use of the same
+     installation. Commercial Use must independently satisfy Section 2
+     or Section 4.
 
 ================================================================================
-10. LIMITATION OF LIABILITY
+4. COMMERCIAL LICENSE TIERS
 ================================================================================
 
-TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, IN NO EVENT SHALL THE 
-AUTHOR, COPYRIGHT HOLDER, OR AFFILIATED CONTRIBUTORS BE LIABLE FOR ANY SPECIAL, 
-INCIDENTAL, INDIRECT, CONSEQUENTIAL, OR PUNITIVE DAMAGES WHATSOEVER (INCLUDING, 
-WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, 
-LOSS OF WORK PRODUCT, LOSS OF DATA OR PRIVACY, INACCURATE MACHINE TRANSLATION, 
-THIRD-PARTY API CHARGES, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF 
-OR INABILITY TO USE THIS SOFTWARE, EVEN IF THE AUTHOR HAS BEEN ADVISED OF THE 
-POSSIBILITY OF SUCH DAMAGES.
+4.1. General Commercial Grant.
+     Upon payment of the applicable fees, Licensor grants Licensee a
+     non-exclusive license to install and use the Registered Version
+     for Licensee's internal business purposes within the purchased
+     scope. Transfer and sublicensing are prohibited except as required
+     by mandatory law or expressly authorized by Licensor.
 
-IN ANY CASE, THE AUTHOR'S TOTAL AGGREGATE LIABILITY UNDER ANY PROVISION OF THIS 
-AGREEMENT SHALL BE STRICTLY LIMITED TO THE GREATER OF: (A) THE AMOUNT ACTUALLY 
-PAID BY THE LICENSEE FOR THE SOFTWARE LICENSE DURING THE TWELVE (12) MONTHS 
-PRECEDING THE CLAIM, OR (B) FIVE UNITED STATES DOLLARS ($5.00 USD).
+4.2. Single-User Commercial License.
+     This license covers one designated, named individual and permits
+     installation on up to two (2) physical or virtual computing
+     devices used by that individual.
+
+     The devices may not be used to provide access to unlicensed users.
+     A shared workstation does not replace the named-user requirement.
+     An employee or contractor may be the designated user.
+
+4.3. Multi-User Volume Corporate License.
+     This license covers the quantity and licensing metric specified
+     in the Order.
+
+     Unless the Order expressly provides otherwise, the metric is
+     named users, each with the two-device allowance in Section 4.2.
+     Device-based, endpoint-based, or concurrent-user licensing applies
+     only if expressly stated in the Order.
+
+     Named-user licenses may not be pooled among rotating users.
+     A concurrent-user license, if expressly granted, limits simultaneous
+     access rather than total installations.
+
+4.4. Enterprise Worldwide Site License.
+     This license permits deployment without a numerical user or device
+     limit across Licensee's worldwide operations and any Affiliates
+     expressly covered by the Order, subject to stated scope restrictions.
+
+     Covered deployments may include offices, remote employees,
+     workstations, virtual desktops, and Licensee-controlled hosted
+     infrastructure. Contractors may use the Software solely to perform
+     work for covered entities.
+
+     This license does not cover customers, unrelated third parties,
+     public software-as-a-service offerings, or Affiliates not included
+     in the Order. Newly acquired entities are included only if the
+     Order expressly provides for them or Licensor confirms inclusion
+     in writing.
+
+4.5. Reassignment and Device Replacement.
+     Licensee may replace licensed devices and permanently reassign
+     named-user licenses when personnel or responsibilities change,
+     provided the former user or device ceases licensed use. Reassignment
+     may not be used to simulate floating or concurrent licensing.
+
+4.6. Term and Version Coverage.
+     Unless the Order expressly specifies a subscription or fixed term,
+     commercial licenses are perpetual for the release identified in
+     the Order or, if none is identified, the current release supplied
+     at purchase.
+
+     Future releases, major upgrades, maintenance, and support are
+     included only to the extent stated in the Order or expressly
+     designated by Licensor as included in that entitlement.
+
+4.7. Deployment Copies.
+     Licensee may make reasonable backup and deployment copies within
+     its licensed scope. A dormant backup or installation image does
+     not itself require an additional license, but its deployment or
+     execution must be covered.
 
 ================================================================================
-11. TERMINATION
+5. ORDERS, PAYMENT, AND LICENSE ADMINISTRATION
 ================================================================================
 
-This Agreement remains effective until terminated. Your rights under this Agreement 
-will terminate automatically and immediately without notice from the Author if 
-you fail to comply with any term or condition of this Agreement. Upon termination, 
-you must cease all execution of the Software and permanently destroy or delete all 
-copies of the Software and associated documentation in your possession or control. 
-Sections 1, 6, 7, 8, 9, 10, and 12 shall survive any termination of this Agreement.
+5.1. Commercial fees, payment dates, currency, license quantities, and
+     applicable taxes are specified in the accepted Order. Licensee is
+     responsible for transaction taxes legally chargeable to it, but
+     not taxes on Licensor's net income.
+
+5.2. Unless Licensor agrees otherwise in writing, commercial entitlement
+     becomes effective upon receipt of full payment. An unpaid purchase
+     order, pending quotation, or intention to purchase does not extend
+     an evaluation period.
+
+5.3. Refunds and cancellation rights are governed by the Order and
+     mandatory applicable law. No provision excludes a statutory
+     withdrawal right or remedy that cannot lawfully be excluded.
+
+5.4. Licensee must maintain reasonable records of its commercial
+     entitlement and deployment. On a reasonable written request,
+     Licensee will confirm its licensed user or device count and
+     applicable entitlement.
+
+     This provision does not authorize remote access, telemetry,
+     inspection of user content, or an onsite audit. Any further
+     verification procedure requires separate agreement or lawful
+     authority.
+
+5.5. Additional or conflicting terms in Licensee's purchase order,
+     procurement portal, or vendor documentation do not amend this
+     Agreement unless expressly accepted in writing by Licensor.
 
 ================================================================================
-12. GOVERNING LAW & SEVERABILITY
+6. REDISTRIBUTION AND REGISTRATION CONFIDENTIALITY
 ================================================================================
 
-This Agreement shall be governed by and construed in accordance with the laws of 
-applicable jurisdiction, without regard to conflicts of law provisions. If any 
-provision of this Agreement is held to be invalid, illegal, or unenforceable by 
-a court of competent jurisdiction, the remaining provisions shall continue in full 
-force and effect.
+6.1. Permitted Redistribution.
+     Any person may redistribute complete, unmodified copies of the
+     official evaluation distribution package through websites,
+     repositories, corporate intranets, or physical media, provided that:
+
+     (a) The original package remains intact, including this Agreement,
+         copyright notices, documentation, and third-party notices;
+
+     (b) No fee, surcharge, mandatory donation, or other payment is
+         charged for the Software or access to its download;
+
+     (c) The package is not repackaged, wrapped in another installer,
+         altered, or bundled with advertising software, tracking
+         software, malware, or unauthorized additions;
+
+     (d) No registration credentials or paid entitlement are included;
+         and
+
+     (e) The distributor does not misrepresent authorship, licensing
+         status, endorsement, or affiliation.
+
+     Ordinary Internet service charges independently imposed by a
+     recipient's connectivity provider are not distribution charges.
+
+6.2. Recipients' Rights.
+     Redistribution does not sublicense the Software or extend a trial.
+     Each recipient must obtain its usage rights directly under this
+     Agreement. Redistribution permission does not authorize continued
+     commercial execution by an unlicensed distributor.
+
+6.3. Confidential Registration Materials.
+     Commercial registration keys, license certificates, activation
+     tokens, and customer-specific licensing files must be kept
+     confidential and protected using reasonable security measures.
+
+     Licensee may disclose them only to personnel, covered Affiliates,
+     and service providers who need access to administer the licensed
+     deployment and are subject to appropriate confidentiality duties,
+     or as required by law.
+
+     Licensee must not publish, sell, rent, sublicense, or share those
+     materials outside its authorized scope, and must promptly report
+     known compromise to Licensor.
 
 ================================================================================
-13. COMMERCIAL LICENSING, REGISTRATION & INQUIRIES
+7. RESTRICTIONS
 ================================================================================
 
-To purchase a Commercial License, request corporate volume pricing, obtain 
-enterprise site licensing agreements, or inquire regarding custom business 
-integrations, please contact the Author via the official repository:
+Except as expressly permitted by this Agreement, the applicable license for
+a Third-Party Component, or mandatory law, Licensee must not:
 
-Official Website / Repository:
+(a) Reverse engineer, decompile, disassemble, or otherwise attempt to
+    derive the source code or internal design of proprietary portions
+    of the Software;
+
+(b) Modify proprietary portions of the Software or create derivative
+    works from them without written permission;
+
+(c) Disable, bypass, manipulate, or circumvent trial periods,
+    registration controls, entitlement checks, or other licensing
+    restrictions, whether or not technically enforced;
+
+(d) Remove or obscure copyright, trademark, attribution, or legal notices;
+
+(e) Sell, resell, sublicense, rent, lease, or commercially host the
+    Software for third parties without written authorization;
+
+(f) Use another person's registration credentials or exceed the users,
+    devices, entities, territory, or term covered by an entitlement;
+
+(g) Use the Software in violation of applicable law, third-party
+    intellectual property rights, privacy rights, export controls,
+    or sanctions.
+
+These restrictions do not prohibit activities that applicable law makes
+non-waivable, including qualifying interoperability activities. A technical
+ability to perform an activity is not permission to perform it.
+
+================================================================================
+8. OWNERSHIP AND THIRD-PARTY COMPONENTS
+================================================================================
+
+8.1. Licensor and the applicable third-party rights holders retain their
+     respective ownership and intellectual property rights. No ownership
+     interest transfers to Licensee. All rights not expressly granted
+     are reserved.
+
+8.2. Availability of source code does not, by itself, grant permission
+     to modify or redistribute proprietary code. Any express license
+     accompanying particular source files governs those files.
+
+8.3. Third-Party Components remain governed by their applicable licenses.
+     If this Agreement conflicts with a third-party license concerning
+     that component, the third-party license controls for that component.
+
+     Nothing in this Agreement restricts rights to use, study, modify,
+     reverse engineer, or redistribute an open-source component granted
+     by its license, or removes applicable source-code and notice
+     obligations.
+
+8.4. Licensor claims no ownership of Licensee's clipboard content,
+     prompts, documents, or translation outputs. Rights in model outputs
+     remain subject to applicable law and any model-provider terms.
+     This Agreement does not guarantee that an output is copyrightable,
+     exclusive, or free of third-party rights.
+
+8.5. No trademark license is granted except the limited right to identify
+     the Software accurately in permitted redistribution.
+
+================================================================================
+9. BYOM ARCHITECTURE, PRIVACY, AND DATA HANDLING
+================================================================================
+
+9.1. Bring Your Own Model.
+     NativeLingo is an independent client application that communicates
+     with a model endpoint selected and configured by Licensee. Endpoints
+     may include third-party cloud APIs or local inference servers such
+     as Ollama or LM Studio.
+
+9.2. No Telemetry or Data Harvesting.
+     The official Software contains no built-in behavioral tracking,
+     background telemetry, analytics collection, or data-harvesting
+     functionality. User content is not routed through a Licensor-operated
+     intermediary or proxy.
+
+     Through the Software, Licensor does not intercept, receive, inspect,
+     collect, retain, or store Licensee's clipboard text, translation
+     prompts, or outputs.
+
+     Local application access to clipboard text for a user-requested
+     operation is not access by Licensor.
+
+9.3. Local and Air-Gapped Operation.
+     When configured exclusively to use a local model endpoint, the
+     Software sends processing requests to that endpoint rather than
+     to a cloud model provider.
+
+     A 100 percent air-gapped deployment requires Licensee to operate
+     the Software, model server, and supporting systems entirely within
+     an isolated environment with no external network path. In that
+     configuration, Software-directed content processing remains inside
+     that environment.
+
+     Merely selecting Ollama, LM Studio, or another local-model product
+     does not establish an air gap or guarantee absolute confidentiality.
+     Third-party logging, plugins, cloud synchronization, backups,
+     operating-system behavior, malware, and endpoint configuration
+     remain outside Licensor's control. No representation is made that
+     processing occurs only in volatile memory or that third-party
+     software never writes data to disk.
+
+9.4. Cloud Endpoints.
+     If Licensee selects a cloud or externally hosted endpoint, relevant
+     prompts, text, and request data are transmitted to that endpoint.
+     Its operator's terms, retention policies, security measures, and
+     international transfer arrangements apply.
+
+9.5. API Accounts and Credentials.
+     Licensee is responsible for obtaining authorized models, accounts,
+     API keys, and necessary permissions, paying provider charges, and
+     safeguarding credentials. Commercial NativeLingo licenses do not
+     include model subscriptions, API credits, or inference services.
+
+9.6. Licensee Responsibilities.
+     Licensee controls endpoint selection, network access, model-server
+     settings, content submitted, and authorization to process that
+     content. Licensee must assess whether its configuration satisfies
+     applicable confidentiality, privacy, and security obligations.
+
+9.7. Administrative Communications.
+     Information voluntarily supplied when purchasing a license,
+     requesting support, or contacting Licensor is separate from
+     in-application content processing. Licensor may handle that
+     information as necessary to fulfill the request, administer the
+     license, and comply with applicable law. Do not submit confidential
+     prompts, documents, or API secrets through public support channels.
+
+================================================================================
+10. UPDATES, SUPPORT, AND EXTERNAL SERVICES
+================================================================================
+
+10.1. Unless separately agreed in writing, Licensor has no obligation to
+      provide support, maintenance, custom development, security fixes,
+      compatibility updates, or a service-level commitment.
+
+10.2. Third-party models and services are not operated or controlled by
+      Licensor. Their availability, pricing, functionality, and terms
+      may change or cease independently of the Software.
+
+10.3. This Agreement continues to govern releases supplied under it.
+      Different terms supplied with a future release apply only upon
+      valid acceptance and do not retroactively revoke an existing
+      perpetual entitlement to a previously licensed release.
+
+================================================================================
+11. WARRANTY DISCLAIMER
+================================================================================
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, AND EXCEPT FOR EXPRESS
+COMMITMENTS IN THIS AGREEMENT OR A WRITTEN AGREEMENT SIGNED BY LICENSOR,
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITH ALL FAULTS.
+
+LICENSOR AND CONTRIBUTORS DISCLAIM ALL OTHER WARRANTIES, WHETHER EXPRESS,
+IMPLIED, OR STATUTORY, INCLUDING MERCHANTABILITY, SATISFACTORY QUALITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, AND ACCURACY.
+
+NO WARRANTY IS MADE THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE,
+COMPATIBLE WITH EVERY SYSTEM, OR IMMUNE FROM SECURITY INCIDENTS, OR THAT
+ANY MODEL OUTPUT WILL BE COMPLETE, CORRECT, LAWFUL, OR SUITABLE FOR RELIANCE.
+
+LICENSEE MUST REVIEW TRANSLATIONS AND GENERATED CONTENT BEFORE USE,
+PUBLICATION, OR RELIANCE, ESPECIALLY IN LEGAL, MEDICAL, FINANCIAL, SAFETY,
+OR OTHER HIGH-CONSEQUENCE CONTEXTS. THE SOFTWARE IS NOT A SUBSTITUTE FOR
+QUALIFIED PROFESSIONAL JUDGMENT.
+
+NOTHING IN THIS SECTION DISCLAIMS AN EXPRESS DATA-HANDLING COMMITMENT IN
+SECTION 9 OR A WARRANTY OR REMEDY THAT CANNOT LAWFULLY BE EXCLUDED.
+
+================================================================================
+12. LIMITATION OF LIABILITY
+================================================================================
+
+12.1. Excluded Damages.
+      TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LICENSOR AND
+      CONTRIBUTORS WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL,
+      CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR LOST PROFITS,
+      LOST REVENUE, LOST BUSINESS OPPORTUNITIES, BUSINESS INTERRUPTION,
+      OR LOSS OF GOODWILL ARISING OUT OF THIS AGREEMENT OR THE SOFTWARE.
+
+      THIS EXCLUSION APPLIES REGARDLESS OF THE LEGAL THEORY AND WHETHER
+      OR NOT THE POSSIBILITY OF SUCH DAMAGES WAS DISCLOSED.
+
+12.2. Aggregate Cap.
+      TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE TOTAL
+      AGGREGATE LIABILITY OF LICENSOR AND CONTRIBUTORS ARISING OUT OF
+      OR RELATING TO THIS AGREEMENT OR THE SOFTWARE WILL NOT EXCEED THE
+      GREATER OF:
+
+      (A) THE TOTAL LICENSE FEES ACTUALLY PAID BY LICENSEE TO LICENSOR
+          OR AN AUTHORIZED RESELLER FOR THE SOFTWARE ENTITLEMENT
+          GIVING RISE TO THE CLAIM; OR
+
+      (B) FIVE UNITED STATES DOLLARS (USD 5.00).
+
+      MULTIPLE CLAIMS DO NOT INCREASE THIS CAP. THIRD-PARTY MODEL,
+      HOSTING, AND API FEES ARE NOT SOFTWARE LICENSE FEES.
+
+12.3. Mandatory Exceptions.
+      NOTHING IN THIS AGREEMENT EXCLUDES OR LIMITS LIABILITY FOR FRAUD,
+      FRAUDULENT MISREPRESENTATION, WILLFUL MISCONDUCT, DEATH OR PERSONAL
+      INJURY CAUSED BY NEGLIGENCE, OR ANY OTHER LIABILITY TO THE EXTENT
+      SUCH EXCLUSION OR LIMITATION IS PROHIBITED BY APPLICABLE LAW.
+
+12.4. Allocation of Risk.
+      THESE LIMITATIONS FORM PART OF THE AGREED ALLOCATION OF RISK,
+      TAKING INTO ACCOUNT THE FREE LICENSES AND COMMERCIAL FEES, AND
+      APPLY EVEN IF A LIMITED REMEDY FAILS OF ITS ESSENTIAL PURPOSE,
+      EXCEPT WHERE APPLICABLE LAW REQUIRES OTHERWISE.
+
+================================================================================
+13. TERM AND TERMINATION
+================================================================================
+
+13.1. This Agreement takes effect upon valid acceptance and continues for
+      the applicable license term unless terminated under this Section.
+      Evaluation rights expire automatically as provided in Section 2.
+
+13.2. Licensee may terminate its rights at any time by ceasing use and
+      deleting the relevant Software copies and registration materials.
+      Voluntary termination does not create a refund right except as
+      required by law or expressly agreed.
+
+13.3. Licensor may terminate an affected license for a material breach
+      not remedied within fifteen (15) calendar days after written notice.
+      Licensor may terminate immediately by written notice for deliberate
+      licensing circumvention, unauthorized sale or public disclosure of
+      registration credentials, or a material breach incapable of remedy.
+
+13.4. Upon termination or expiration, Licensee must cease use under the
+      affected entitlement and delete the affected copies and registration
+      materials. One copy of purchase and license records may be retained
+      for legal compliance, without any right to execute the Software.
+      Inaccessible routine backups may remain until ordinarily overwritten.
+
+13.5. Termination does not affect accrued payment obligations, accrued
+      claims, independently valid licenses, or rights under third-party
+      open-source licenses. Provisions concerning ownership,
+      confidentiality, disclaimers, liability, accrued obligations, and
+      dispute resolution survive to the extent relevant.
+
+================================================================================
+14. GOVERNING LAW AND DISPUTES
+================================================================================
+
+14.1. An accepted Order may identify the governing law and courts for the
+      commercial entitlement, subject to mandatory applicable law.
+
+14.2. If no governing law is expressly agreed in an accepted Order,
+      applicable law will be determined under the conflict-of-laws rules
+      of the court having jurisdiction. This Agreement does not select
+      an unidentified or undisclosed jurisdiction.
+
+14.3. Unless a valid written forum agreement provides otherwise, disputes
+      may be brought before any court having lawful jurisdiction.
+      Nothing deprives a consumer of mandatory protections of the law
+      of their habitual residence or any non-waivable right to bring
+      proceedings in an available local court.
+
+14.4. To the extent applicable and lawfully excludable, the United Nations
+      Convention on Contracts for the International Sale of Goods does
+      not apply.
+
+================================================================================
+15. GENERAL PROVISIONS
+================================================================================
+
+15.1. Entire Agreement and Priority.
+      This Agreement, an accepted Order, and applicable third-party
+      licenses constitute the entire agreement concerning the Software
+      and supersede prior statements on the same subject.
+
+      An accepted Order controls its expressly stated commercial scope.
+      A negotiated amendment controls conflicting provisions only where
+      it expressly identifies the departure and is accepted by Licensor.
+      Third-party license priority is governed by Section 8.
+
+15.2. Amendments.
+      Amendments require agreement by both parties, including valid
+      electronic acceptance. Posting revised terms alone does not
+      amend an existing license.
+
+15.3. Severability.
+      An invalid or unenforceable provision will be limited or severed
+      only to the extent necessary under applicable law. The remaining
+      provisions continue in effect.
+
+15.4. No Waiver.
+      Failure or delay to enforce a provision is not a waiver. A waiver
+      of one breach is not a waiver of another.
+
+15.5. Assignment.
+      Licensee may not assign this Agreement or transfer a commercial
+      entitlement without Licensor's written consent, except where
+      mandatory law permits transfer notwithstanding this restriction.
+
+15.6. Notices.
+      Licensing and legal notices to Licensor must be directed through
+      the official contact channel in Section 16 or a verified address
+      identified in an accepted Order. Notices to Licensee may be sent
+      to the contact address supplied with its Order. Statutory service
+      requirements remain unaffected.
+
+15.7. Independent Parties.
+      This Agreement creates no partnership, employment, agency, or
+      authority to bind the other party.
+
+================================================================================
+16. OFFICIAL CONTACT AND COMMERCIAL REGISTRATION
+================================================================================
+
+Licensor:
+pkoryaka
+
+Official Project Repository and Contact Channel:
 https://github.com/pkoryaka/gemini-desktop-translator
 
+For commercial registration, volume pricing, Enterprise Worldwide Site
+Licenses, approved resale arrangements, or negotiated enterprise terms,
+use the contact instructions published in the official repository.
+
+Verify payment instructions and licensing communications against that
+official channel. Do not publish registration keys, API credentials,
+confidential purchase records, or private user content in public issues.
+
+Any accepted commercial Order should identify the contracting parties'
+legal names, business addresses, authorized contacts, and applicable
+commercial particulars.
+
 Copyright (c) 2026 pkoryaka. All rights reserved.
-NativeLingo™ is a trademark of pkoryaka.
+NativeLingo is a trademark of pkoryaka.
+Third-party names and marks belong to their respective owners.
+
+================================================================================
+END OF AGREEMENT
 ================================================================================
