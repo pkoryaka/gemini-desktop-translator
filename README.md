@@ -44,75 +44,9 @@ Tired of copying text, switching browser tabs, pasting into ChatGPT or DeepL, co
 
 Workplaces, enterprise policies, and privacy-conscious users often cannot send sensitive code, legal documents, or private chats to cloud APIs. **NativeLingo solves this with native BYOM support:**
 
-```mermaid
-flowchart TD
-    %% BPMN 2.0 Swimlane 1: User & Active Application
-    subgraph Lane_User ["👤 Pool: Active Windows Application (Word, Slack, Chrome, VS Code, etc.)"]
-        Start_Event(("● START EVENT<br/>Text Selected & Hotkey Pressed")):::startEvent
-        User_App["User Workspace / Document Context"]:::task
-    end
-
-    %% BPMN 2.0 Swimlane 2: Native Windows & Electron Core
-    subgraph Lane_Native ["⚙️ Pool: Native Assistant Core (Electron + C# Win32 Keystroke Synthesizer)"]
-        Task_Win32["⚡ Service Task: Win32 Keystroke Capture<br/>CopyNative.exe extracts selection (&lt;15ms)"]:::task
-        GW_Action{"XOR Gateway<br/>Action Type?"}:::gateway
-        Action_InPlace["Prepare In-Place Prompt<br/>(Grammar, Tone, or Translate)"]:::task
-        Action_HUD["Prepare Interactive Context<br/>(Jargon Demystifier or Translation)"]:::task
-    end
-
-    %% BPMN 2.0 Swimlane 3: BYOM AI Router
-    subgraph Lane_BYOM ["🧠 Pool: BYOM Model Router (Bring Your Own Model)"]
-        GW_Provider{"XOR Gateway<br/>Configured AI Engine?"}:::gateway
-        Task_Local["🦙 Service Task: Local Offline LLM<br/>Ollama / LM Studio (localhost)<br/>• 0 API Keys • 100% Air-Gapped • $0 Cost"]:::localTask
-        Task_Gemini["⚡ Service Task: Google Gemini Cloud<br/>Official v1beta Keep-Alive Sockets<br/>• Sub-150ms TTFT • High Reasoning"]:::cloudTask
-        Task_Custom["🌐 Service Task: OpenAI-Compatible<br/>OpenRouter / Groq / vLLM Gateway<br/>• Custom Base URL & Model Name"]:::customTask
-        Task_Aggregate["Standardize & Validate AI Response"]:::task
-    end
-
-    %% BPMN 2.0 Swimlane 4: Output Synthesis & Dispatch
-    subgraph Lane_Output ["🚀 Pool: Output Synthesis & Dispatch"]
-        GW_Target{"XOR Gateway<br/>Delivery Target?"}:::gateway
-        Task_PasteBack["⚡ Service Task: In-Place Synthesizer<br/>Simulate Win32 Ctrl+V Paste-Back at Cursor"]:::task
-        Task_ShowHUD["🪟 Service Task: Floating Mini HUD<br/>Position at Mouse Cursor with TTS & Slang Pills"]:::task
-        End_Event((("◎ END EVENT<br/>Workflow Completed (&lt;150ms)"))):::endEvent
-    end
-
-    %% BPMN Sequence Flows
-    Start_Event --> User_App
-    User_App -->|Global Keystroke Interrupt| Task_Win32
-    Task_Win32 --> GW_Action
-
-    GW_Action -->|Ctrl + Alt + 1 / 2 / 3| Action_InPlace
-    GW_Action -->|Ctrl + Alt + T / J| Action_HUD
-
-    Action_InPlace --> GW_Provider
-    Action_HUD --> GW_Provider
-
-    GW_Provider -->|Provider: Local AI| Task_Local
-    GW_Provider -->|Provider: Gemini Cloud| Task_Gemini
-    GW_Provider -->|Provider: Custom Endpoint| Task_Custom
-
-    Task_Local --> Task_Aggregate
-    Task_Gemini --> Task_Aggregate
-    Task_Custom --> Task_Aggregate
-
-    Task_Aggregate --> GW_Target
-
-    GW_Target -->|In-Place Action| Task_PasteBack
-    GW_Target -->|Mini Window HUD| Task_ShowHUD
-
-    Task_PasteBack --> End_Event
-    Task_ShowHUD --> End_Event
-
-    %% BPMN 2.0 Color Styles
-    classDef startEvent fill:#065f46,stroke:#10b981,stroke-width:2.5px,color:#ecfdf5,font-weight:bold;
-    classDef endEvent fill:#7f1d1d,stroke:#ef4444,stroke-width:3px,color:#fef2f2,font-weight:bold;
-    classDef task fill:#1e293b,stroke:#6366f1,stroke-width:1.5px,color:#f8fafc;
-    classDef gateway fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#faf5ff,font-weight:bold;
-    classDef localTask fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f0fdf4,font-weight:600;
-    classDef cloudTask fill:#4a044e,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,font-weight:600;
-    classDef customTask fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff,font-weight:600;
-```
+<div align="center">
+  <img src="./public/bpmn-architecture.svg" alt="NativeLingo BPMN 2.0 Architectural Specification" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #1e293b;" />
+</div>
 
 ### 1. 🦙 100% Offline Local LLMs (Ollama & LM Studio)
 * **Zero API Keys Required**: Plug-and-play with your existing Ollama or LM Studio installation.
