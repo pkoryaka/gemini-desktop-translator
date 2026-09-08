@@ -70,6 +70,11 @@ export function App() {
     setIsLoading(false);
   };
 
+  // Proactively sync settings to Electron main process on mount
+  useEffect(() => {
+    storageService.syncToElectron();
+  }, []);
+
   const executeTranslationWithMode = useCallback(async (textToTranslate, explicitTargetLang, explicitExplainMode, explicitCustomPrompt) => {
     const text = textToTranslate !== undefined ? textToTranslate : sourceText;
     if (!text || !text.trim()) return;
@@ -84,8 +89,9 @@ export function App() {
 
     const currentSettings = storageService.getSettings();
     const mode = explicitExplainMode !== undefined ? explicitExplainMode : explainJargon;
-    const effectiveTarget = explicitTargetLang || targetLang || currentSettings.primaryTargetLanguage || 'uk';
     const effectivePrompt = explicitCustomPrompt !== undefined ? explicitCustomPrompt : customPrompt;
+    // When a custom prompt is active, do NOT force default target language to Ukrainian
+    const effectiveTarget = effectivePrompt ? (explicitTargetLang || '') : (explicitTargetLang || targetLang || currentSettings.primaryTargetLanguage || 'uk');
 
     setIsLoading(true);
     setErrorMessage('');
@@ -121,7 +127,7 @@ export function App() {
             sourceText: text,
             translatedText: result.translation,
             sourceLang,
-            targetLang: effectiveTarget,
+            targetLang: effectiveTarget || 'custom',
             isExplained: result.isExplained,
             customPrompt: effectivePrompt
           });
@@ -163,9 +169,11 @@ export function App() {
           setIsLoading(true);
 
           const currentSettings = storageService.getSettings();
-          const target = currentSettings.primaryTargetLanguage || 'uk';
+          const target = slotPrompt ? '' : (currentSettings.primaryTargetLanguage || 'uk');
           
-          setTargetLang(target);
+          if (target) {
+            setTargetLang(target);
+          }
           setSourceText(text);
           setExplainJargon(shouldExplain);
           if (slotPrompt) {

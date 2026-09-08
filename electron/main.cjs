@@ -85,6 +85,23 @@ function loadSavedConfig() {
         quickPromptSlots = data.quickPromptSlots;
       }
     }
+
+    // Auto-migrate from legacy config if apiKey is empty
+    if (!savedApiKey) {
+      const appData = app.getPath('appData');
+      const legacyPath = path.join(appData, 'gemini-desktop-translator', 'config.json');
+      if (fs.existsSync(legacyPath)) {
+        try {
+          const legacyData = JSON.parse(fs.readFileSync(legacyPath, 'utf8'));
+          if (legacyData.apiKey) {
+            savedApiKey = legacyData.apiKey;
+            if (legacyData.primaryTargetLanguage) savedTargetLang = legacyData.primaryTargetLanguage;
+            if (legacyData.model) savedModel = legacyData.model;
+            saveConfig({ apiKey: savedApiKey, primaryTargetLanguage: savedTargetLang, model: savedModel });
+          }
+        } catch {}
+      }
+    }
   } catch (e) {
     console.warn('Could not load saved config:', e);
   }
@@ -682,19 +699,19 @@ function triggerQuickSlotAction(slotId) {
         if (slot.pasteBack) {
           // Direct In-Place Text Processing & Replacement
           if (savedAiProvider === 'gemini' && (!savedApiKey || !savedApiKey.trim())) {
+            loadSavedConfig();
+          }
+
+          if (savedAiProvider === 'gemini' && (!savedApiKey || !savedApiKey.trim())) {
             focusAppWindow(true);
             if (mainWindow) {
-              mainWindow.webContents.send('quick-translate', {
-                text: trimmed,
-                customPrompt: slot.prompt,
-                slotName: slot.name
-              });
+              mainWindow.webContents.send('open-settings');
             }
             return;
           }
 
           try {
-            const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Output ONLY the transformed text directly. Do NOT add conversational preamble, markdown meta commentary, or quotes wrapping unless specifically requested.`;
+            const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`;
 
             const outputText = await runAiGeneration({
               text: trimmed,
@@ -714,21 +731,18 @@ function triggerQuickSlotAction(slotId) {
                     if (err) console.warn('Native paste execution error:', err);
                   });
                 }
-              }, 25);
+              }, 40);
             }
           } catch (err) {
             console.error(`Slot ${slotId} execution error:`, err);
+            // On error, do not force a mistranslation into Ukrainian!
             if (mainWindow) {
-              mainWindow.webContents.send('quick-translate', {
-                text: trimmed,
-                customPrompt: slot.prompt,
-                slotName: slot.name
-              });
+              mainWindow.webContents.send('show-full-window');
               focusAppWindow(true);
             }
           }
         } else {
-          // Open Floating HUD
+          // Open Floating HUD with explicit custom prompt
           if (mainWindow) {
             mainWindow.webContents.send('quick-translate', {
               text: trimmed,
@@ -738,7 +752,7 @@ function triggerQuickSlotAction(slotId) {
             focusAppWindow(true);
           }
         }
-      }, 15);
+      }, 35);
     };
 
     if (fs.existsSync(copyExe)) {
@@ -932,7 +946,9 @@ ipcMain.handle('window:set-size', (event, { width, height }) => {
 ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, customPrompt, explainJargon, model }) => {
   const systemInstructionText = explainJargon
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
-    : `Translate into ${targetLang}. Output translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
+    : customPrompt && customPrompt.trim()
+    ? `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
+    : `Translate into ${targetLang}. Output translation only.`;
 
   const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
 

@@ -277,9 +277,12 @@ Respond ONLY in JSON format:
   ],
   "culturalNotes": "string or null"
 }`;
+  } else if (customPrompt && customPrompt.trim()) {
+    // Custom prompt slot / precision instruction mode: strictly follow prompt instruction
+    systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`;
   } else {
-    // Ultra-compact prompt to minimize prompt ingestion latency
-    systemInstructionText = `Translate into ${targetName}. Output translation only.${customPrompt ? ` Style: ${customPrompt}` : ''}`;
+    // Pure translation mode
+    systemInstructionText = `Translate into ${targetName}. Output translation only.`;
   }
 
   // Generation configuration tuned for lowest latency:
