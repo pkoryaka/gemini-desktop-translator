@@ -131,17 +131,26 @@ function getStartupShortcutPath() {
   return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini AI Clipboard Assistant.lnk');
 }
 
+function cleanRogueRegistryEntries() {
+  if (process.platform === 'win32') {
+    try {
+      exec('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "electron.app.Electron" /f', () => {});
+      exec('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run" /v "electron.app.Electron" /f', () => {});
+    } catch {}
+  }
+}
+
 function isAutoStartEnabled() {
   if (process.platform === 'win32') {
     const startupPath = getStartupShortcutPath();
-    if (fs.existsSync(startupPath)) return true;
-    return app.getLoginItemSettings().openAtLogin;
+    return fs.existsSync(startupPath);
   }
   return app.getLoginItemSettings().openAtLogin;
 }
 
 function setAutoStartEnabled(enable) {
   if (process.platform === 'win32') {
+    cleanRogueRegistryEntries();
     const startupPath = getStartupShortcutPath();
     if (enable) {
       if (fs.existsSync(startupPath)) return true;
@@ -161,6 +170,7 @@ function setAutoStartEnabled(enable) {
       execFile('powershell', ['-NoProfile', '-Command', psScript], (err) => {
         if (err) console.warn('Autostart shortcut creation warning:', err);
       });
+      return true;
     } else {
       if (fs.existsSync(startupPath)) {
         try {
@@ -169,6 +179,7 @@ function setAutoStartEnabled(enable) {
           console.warn('Could not remove autostart shortcut:', e);
         }
       }
+      return false;
     }
   }
 
@@ -237,7 +248,7 @@ function createWindow() {
     height: 820,
     minWidth: 460,
     minHeight: 280,
-    show: !shouldStartHidden,
+    show: false, // NEVER show immediately to prevent white/empty frame flashing
     title: 'Gemini AI Clipboard Assistant',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
@@ -247,6 +258,12 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
+    }
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    if (!shouldStartHidden) {
+      mainWindow.show();
     }
   });
 
@@ -800,6 +817,7 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
+  cleanRogueRegistryEntries();
   loadSavedConfig();
   createWindow();
   createTray();
