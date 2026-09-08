@@ -45,7 +45,7 @@ Tired of copying text, switching browser tabs, pasting into ChatGPT or DeepL, co
 Workplaces, enterprise policies, and privacy-conscious users often cannot send sensitive code, legal documents, or private chats to cloud APIs. **NativeLingo solves this with native BYOM support:**
 
 <div align="center">
-  <img src="./public/bpmn-architecture.svg" alt="NativeLingo BPMN 2.0 Architectural Specification" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #1e293b;" />
+  <img src="public/bpmn-architecture.svg" alt="NativeLingo BPMN 2.0 Architectural Specification" width="100%" style="border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 20px rgba(0,0,0,0.06);" />
 </div>
 
 ### 1. 🦙 100% Offline Local LLMs (Ollama & LM Studio)
