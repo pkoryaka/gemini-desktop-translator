@@ -51,3 +51,13 @@ When Jargon Explainer mode is activated, Gemini returns structured JSON:
 - **Headless WScript Launcher**: Uses `launch.vbs` running under `wscript.exe` with `SW_HIDE` (`0, False`) to prevent CMD console popping up.
 - **Rogue Registry Guard**: Automatically purges any unpackaged `electron.app.Electron` keys in `HKCU\...\Run` on boot.
 - **Ready-to-Show Display**: `BrowserWindow` is initialized with `show: false`, deferring display to `mainWindow.once('ready-to-show')`. When launched with `--hidden` at Windows logon, the window is never shown and the app loads directly into the system tray in <100ms.
+
+## Tabbed Settings Architecture & Theme Engine
+- **Categorized Tabs Navigation**: Settings modal is organized into 4 distinct workflow tabs:
+  1. `models`: AI Engine & BYOM (Gemini Cloud vs Local Offline LLMs via Ollama/LM Studio with live test connections and live catalog discovery).
+  2. `languages`: Default Target Language configuration (Ukrainian, English, Spanish, Russian, German, French, Polish) and translation temperature control.
+  3. `shortcuts`: Global hardware hotkeys (`Alt+T`, `Alt+J`) and the 3 custom in-place prompt slots with conflict detection.
+  4. `appearance`: Dual-theme switcher (Obsidian Dark vs Crisp Light modern mode) and system auto-start controls.
+- **Theme Engine**: Document root tokens switch via `[data-theme="light"]` attribute, synchronized instantly through `storageService` and quick toggled from Header or Settings.
+- **Prompt Isolation Protocol**: One-shot slot prompts are cleanly scoped to the active execution and reset on standard translations or window close to prevent prompt leakage.
+

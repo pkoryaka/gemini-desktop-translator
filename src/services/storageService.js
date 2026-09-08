@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS = {
   startMinimized: false,
   translateHotkey: 'CommandOrControl+Alt+T',
   explainHotkey: 'CommandOrControl+Alt+J',
+  theme: 'dark', // 'dark' | 'light'
   // BYOM (Bring Your Own Model) Settings
   aiProvider: 'gemini', // 'gemini' | 'openai_compatible'
   customGeminiModel: '',
@@ -127,6 +128,16 @@ export const storageService = {
         customModel: settings.customModel || 'llama3.2'
       });
     }
+  },
+
+  getTheme: () => {
+    return storageService.getSettings().theme || 'dark';
+  },
+
+  setTheme: (theme) => {
+    const settings = storageService.getSettings();
+    storageService.saveSettings({ ...settings, theme });
+    document.documentElement.setAttribute('data-theme', theme);
   },
 
 

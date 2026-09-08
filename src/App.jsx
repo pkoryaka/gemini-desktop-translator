@@ -37,10 +37,26 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
+  const [theme, setTheme] = useState(() => storageService.getTheme());
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    storageService.setTheme(nextTheme);
+  };
+
   const refreshSettings = () => {
     const updated = storageService.getSettings();
     setSettings(updated);
     setApiKey(storageService.getApiKey());
+    if (updated.theme && updated.theme !== theme) {
+      setTheme(updated.theme);
+      document.documentElement.setAttribute('data-theme', updated.theme);
+    }
     if (updated.primaryTargetLanguage) {
       setTargetLang(updated.primaryTargetLanguage);
     }
@@ -68,6 +84,8 @@ export function App() {
     setExplanationData(null);
     setErrorMessage('');
     setIsLoading(false);
+    setCustomPrompt('');
+    setActivePreset(null);
   };
 
   // Proactively sync settings to Electron main process on mount
@@ -178,6 +196,9 @@ export function App() {
           setExplainJargon(shouldExplain);
           if (slotPrompt) {
             setCustomPrompt(slotPrompt);
+          } else {
+            setCustomPrompt('');
+            setActivePreset(null);
           }
 
           // If Instant Mini Popup mode is enabled
@@ -222,6 +243,8 @@ export function App() {
         setExplanationData(null);
         setErrorMessage('');
         setIsLoading(false);
+        setCustomPrompt('');
+        setActivePreset(null);
       });
       return () => unsubscribe && unsubscribe();
     }
@@ -326,6 +349,8 @@ export function App() {
       <Header
         currentModel={settings.model || 'gemini-3.6-flash'}
         hasApiKey={Boolean(apiKey)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenHistory={() => setIsHistoryOpen(true)}
       />
@@ -370,6 +395,8 @@ export function App() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onSettingsUpdated={refreshSettings}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* History Drawer */}

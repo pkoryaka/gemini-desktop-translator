@@ -1,7 +1,7 @@
 import React from 'react';
-import { Languages, Settings, History, Sparkles } from 'lucide-react';
+import { Languages, Settings, History, Sparkles, Sun, Moon } from 'lucide-react';
 
-export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey }) {
+export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey, theme, onToggleTheme }) {
   return (
     <header className="app-header">
       <div className="brand-section">
@@ -15,7 +15,6 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey 
           <h1 className="brand-title">Gemini AI Clipboard Assistant</h1>
           <p className="brand-subtitle">BYOM • In-Place Actions • Jargon Demystifier • Translation</p>
         </div>
-
       </div>
 
       <div className="header-actions">
@@ -31,6 +30,15 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey 
 
         <button 
           className="btn-icon" 
+          onClick={onToggleTheme}
+          title={theme === 'light' ? 'Switch to Dark Theme' : 'Switch to Light Theme'}
+          aria-label="Toggle Theme"
+        >
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+
+        <button 
+          className="btn-icon" 
           onClick={onOpenHistory}
           title="Translation History"
           aria-label="History"
@@ -41,7 +49,7 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey 
         <button 
           className="btn-icon" 
           onClick={onOpenSettings}
-          title="Settings & API Key"
+          title="Settings & Preferences"
           aria-label="Settings"
         >
           <Settings size={18} />

@@ -76,9 +76,9 @@ export function MiniTranslatePopup({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      background: 'rgba(15, 23, 42, 0.98)',
+      background: 'var(--bg-secondary)',
       backdropFilter: 'blur(20px)',
-      color: '#fff',
+      color: 'var(--text-primary)',
       padding: '14px 18px',
       gap: '10px',
       userSelect: 'text',
@@ -86,7 +86,7 @@ export function MiniTranslatePopup({
       boxSizing: 'border-box'
     }}>
       {/* Top Header Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
             {sourceLangObj?.name || 'Auto-Detect'}
