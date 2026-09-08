@@ -19,7 +19,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
   const [activeTab, setActiveTab] = useState('models'); // 'models' | 'languages' | 'shortcuts' | 'appearance'
   const [themeMode, setThemeMode] = useState(() => initialTheme || storageService.getTheme());
 
-  const initialModel = currentSettings.model || 'gemini-3.8-flash';
+  const initialModel = currentSettings.model || 'gemini-3.6-flash';
 
   const [apiKey, setApiKey] = useState(currentKey);
   const [model, setModel] = useState(initialModel);

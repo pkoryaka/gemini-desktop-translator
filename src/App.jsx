@@ -123,7 +123,7 @@ export function App() {
         targetLang: effectiveTarget,
         customPrompt: effectivePrompt,
         explainJargon: mode,
-        model: currentSettings.model || 'gemini-3.8-flash',
+        model: currentSettings.model || 'gemini-3.6-flash',
         temperature: currentSettings.temperature ?? 0.1,
         onStreamChunk: (partialText) => {
           if (!mode) {

@@ -18,8 +18,8 @@ public class CopyNative {
     public static void Main(string[] args) {
         bool isPaste = (args.Length > 0 && args[0].ToLower() == "paste");
 
-        // 1. Brief pause to ensure physical modifier state settling
-        Thread.Sleep(20);
+        // 1. Pause to ensure physical modifier key settling (e.g. user pressing Alt+A)
+        Thread.Sleep(35);
 
         // 2. Force release modifier keys
         keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
@@ -27,18 +27,17 @@ public class CopyNative {
         keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_RWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-        Thread.Sleep(15);
+        Thread.Sleep(25);
 
         byte targetKey = isPaste ? VK_V : VK_C;
 
         // 3. Synthesize clean Ctrl + C or Ctrl + V keystroke
         keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
-        Thread.Sleep(10);
+        Thread.Sleep(15);
         keybd_event(targetKey, 0, 0, UIntPtr.Zero);
-        Thread.Sleep(25);
+        Thread.Sleep(35);
         keybd_event(targetKey, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-        Thread.Sleep(20);
+        Thread.Sleep(25);
     }
 }
-

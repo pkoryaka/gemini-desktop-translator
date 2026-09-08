@@ -18,7 +18,7 @@ let explainHotkey = 'CommandOrControl+Alt+J';
 let startMinimized = false;
 let savedApiKey = '';
 let savedTargetLang = 'uk';
-let savedModel = 'gemini-3.8-flash';
+let savedModel = 'gemini-3.6-flash';
 
 // BYOM (Bring Your Own Model) state
 let savedAiProvider = 'gemini'; // 'gemini' | 'openai_compatible'
@@ -75,7 +75,13 @@ function loadSavedConfig() {
       if (data.startMinimized !== undefined) startMinimized = Boolean(data.startMinimized);
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
-      if (data.model) savedModel = data.model;
+      if (data.model) {
+        if (data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash') {
+          savedModel = 'gemini-3.6-flash';
+        } else {
+          savedModel = data.model;
+        }
+      }
       if (data.aiProvider) savedAiProvider = data.aiProvider;
       if (data.customGeminiModel) savedCustomGeminiModel = data.customGeminiModel;
       if (data.customEndpoint) savedCustomEndpoint = data.customEndpoint;
@@ -485,8 +491,13 @@ async function startNativeStream({ text, targetLang, apiKey, model, explainJargo
   }
   activeStreamController = new AbortController();
 
-  const targetModel = model || 'gemini-2.0-flash';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  const primaryModel = model || savedModel || 'gemini-3.6-flash';
+  const candidates = Array.from(new Set([
+    primaryModel,
+    'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-2.0-flash'
+  ]));
 
   const systemInstructionText = explainJargon
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
@@ -503,58 +514,73 @@ async function startNativeStream({ text, targetLang, apiKey, model, explainJargo
     }
   };
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: activeStreamController.signal,
-      body: JSON.stringify(payload)
-    });
+  for (let i = 0; i < candidates.length; i++) {
+    const candidateModel = candidates[i];
+    const isLast = (i === candidates.length - 1);
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      onError(new Error(err.error?.message || `HTTP ${response.status}`));
-      return;
-    }
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: activeStreamController.signal,
+        body: JSON.stringify(payload)
+      });
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let accumulated = '';
-    let buffer = '';
+      if (!response.ok) {
+        if ((response.status === 429 || response.status === 503 || response.status === 404) && !isLast) {
+          console.warn(`Stream with ${candidateModel} failed with HTTP ${response.status}. Falling back to next candidate...`);
+          continue;
+        }
+        const err = await response.json().catch(() => ({}));
+        onError(new Error(err.error?.message || `HTTP ${response.status}`));
+        return;
+      }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulated = '';
+      let buffer = '';
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split(/\r?\n/);
-      buffer = lines.pop() || '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('data:')) {
-          const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
-          if (jsonStr) {
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const candidate = parsed.candidates?.[0];
-              const chunk = candidate?.content?.parts?.[0]?.text || '';
-              if (chunk) {
-                accumulated += chunk;
-                onChunk(accumulated);
-              }
-              if (candidate?.finishReason) {
-                try { reader.cancel(); } catch {}
-                return;
-              }
-            } catch {}
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data:')) {
+            const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+            if (jsonStr) {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const candidate = parsed.candidates?.[0];
+                const chunk = candidate?.content?.parts?.[0]?.text || '';
+                if (chunk) {
+                  accumulated += chunk;
+                  onChunk(accumulated);
+                }
+                if (candidate?.finishReason) {
+                  try { reader.cancel(); } catch {}
+                  return;
+                }
+              } catch {}
+            }
           }
         }
       }
-    }
-  } catch (err) {
-    if (err.name !== 'AbortError') {
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      if (!isLast) {
+        console.warn(`Stream attempt with ${candidateModel} error: ${err.message}. Trying next candidate...`);
+        continue;
+      }
       onError(err);
+      return;
     }
   }
 }
@@ -628,11 +654,11 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
 }
 
 async function runAiGeneration({ text, systemInstructionText, isJson = false, maxTokens = 1024, model, apiKey }) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  if (savedAiProvider === 'openai_compatible') {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-  try {
-    if (savedAiProvider === 'openai_compatible') {
+    try {
       const baseUrl = (savedCustomEndpoint || 'http://localhost:11434/v1').replace(/\/+$/, '');
       const endpoint = `${baseUrl}/chat/completions`;
       const bearer = savedCustomApiKey ? `Bearer ${savedCustomApiKey.trim()}` : 'Bearer ollama';
@@ -666,45 +692,82 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
 
       const data = await response.json();
       return data.choices?.[0]?.message?.content || '';
-    } else {
-      // Google Gemini Provider
-      const targetModel = savedCustomGeminiModel || model || savedModel || 'gemini-3.8-flash';
-      const key = (apiKey && apiKey.trim()) || savedApiKey;
-      if (!key) {
-        throw new Error('Please configure your Google Gemini API Key.');
-      }
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${key.trim()}`;
-
-      const payload = {
-        systemInstruction: { parts: [{ text: systemInstructionText }] },
-        contents: [{ role: 'user', parts: [{ text }] }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: maxTokens,
-          candidateCount: 1,
-          ...(isJson ? { responseMimeType: 'application/json' } : {})
-        }
-      };
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify(payload)
-      });
+    } catch (err) {
       clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      throw err;
     }
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
+  } else {
+    // Google Gemini Provider with Multi-Model Auto-Fallback
+    const requestedModel = savedCustomGeminiModel || model || savedModel || 'gemini-3.6-flash';
+    const key = (apiKey && apiKey.trim()) || savedApiKey;
+    if (!key) {
+      throw new Error('Please configure your Google Gemini API Key.');
+    }
+
+    const candidates = Array.from(new Set([
+      requestedModel,
+      'gemini-3.6-flash',
+      'gemini-3.7-flash',
+      'gemini-2.0-flash'
+    ]));
+
+    let lastError = null;
+
+    for (let i = 0; i < candidates.length; i++) {
+      const candidateModel = candidates[i];
+      const isLast = (i === candidates.length - 1);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${key.trim()}`;
+
+        const payload = {
+          systemInstruction: { parts: [{ text: systemInstructionText }] },
+          contents: [{ role: 'user', parts: [{ text }] }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: maxTokens,
+            candidateCount: 1,
+            ...(isJson ? { responseMimeType: 'application/json' } : {})
+          }
+        };
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify(payload)
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          const errMsg = err.error?.message || `HTTP ${response.status}`;
+          console.warn(`Model ${candidateModel} returned HTTP ${response.status} (${errMsg}).`);
+          lastError = new Error(errMsg);
+
+          if ((response.status === 429 || response.status === 503 || response.status === 404 || response.status === 400) && !isLast) {
+            console.warn(`Retrying with next Gemini fallback model...`);
+            continue;
+          }
+          throw lastError;
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } catch (err) {
+        clearTimeout(timeoutId);
+        lastError = err;
+        if (!isLast) {
+          console.warn(`Attempt with ${candidateModel} error: ${err.message}. Retrying fallback...`);
+          continue;
+        }
+        throw lastError;
+      }
+    }
+
+    throw lastError || new Error('All candidate Gemini models failed.');
   }
 }
 
@@ -717,10 +780,20 @@ function triggerQuickSlotAction(slotId) {
     const copyExe = path.join(__dirname, 'copy_native.exe');
     const copyVbs = path.join(__dirname, 'copy.vbs');
 
+    // Save previous clipboard state and clear clipboard before copying
+    const previousClipboard = clipboard.readText();
+    clipboard.writeText('');
+
     const handleSlotClipboard = () => {
       setTimeout(async () => {
         const selectedText = clipboard.readText();
-        if (!selectedText || !selectedText.trim()) return;
+        if (!selectedText || !selectedText.trim()) {
+          // No text selected: restore user's previous clipboard and exit silently
+          if (previousClipboard) {
+            clipboard.writeText(previousClipboard);
+          }
+          return;
+        }
 
         const trimmed = selectedText.trim();
 
@@ -758,15 +831,20 @@ function triggerQuickSlotAction(slotId) {
                   execFile(copyExe, ['paste'], (err) => {
                     if (err) console.warn('Native paste execution error:', err);
                   });
+                } else if (fs.existsSync(copyVbs)) {
+                  exec(`wscript.exe "${copyVbs}" paste`);
                 }
               }, 40);
+            } else {
+              if (previousClipboard) {
+                clipboard.writeText(previousClipboard);
+              }
             }
           } catch (err) {
             console.error(`Slot ${slotId} execution error:`, err);
-            // On error, do not force a mistranslation into Ukrainian!
-            if (mainWindow) {
-              mainWindow.webContents.send('show-full-window');
-              focusAppWindow(true);
+            // In-place mode must stay silent: do not open main modal!
+            if (previousClipboard) {
+              clipboard.writeText(previousClipboard);
             }
           }
         } else {
@@ -780,7 +858,7 @@ function triggerQuickSlotAction(slotId) {
             focusAppWindow(true);
           }
         }
-      }, 35);
+      }, 40);
     };
 
     if (fs.existsSync(copyExe)) {

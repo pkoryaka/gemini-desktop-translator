@@ -61,12 +61,12 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-3.8-flash',
-    name: 'Gemini 3.8 Flash',
-    tag: '⚡ Ultra Fast Frontier (Recommended)',
+    id: 'gemini-3.6-flash',
+    name: 'Gemini 3.6 Flash',
+    tag: '⚡ Ultra Fast & Generous Free Tier (Recommended)',
     badgeColor: '#10b981',
-    description: 'Google\'s newest frontier workhorse model. Exceptional multi-lingual speed, adaptive reasoning, and zero translation latency.',
-    bestFor: 'Instant hotkey translation, everyday chatting, technical documentation.'
+    description: 'Optimized efficiency model designed for lightning-fast phrasing, instant hotkey replacement, and generous free quotas.',
+    bestFor: 'Instant hotkey translation, quick in-place rewrites, everyday chatting.'
   },
   {
     id: 'gemini-3.7-flash',
@@ -77,12 +77,12 @@ export const AVAILABLE_MODELS = [
     bestFor: 'Real-time sentence streaming and everyday translation.'
   },
   {
-    id: 'gemini-3.6-flash',
-    name: 'Gemini 3.6 Flash',
-    tag: '⚡ Fast Multilingual',
-    badgeColor: '#3b82f6',
-    description: 'Optimized efficiency model designed for fast phrasing and conversational flow.',
-    bestFor: 'Quick lookups and conversational translations.'
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    tag: '⚡ Frontier Flash Preview',
+    badgeColor: '#f59e0b',
+    description: 'Google\'s newest frontier workhorse preview. Exceptional multi-lingual reasoning, subject to strict free-tier limits.',
+    bestFor: 'Everyday chatting and technical documentation when quota allows.'
   },
   {
     id: 'gemini-3.5-flash',
