@@ -25,3 +25,9 @@
    - **In-Place Delivery Route**: Exits Delivery Mode Gateway North vertex `(885, 588)`, jogs left to vertical corridor at `x=850`, travels straight up through the 40px open channel between task columns, and enters Service Task 3A West vertex at `(888, 247)`. Zero collision with Task 3B or LRU Cache.
    - **HUD Mode Delivery Route**: Exits Delivery Mode Gateway East vertex `(910, 613)` horizontally to `x=1005`, then travels vertically up entering the bottom edge of Service Task 3B directly at `(1005, 362)`.
    - **Dual Independent End Events**: Distinct End Event A (In-Place Done) and End Event B (HUD Displayed) eliminate duplicate stacked circles.
+
+## Light Theme Color Palette Specification
+- **Canvas & Grid**: Canvas background `#f8fafc` (Slate 50), orthogonal blueprint grid `#e2e8f0` (Slate 200).
+- **Cards & Tasks**: Crisp `#ffffff` cards with Slate-300 borders (`#cbd5e1`), subtle drop shadow (`flood-color="#0f172a"`, opacity `0.08`), and Slate-900 high-contrast typography (`#0f172a`).
+- **BYOM AI Engines**: Elegant pastel distinction with Emerald (`#f0fdf4`), Purple (`#faf5ff`), and Sky (`#f0f9ff`) fills with deep, readable headers and dark body labels.
+- **BPMN Sequence Flows**: Saturated high-contrast flows (Blue `#2563eb`, Orange `#ea580c`, Violet `#7c3aed`, Emerald `#059669`, Cyan `#0891b2`, Red `#dc2626`) with matching colored arrowheads.
