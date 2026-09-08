@@ -8,6 +8,7 @@ import {
 import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { HotkeyRecorder } from './HotkeyRecorder';
+import appLogo from '../assets/app-icon.png';
 
 export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initialTheme, onToggleTheme }) {
   if (!isOpen) return null;
@@ -291,7 +292,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
         <aside className="settings-sidebar">
           <div className="settings-sidebar-brand">
             <img 
-              src="/app-icon.png" 
+              src={appLogo} 
               alt="NativeLingo" 
               style={{
                 width: '32px',

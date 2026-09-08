@@ -1,13 +1,14 @@
 import React from 'react';
 import { Languages, Settings, History, Sparkles, Sun, Moon } from 'lucide-react';
+import appLogo from '../assets/app-icon.png';
 
 export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey, theme, onToggleTheme }) {
   return (
     <header className="app-header">
       <div className="brand-section">
         <img 
-          src="/app-icon.png" 
-          alt="NativeLingo Logo" 
+          src={appLogo} 
+          alt="NativeLingo" 
           className="brand-logo" 
           style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }}
         />
