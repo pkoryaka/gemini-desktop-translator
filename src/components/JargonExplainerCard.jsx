@@ -16,10 +16,10 @@ export function JargonExplainerCard({ explanationData }) {
     <div className="jargon-results-container">
       <div className="jargon-results-header">
         <div className="jargon-results-title">
-          <BookOpen size={18} color="#c084fc" />
+          <BookOpen size={18} color="var(--accent-purple)" />
           <span>Plain Language & Jargon Breakdown</span>
           {detectedSourceLanguage && (
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
               (Detected: {detectedSourceLanguage})
             </span>
           )}
@@ -44,7 +44,7 @@ export function JargonExplainerCard({ explanationData }) {
       {/* Jargon / Slang / Idiom Term Breakdown */}
       {jargonBreakdown && jargonBreakdown.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e9d5ff', marginTop: '6px', marginBottom: '6px' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', marginBottom: '6px' }}>
             Demystified Terms & Slang ({jargonBreakdown.length}):
           </div>
           <div className="jargon-terms-grid">

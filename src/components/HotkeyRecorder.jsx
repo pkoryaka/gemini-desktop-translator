@@ -207,12 +207,12 @@ export function HotkeyRecorder({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Keyboard size={15} color={isRecording ? '#a5b4fc' : '#94a3b8'} />
+            <Keyboard size={15} color={isRecording ? 'var(--primary)' : 'var(--text-muted)'} />
             <span style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '0.85rem',
               fontWeight: 600,
-              color: isRecording ? '#a5b4fc' : isConflict ? '#f87171' : '#fff'
+              color: isRecording ? 'var(--primary)' : isConflict ? '#ef4444' : 'var(--text-primary)'
             }}>
               {isRecording
                 ? currentPressed || 'Press key combination (e.g. Ctrl + Alt + K)...'
@@ -224,8 +224,8 @@ export function HotkeyRecorder({
             fontSize: '0.72rem',
             padding: '3px 8px',
             borderRadius: '4px',
-            background: isRecording ? '#6366f1' : 'rgba(255, 255, 255, 0.08)',
-            color: '#fff',
+            background: isRecording ? 'var(--primary)' : 'rgba(99, 102, 241, 0.12)',
+            color: isRecording ? '#ffffff' : 'var(--primary)',
             fontWeight: 600
           }}>
             {isRecording ? 'Listening...' : 'Click to Record'}

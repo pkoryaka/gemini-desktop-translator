@@ -390,10 +390,10 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 <div className="settings-card">
                   <div className="settings-card-header">
                     <div className="settings-card-title">
-                      <Cpu size={16} color="#6366f1" />
+                      <Cpu size={16} color="var(--primary)" />
                       <span>Model Provider</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#a5b4fc', fontWeight: 600, background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, background: 'rgba(99, 102, 241, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
                       BYOM Enabled
                     </span>
                   </div>
@@ -407,8 +407,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         flex: 1,
                         padding: '8px 12px',
                         borderRadius: 'var(--radius-sm)',
-                        border: aiProvider === 'gemini' ? '1px solid #6366f1' : '1px solid var(--border-color)',
-                        background: aiProvider === 'gemini' ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                        border: aiProvider === 'gemini' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                        background: aiProvider === 'gemini' ? 'rgba(99, 102, 241, 0.18)' : 'var(--bg-input)',
                         color: aiProvider === 'gemini' ? 'var(--text-primary)' : 'var(--text-secondary)',
                         fontWeight: 600,
                         fontSize: '0.8rem',
@@ -420,7 +420,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <Sparkles size={14} color={aiProvider === 'gemini' ? '#818cf8' : '#64748b'} />
+                      <Sparkles size={14} color={aiProvider === 'gemini' ? 'var(--primary)' : 'var(--text-muted)'} />
                       <span>Google Gemini (Cloud)</span>
                     </button>
 
@@ -431,8 +431,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         flex: 1,
                         padding: '8px 12px',
                         borderRadius: 'var(--radius-sm)',
-                        border: aiProvider === 'openai_compatible' ? '1px solid #a855f7' : '1px solid var(--border-color)',
-                        background: aiProvider === 'openai_compatible' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                        border: aiProvider === 'openai_compatible' ? '1px solid var(--accent-purple)' : '1px solid var(--border-color)',
+                        background: aiProvider === 'openai_compatible' ? 'rgba(168, 85, 247, 0.18)' : 'var(--bg-input)',
                         color: aiProvider === 'openai_compatible' ? 'var(--text-primary)' : 'var(--text-secondary)',
                         fontWeight: 600,
                         fontSize: '0.8rem',
@@ -444,7 +444,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <Server size={14} color={aiProvider === 'openai_compatible' ? '#c084fc' : '#64748b'} />
+                      <Server size={14} color={aiProvider === 'openai_compatible' ? 'var(--accent-purple)' : 'var(--text-muted)'} />
                       <span>BYOM (Ollama / Local LLM)</span>
                     </button>
                   </div>
@@ -459,7 +459,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             href="https://aistudio.google.com/app/apikey"
                             target="_blank"
                             rel="noreferrer"
-                            style={{ fontSize: '0.75rem', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                            style={{ fontSize: '0.75rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
                           >
                             Get Free Key <ExternalLink size={12} />
                           </a>
@@ -484,7 +484,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                               transform: 'translateY(-50%)',
                               background: 'none',
                               border: 'none',
-                              color: '#64748b',
+                              color: 'var(--text-muted)',
                               fontSize: '0.75rem',
                               cursor: 'pointer'
                             }}
@@ -504,7 +504,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             style={{
                               background: 'none',
                               border: 'none',
-                              color: isRefreshingModels ? '#64748b' : '#818cf8',
+                              color: isRefreshingModels ? 'var(--text-muted)' : 'var(--primary)',
                               fontSize: '0.75rem',
                               cursor: isRefreshingModels ? 'default' : 'pointer',
                               display: 'flex',
@@ -525,7 +525,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                           style={{ cursor: 'pointer' }}
                         >
                           {modelsList.map((m) => (
-                            <option key={m.id} value={m.id} style={{ background: '#0f172a', color: '#fff' }}>
+                            <option key={m.id} value={m.id}>
                               {m.name || m.id} {m.tag ? `— ${m.tag}` : ''}
                             </option>
                           ))}
@@ -600,7 +600,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             borderRadius: '4px',
                             border: '1px solid rgba(168, 85, 247, 0.3)',
                             background: 'rgba(168, 85, 247, 0.1)',
-                            color: '#c084fc',
+                            color: 'var(--accent-purple)',
                             fontSize: '0.72rem',
                             fontWeight: 600,
                             cursor: 'pointer'
@@ -619,7 +619,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             borderRadius: '4px',
                             border: '1px solid rgba(6, 182, 212, 0.3)',
                             background: 'rgba(6, 182, 212, 0.1)',
-                            color: '#67e8f9',
+                            color: 'var(--accent-cyan)',
                             fontSize: '0.72rem',
                             fontWeight: 600,
                             cursor: 'pointer'
@@ -695,10 +695,10 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 <div className="settings-card">
                   <div className="settings-card-header">
                     <div className="settings-card-title">
-                      <Languages size={17} color="#6366f1" />
+                      <Languages size={17} color="var(--primary)" />
                       <span>Default Target Language & Pinning</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>
                       Active: {primaryTargetLanguage.toUpperCase()}
                     </span>
                   </div>
@@ -830,10 +830,10 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 <div className="settings-card">
                   <div className="settings-card-header">
                     <div className="settings-card-title">
-                      <Sliders size={16} color="#06b6d4" />
+                      <Sliders size={16} color="var(--accent-cyan)" />
                       <span>Creativity & Temperature</span>
                     </div>
-                    <span style={{ fontSize: '0.8rem', color: '#a5b4fc', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
                       {temperature}
                     </span>
                   </div>
@@ -844,7 +844,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     step="0.05"
                     value={temperature}
                     onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    style={{ accentColor: '#6366f1', cursor: 'pointer', width: '100%' }}
+                    style={{ accentColor: 'var(--primary)', cursor: 'pointer', width: '100%' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                     <span>0.0 (Precise / Literal)</span>
@@ -856,7 +856,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 {/* Save History Toggle */}
                 <div className="settings-card" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <History size={16} color="#10b981" />
+                    <History size={16} color="var(--accent-emerald)" />
                     <div>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Save Translation History</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Keep local record of translations in History Drawer</div>
@@ -866,7 +866,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     type="checkbox"
                     checked={saveHistory}
                     onChange={(e) => setSaveHistory(e.target.checked)}
-                    style={{ accentColor: '#6366f1', width: '18px', height: '18px', cursor: 'pointer' }}
+                    style={{ accentColor: 'var(--primary)', width: '18px', height: '18px', cursor: 'pointer' }}
                   />
                 </div>
               </div>
@@ -877,7 +877,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
               <div className="settings-tab-body">
                 <div className="settings-card">
                   <div className="settings-card-title">
-                    <Keyboard size={16} color="#6366f1" />
+                    <Keyboard size={16} color="var(--primary)" />
                     <span>Global Windows Hotkeys</span>
                   </div>
 
@@ -905,10 +905,10 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 <div className="settings-card">
                   <div className="settings-card-header">
                     <div className="settings-card-title">
-                      <Sparkles size={17} color="#a855f7" />
+                      <Sparkles size={17} color="var(--accent-purple)" />
                       <span>3 In-Place Rewrite Slots</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#c084fc', background: 'rgba(168, 85, 247, 0.12)', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-purple)', background: 'rgba(168, 85, 247, 0.12)', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
                       ⚡ Auto Paste-Back
                     </span>
                   </div>
@@ -929,14 +929,9 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     return (
                       <div
                         key={slot.id}
+                        className="slot-config-card"
                         style={{
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          border: slot.enabled ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '12px 14px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '10px',
+                          border: slot.enabled ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--border-color)',
                           opacity: slot.enabled ? 1 : 0.65
                         }}
                       >
@@ -947,7 +942,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                               id={`slot-enable-${slot.id}`}
                               checked={slot.enabled !== false}
                               onChange={(e) => handleSlotChange(slot.id, { enabled: e.target.checked })}
-                              style={{ accentColor: '#6366f1', cursor: 'pointer', width: '15px', height: '15px' }}
+                              style={{ accentColor: 'var(--primary)', cursor: 'pointer', width: '15px', height: '15px' }}
                             />
                             <label htmlFor={`slot-enable-${slot.id}`} style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', cursor: 'pointer' }}>
                               Slot {index + 1}:
@@ -968,7 +963,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             style={{
                               background: slot.pasteBack ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)',
                               border: slot.pasteBack ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)',
-                              color: slot.pasteBack ? '#34d399' : '#a5b4fc',
+                              color: slot.pasteBack ? '#10b981' : 'var(--primary)',
                               fontSize: '0.72rem',
                               fontWeight: 600,
                               padding: '4px 10px',
@@ -988,31 +983,31 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                             <div style={{ display: 'flex', gap: '4px' }}>
                               <button
                                 type="button"
+                                className="slot-preset-tag"
                                 onClick={() => handleSlotChange(slot.id, {
                                   name: 'Fix Grammar & Polish',
                                   prompt: 'Fix grammar, spelling, typos, and phrasing. Keep the exact same language and meaning intact. Output ONLY the polished text without any introduction, explanations, or quotes.'
                                 })}
-                                style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: 'var(--text-secondary)', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
                               >
                                 Grammar
                               </button>
                               <button
                                 type="button"
+                                className="slot-preset-tag"
                                 onClick={() => handleSlotChange(slot.id, {
                                   name: 'American Business Casual',
                                   prompt: 'Rewrite the text into natural, polite, concise American business casual tone. Keep the original language intact. Output ONLY the rewritten text without commentary.'
                                 })}
-                                style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: 'var(--text-secondary)', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
                               >
                                 Business Casual
                               </button>
                               <button
                                 type="button"
+                                className="slot-preset-tag"
                                 onClick={() => handleSlotChange(slot.id, {
                                   name: 'Translate to English',
                                   prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.'
                                 })}
-                                style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '3px', color: 'var(--text-secondary)', fontSize: '0.65rem', padding: '2px 6px', cursor: 'pointer' }}
                               >
                                 To English
                               </button>
@@ -1109,7 +1104,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     <span style={{
                       position: 'absolute',
                       inset: 0,
-                      backgroundColor: instantPopupMode ? '#6366f1' : 'rgba(255,255,255,0.15)',
+                      backgroundColor: instantPopupMode ? 'var(--primary)' : 'rgba(100, 116, 139, 0.25)',
                       borderRadius: '999px',
                       transition: 'all 0.2s ease'
                     }}>
@@ -1122,6 +1117,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         bottom: '3px',
                         backgroundColor: 'white',
                         borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         transition: 'all 0.2s ease'
                       }} />
                     </span>
@@ -1130,7 +1126,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
 
                 <div className="settings-card" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 600 }}>
-                    <Power size={15} color="#10b981" />
+                    <Power size={15} color="var(--accent-emerald)" />
                     <div>
                       <div>Launch on Windows Startup</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 400 }}>Silent background logon into system tray in &lt;100ms</div>
@@ -1146,7 +1142,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     <span style={{
                       position: 'absolute',
                       inset: 0,
-                      backgroundColor: autoStart ? '#6366f1' : 'rgba(255,255,255,0.15)',
+                      backgroundColor: autoStart ? 'var(--primary)' : 'rgba(100, 116, 139, 0.25)',
                       borderRadius: '999px',
                       transition: 'all 0.2s ease'
                     }}>
@@ -1159,6 +1155,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         bottom: '3px',
                         backgroundColor: 'white',
                         borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         transition: 'all 0.2s ease'
                       }} />
                     </span>
@@ -1168,7 +1165,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 <div className="settings-card" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 600 }}>
-                      <Monitor size={15} color="#38bdf8" />
+                      <Monitor size={15} color="var(--accent-cyan)" />
                       <span>Start Minimized (in System Tray)</span>
                     </div>
                     <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
@@ -1185,7 +1182,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     <span style={{
                       position: 'absolute',
                       inset: 0,
-                      backgroundColor: startMinimized ? '#6366f1' : 'rgba(255,255,255,0.15)',
+                      backgroundColor: startMinimized ? 'var(--primary)' : 'rgba(100, 116, 139, 0.25)',
                       borderRadius: '999px',
                       transition: 'all 0.2s ease'
                     }}>
@@ -1198,6 +1195,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                         bottom: '3px',
                         backgroundColor: 'white',
                         borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         transition: 'all 0.2s ease'
                       }} />
                     </span>

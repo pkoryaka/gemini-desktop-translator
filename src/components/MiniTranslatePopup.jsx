@@ -99,10 +99,10 @@ export function MiniTranslatePopup({
       {/* Top Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
             {sourceLangObj?.name || 'Auto-Detect'}
           </span>
-          <ArrowRight size={13} color="#6366f1" />
+          <ArrowRight size={13} color="var(--primary)" />
 
           {/* Quick Target Language Selector */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -111,11 +111,11 @@ export function MiniTranslatePopup({
               onChange={(e) => setTargetLang && setTargetLang(e.target.value)}
               style={{
                 appearance: 'none',
-                background: 'rgba(99, 102, 241, 0.15)',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '6px',
                 padding: '3px 22px 3px 8px',
-                color: '#818cf8',
+                color: 'var(--primary)',
                 fontSize: '0.8rem',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -123,27 +123,27 @@ export function MiniTranslatePopup({
               }}
             >
               {preferredList.length > 0 && (
-                <optgroup label="⭐ Preferred" style={{ background: '#0f172a', color: '#f59e0b' }}>
+                <optgroup label="⭐ Preferred" style={{ background: 'var(--bg-secondary)', color: 'var(--accent-amber)' }}>
                   {preferredList.map((l) => (
-                    <option key={`mini-pref-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
+                    <option key={`mini-pref-${l.code}`} value={l.code} style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
                       {l.name} ({l.nativeName})
                     </option>
                   ))}
                 </optgroup>
               )}
-              <optgroup label="All Languages" style={{ background: '#0f172a', color: '#94a3b8' }}>
+              <optgroup label="All Languages" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
                 {otherList.map((l) => (
-                  <option key={`mini-all-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
+                  <option key={`mini-all-${l.code}`} value={l.code} style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
                     {l.name} ({l.nativeName})
                   </option>
                 ))}
               </optgroup>
             </select>
-            <ChevronDown size={12} color="#818cf8" style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <ChevronDown size={12} color="var(--primary)" style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
 
           {explanationData && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(168,85,247,0.15)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600 }}>
               <BookOpen size={10} /> Jargon Mode
             </span>
           )}
@@ -184,12 +184,12 @@ export function MiniTranslatePopup({
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-color)',
               borderRadius: '6px',
               padding: '4px 8px',
               fontSize: '0.72rem',
-              color: '#f8fafc',
+              color: 'var(--text-primary)',
               cursor: 'pointer',
               fontWeight: 600,
               transition: 'all 0.2s ease'
@@ -215,13 +215,13 @@ export function MiniTranslatePopup({
       {sourceText && (
         <div style={{
           fontSize: '0.78rem',
-          color: '#94a3b8',
-          background: 'rgba(255,255,255,0.03)',
+          color: 'var(--text-secondary)',
+          background: 'var(--bg-input)',
           borderRadius: '6px',
           padding: '6px 10px',
           maxHeight: '50px',
           overflowY: 'auto',
-          borderLeft: '3px solid #6366f1',
+          borderLeft: '3px solid var(--primary)',
           lineHeight: 1.4,
           wordBreak: 'normal',
           overflowWrap: 'break-word',
@@ -282,7 +282,7 @@ export function MiniTranslatePopup({
           flex: 1,
           fontSize: '1.05rem',
           lineHeight: 1.5,
-          color: '#f8fafc',
+          color: 'var(--text-primary)',
           fontFamily: 'var(--font-main)',
           minHeight: '70px',
           display: 'flex',
@@ -290,7 +290,7 @@ export function MiniTranslatePopup({
           justifyContent: isLoading && !translatedText ? 'center' : 'flex-start'
         }}>
           {isLoading && !translatedText ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a5b4fc', fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.9rem' }}>
               <Loader2 size={18} className="spinner" />
               <span>Translating into {targetLangObj?.name || targetLang}...</span>
             </div>
@@ -312,8 +312,8 @@ export function MiniTranslatePopup({
       {/* Plain Language & Jargon Breakdown (if active) */}
       {!errorMessage && explanationData && (
         <div style={{
-          background: 'rgba(168, 85, 247, 0.12)',
-          border: '1px solid rgba(168, 85, 247, 0.3)',
+          background: 'rgba(168, 85, 247, 0.1)',
+          border: '1px solid rgba(168, 85, 247, 0.25)',
           borderRadius: '8px',
           padding: '8px 12px',
           display: 'flex',
@@ -323,13 +323,13 @@ export function MiniTranslatePopup({
         }}>
           {explanationData.plainLanguageMeaning && (
             <div>
-              <strong style={{ color: '#c084fc' }}>Meaning: </strong>
-              <span style={{ color: '#e2e8f0' }}>{explanationData.plainLanguageMeaning}</span>
+              <strong style={{ color: 'var(--accent-purple)' }}>Meaning: </strong>
+              <span style={{ color: 'var(--text-primary)' }}>{explanationData.plainLanguageMeaning}</span>
             </div>
           )}
 
           {explanationData.detectedTone && (
-            <div style={{ fontSize: '0.74rem', color: '#fde68a' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--accent-amber)' }}>
               <strong>Tone:</strong> {explanationData.detectedTone}
             </div>
           )}
@@ -340,12 +340,12 @@ export function MiniTranslatePopup({
                 <span
                   key={i}
                   style={{
-                    background: 'rgba(15, 23, 42, 0.9)',
+                    background: 'var(--bg-card)',
                     border: '1px solid rgba(168,85,247,0.3)',
                     padding: '2px 6px',
                     borderRadius: '4px',
                     fontSize: '0.72rem',
-                    color: '#e9d5ff'
+                    color: 'var(--text-primary)'
                   }}
                   title={`Literal: ${j.literalMeaning || 'N/A'} | Nuance: ${j.nuance || ''}`}
                 >
