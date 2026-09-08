@@ -1,7 +1,7 @@
-# Gemini AI Clipboard Assistant Architecture & Design
+# NativeLingo — Architecture & Design
 
 ## Overview
-A high-performance desktop clipboard assistant tailored for in-place rewriting, translation, and a **"Explain Jargon / Plain Language Breakdown"** engine powered by **Google Gemini** or **Local Offline LLMs via BYOM (Bring Your Own Model: Ollama, LM Studio, OpenAI-compatible endpoints)**.
+A high-performance Windows desktop in-place AI translator, clipboard assistant, and **"Explain Jargon / Plain Language Breakdown"** engine powered by **Google Gemini** or **Local Offline LLMs via BYOM (Bring Your Own Model: Ollama, LM Studio, OpenAI-compatible endpoints)**.
 
 ## Core Architecture
 - **Desktop Runtime**: Electron + Node.js 24 + React 19 + Vite 6

@@ -1,9 +1,10 @@
 <div align="center">
 
-# ⚡ Gemini AI Clipboard Assistant
-### *With Full BYOM (Bring Your Own Model) & Local Offline AI Support*
+# ⚡ NativeLingo
+### *Native In-Place AI Translator, Clipboard Assistant & Jargon Demystifier*
+#### *With Full BYOM (Bring Your Own Model) & Local Offline AI Support*
 
-**The ultra-fast desktop clipboard AI that rewrites text in-place, fixes grammar, demystifies slang, and translates across any Windows application — powered by Google Gemini or 100% offline local LLMs.**
+**The ultra-fast desktop assistant that translates across 53+ languages, rewrites text in-place, fixes grammar, demystifies slang, and integrates natively across any Windows application — powered by Google Gemini or 100% offline local LLMs.**
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=for-the-badge&logo=windows)](https://github.com/pkoryaka/gemini-desktop-translator)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini%20%7C%20Ollama%20%7C%20LM%20Studio-8A2BE2?style=for-the-badge&logo=google)](https://aistudio.google.com/)
@@ -28,7 +29,7 @@
 
 Tired of copying text, switching browser tabs, pasting into ChatGPT or DeepL, copying the answer, and switching back?
 
-**Gemini AI Clipboard Assistant** lives quietly in your Windows system tray and hooks directly into your global keystrokes. Highlight text in **any software** (Slack, Microsoft Word, Visual Studio Code, Chrome, Outlook, Telegram, Discord, Notion, Notepad) and press a shortcut:
+**NativeLingo** lives quietly in your Windows system tray and hooks directly into your global keystrokes. Highlight text in **any software** (Slack, Microsoft Word, Visual Studio Code, Chrome, Outlook, Telegram, Discord, Notion, Notepad) and press a shortcut:
 
 * **⚡ Need a grammar fix?** Press `Ctrl + Alt + 1` &rarr; Instant correction replaces your text in-place.
 * **⚡ Need a professional tone?** Press `Ctrl + Alt + 2` &rarr; Rewritten in executive corporate phrasing in-place.
@@ -39,7 +40,7 @@ Tired of copying text, switching browser tabs, pasting into ChatGPT or DeepL, co
 
 ## 🧠 Why BYOM (Bring Your Own Model)?
 
-Workplaces, enterprise policies, and privacy-conscious users often cannot send sensitive code, legal documents, or private chats to cloud APIs. **Gemini AI Clipboard Assistant solves this with native BYOM support:**
+Workplaces, enterprise policies, and privacy-conscious users often cannot send sensitive code, legal documents, or private chats to cloud APIs. **NativeLingo solves this with native BYOM support:**
 
 ```mermaid
 flowchart TD
@@ -155,7 +156,7 @@ Bidirectional fluency across **Ukrainian (Українська)**, **English**, 
 
 ## 📊 Why This Beats Other Tools
 
-| Feature | **Gemini AI Clipboard Assistant** | **DeepL Desktop** | **Raycast AI** | **ChatGPT Web Tab** |
+| Feature | **NativeLingo** | **DeepL Desktop** | **Raycast AI** | **ChatGPT Web Tab** |
 | :--- | :---: | :---: | :---: | :---: |
 | **Bring Your Own Model (BYOM)** | ✅ **Yes (Ollama, LM Studio, Custom)** | ❌ No | ⚠️ Proprietary only | ❌ No |
 | **100% Offline / Air-Gapped Mode** | ✅ **Yes (via Local LLM)** | ❌ No | ❌ No | ❌ No |

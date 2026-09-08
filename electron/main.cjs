@@ -145,7 +145,7 @@ function getIconPath() {
 
 function getStartupShortcutPath() {
   const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
-  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Gemini AI Clipboard Assistant.lnk');
+  return path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'NativeLingo.lnk');
 }
 
 function cleanRogueRegistryEntries() {
@@ -180,7 +180,7 @@ function setAutoStartEnabled(enable) {
         `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\" --hidden'`,
         `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Clipboard Assistant (Silent Auto-start)'`,
+        `$Shortcut.Description = 'NativeLingo (Silent Auto-start)'`,
         '$Shortcut.Save()'
       ].join('; ');
 
@@ -214,14 +214,20 @@ function ensureStartMenuShortcut() {
     try {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-      const startShortcutPath = path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk');
+      const startShortcutPath = path.join(startMenuDir, 'NativeLingo.lnk');
       const desktopDir = path.join(process.env.USERPROFILE, 'Desktop');
-      const desktopShortcutPath = path.join(desktopDir, 'Gemini AI Clipboard Assistant.lnk');
-      const oldDesktopShortcut = path.join(desktopDir, 'Gemini Translator.lnk');
+      const desktopShortcutPath = path.join(desktopDir, 'NativeLingo.lnk');
       
-      // Clean up legacy desktop shortcut if present
-      if (fs.existsSync(oldDesktopShortcut)) {
-        try { fs.unlinkSync(oldDesktopShortcut); } catch {}
+      // Clean up legacy desktop shortcuts if present
+      const oldShortcuts = [
+        path.join(desktopDir, 'Gemini AI Clipboard Assistant.lnk'),
+        path.join(desktopDir, 'Gemini Translator.lnk'),
+        path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk')
+      ];
+      for (const oldSc of oldShortcuts) {
+        if (fs.existsSync(oldSc)) {
+          try { fs.unlinkSync(oldSc); } catch {}
+        }
       }
 
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
@@ -234,14 +240,14 @@ function ensureStartMenuShortcut() {
         `$s1.Arguments = '"${vbsScript.replace(/'/g, "''")}"'`,
         `$s1.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$s1.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$s1.Description = 'Gemini AI Clipboard Assistant'`,
+        `$s1.Description = 'NativeLingo — In-Place AI Translator & Assistant'`,
         '$s1.Save()',
         `$s2 = $WshShell.CreateShortcut('${desktopShortcutPath.replace(/'/g, "''")}')`,
         `$s2.TargetPath = 'wscript.exe'`,
         `$s2.Arguments = '"${vbsScript.replace(/'/g, "''")}"'`,
         `$s2.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
         `$s2.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$s2.Description = 'Gemini AI Clipboard Assistant'`,
+        `$s2.Description = 'NativeLingo — In-Place AI Translator & Assistant'`,
         '$s2.Save()'
       ].join('; ');
 
@@ -276,7 +282,7 @@ function createWindow() {
     minWidth: 460,
     minHeight: 280,
     show: !shouldStartHidden, // Show immediately on manual launch; hide if launched with --hidden
-    title: 'Gemini AI Clipboard Assistant',
+    title: 'NativeLingo — In-Place AI Translator & Assistant',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
     icon: icon,
@@ -344,7 +350,7 @@ function updateTrayMenu() {
 
   const menuTemplate = [
     {
-      label: 'Open Gemini AI Clipboard Assistant',
+      label: 'Open NativeLingo',
       click: () => {
         focusAppWindow();
         if (mainWindow) {
@@ -386,7 +392,7 @@ function updateTrayMenu() {
     },
     { type: 'separator' },
     {
-      label: 'Quit Gemini AI Clipboard Assistant',
+      label: 'Quit NativeLingo',
       click: () => {
         isQuitting = true;
         app.quit();
@@ -395,7 +401,7 @@ function updateTrayMenu() {
   );
 
   const contextMenu = Menu.buildFromTemplate(menuTemplate);
-  tray.setToolTip(`Gemini AI Clipboard Assistant (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
+  tray.setToolTip(`NativeLingo (${translateHotkey.replace('CommandOrControl', 'Ctrl')} to translate)`);
   tray.setContextMenu(contextMenu);
 }
 

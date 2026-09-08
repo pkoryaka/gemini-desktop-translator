@@ -1,7 +1,7 @@
 {
-  "name": "gemini-ai-clipboard-assistant",
+  "name": "nativelingo",
   "version": "1.0.0",
-  "description": "Desktop AI Clipboard Assistant with Bring Your Own Model (BYOM) support — instant in-place rewriting, custom hotkeys, translation, and jargon breakdown with Gemini, Ollama, LM Studio & local LLMs.",
+  "description": "NativeLingo — Desktop in-place AI clipboard assistant, translator & jargon demystifier with Gemini & BYOM local LLMs.",
   "main": "electron/main.cjs",
   "type": "module",
 

@@ -179,7 +179,7 @@ export function MiniTranslatePopup({
           <button
             type="button"
             onClick={onExpandToFull}
-            title="Open Full Gemini Translator Application"
+            title="Open Full NativeLingo Application"
             style={{
               display: 'flex',
               alignItems: 'center',

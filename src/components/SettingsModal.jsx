@@ -308,7 +308,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 Settings
               </h2>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                Clipboard Assistant
+                NativeLingo AI
               </p>
             </div>
           </div>

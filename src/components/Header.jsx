@@ -12,8 +12,8 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey,
           style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }}
         />
         <div>
-          <h1 className="brand-title">Gemini AI Clipboard Assistant</h1>
-          <p className="brand-subtitle">BYOM • In-Place Actions • Jargon Demystifier • Translation</p>
+          <h1 className="brand-title">NativeLingo</h1>
+          <p className="brand-subtitle">In-Place AI • 53+ Languages • Jargon Demystifier • BYOM Local AI</p>
         </div>
       </div>
 
