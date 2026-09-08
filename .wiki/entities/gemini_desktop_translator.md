@@ -36,3 +36,18 @@ When Jargon Explainer mode is activated, Gemini returns structured JSON:
 - `detectedTone`: Tone analysis (e.g., Casual, Sarcastic, Professional).
 - `jargonBreakdown`: Array of `{ term, literalMeaning, intendedMeaning, nuance }`.
 - `culturalNotes`: Contextual background.
+
+## In-Place Prompt Slot Execution (Paste-Back Engine)
+- **Precision Instruction Mode**: Unlike pure translation, prompt slot actions (e.g., *Fix Grammar*, *Business Tone*, custom user rewrites) are executed as dedicated transformation directives:
+  `You are a precision text transformer. Follow this user instruction precisely: "${prompt}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
+- **Win32 Synthesized Paste-Back**:
+  1. Global hardware shortcut event triggers `triggerQuickSlotAction(slotId)`.
+  2. Native C# executable (`copy_native.exe`) releases physical modifier keys and captures text into clipboard in <15ms.
+  3. `runAiGeneration` queries the active provider (Gemini or Local LLM).
+  4. Response is written to clipboard and `copy_native.exe paste` synthesizes `Ctrl + V` directly back into the active application cursor (with 40ms settling buffer).
+  5. The assistant never steals window focus and does not pop open unless an error or HUD mode is explicitly invoked.
+
+## Silent Windows Startup Architecture
+- **Headless WScript Launcher**: Uses `launch.vbs` running under `wscript.exe` with `SW_HIDE` (`0, False`) to prevent CMD console popping up.
+- **Rogue Registry Guard**: Automatically purges any unpackaged `electron.app.Electron` keys in `HKCU\...\Run` on boot.
+- **Ready-to-Show Display**: `BrowserWindow` is initialized with `show: false`, deferring display to `mainWindow.once('ready-to-show')`. When launched with `--hidden` at Windows logon, the window is never shown and the app loads directly into the system tray in <100ms.
