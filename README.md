@@ -233,9 +233,9 @@ Bidirectional fluency across **Ukrainian (Українська)**, **English**, 
 This software is distributed under a **Dual-Use License**:
 
 * **🟢 Personal, Educational & Non-Commercial Use:** **100% Free of charge** for individual personal productivity and learning.
-* **🏢 Commercial & Enterprise Use:** Any deployment or use within commercial companies, businesses, or revenue-generating organizations requires an authorized **Commercial License** after a 30-day evaluation period.
+* **🏢 Commercial & Enterprise Use:** Any deployment or use within commercial companies, businesses, or revenue-generating organizations requires an authorized **Commercial License** after a 40-day evaluation period.
 
-See the full terms in the [`LICENSE`](./LICENSE) file. For commercial licensing inquiries, please open an issue or contact the maintainer via GitHub.
+See the full terms in the [`LICENSE`](./LICENSE) file (End User License Agreement). For commercial licensing inquiries, please open an issue or contact the maintainer via GitHub.
 
 ---
 

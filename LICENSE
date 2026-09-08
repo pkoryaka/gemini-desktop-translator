@@ -1,66 +1,264 @@
-SOFTWARE LICENSE AND TERMS OF USE
-NativeLingo — In-Place AI Translator & Assistant
-
-Copyright (c) 2026 pkoryaka. All rights reserved.
-
 ================================================================================
-1. GRANT OF LICENSE
+END USER LICENSE AGREEMENT (EULA) FOR NATIVELINGO™
 ================================================================================
 
-This Software is licensed, not sold. By downloading, installing, or using this 
-Software, you agree to be bound by the terms and conditions of this Agreement.
+IMPORTANT — READ CAREFULLY BEFORE DOWNLOADING, INSTALLING, COPYING, OR USING:
 
-A. PERSONAL & NON-COMMERCIAL USE (FREE):
-   Permission is hereby granted, free of charge, to any individual person to use, 
-   copy, and execute this Software solely for personal, educational, non-profit, 
-   and individual productivity purposes, without limitation of time.
+This End User License Agreement ("Agreement" or "EULA") is a legally binding 
+contract between you (either an individual person or a single corporate entity, 
+organization, or business establishment, hereinafter referred to as "Licensee" 
+or "You") and the copyright holder, pkoryaka ("Licensor" or "Author"), for the 
+software product known as NativeLingo™ ("Software"), including all associated 
+binaries, scripts, compiled native utilities (e.g., CopyNative executable), 
+documentation, graphics, and interface assets.
 
-B. COMMERCIAL & ENTERPRISE USE (COMMERCIAL LICENSE REQUIRED):
-   Any use of this Software by or on behalf of a commercial entity, corporation, 
-   business, partnership, government agency, or for-profit enterprise for commercial, 
-   business, or revenue-generating operations requires an authorized Commercial 
-   License from the copyright holder.
-
-   - Evaluation Period: Commercial entities are granted a temporary 30-day trial 
-     period to evaluate the Software free of charge.
-   - Post-Evaluation: Following the 30-day evaluation period, continued deployment 
-     or usage within an organizational or commercial environment requires acquiring 
-     a valid Commercial License.
+BY DOWNLOADING, INSTALLING, COPYING, ACCESSING, OR OTHERWISE USING THE SOFTWARE, 
+YOU AGREE TO BE UNCONDITIONALLY BOUND BY ALL TERMS AND CONDITIONS OF THIS 
+AGREEMENT. IF YOU DO NOT AGREE TO THESE TERMS, DO NOT INSTALL, COPY, OR USE 
+THE SOFTWARE.
 
 ================================================================================
-2. RESTRICTIONS
+1. DEFINITIONS
 ================================================================================
 
-You may not:
-- Sublicense, rent, lease, resell, or distribute the Software for standalone commercial gain without explicit written authorization.
-- Remove, alter, or obscure any copyright notices, branding, or proprietary markings on the Software.
-- Reverse engineer or decompile parts of the Software beyond what is permitted by applicable open-source component licenses.
+1.1. "Software" means the computer software application known as NativeLingo, 
+     including executable files, scripts, dynamic libraries, user interface 
+     components, and documentation, in both object code and source forms.
+
+1.2. "Commercial Entity" means any corporation, partnership, limited liability 
+     company, sole proprietorship, association, governmental agency, or other 
+     for-profit or enterprise organization, including contractors or individuals 
+     operating on behalf of such organizations.
+
+1.3. "Personal & Non-Commercial Use" means usage strictly by an individual 
+     human user on personal computing devices exclusively for non-profit, 
+     educational, academic research, or individual personal productivity 
+     purposes where no direct or indirect commercial gain or corporate remuneration 
+     is derived from such usage.
+
+1.4. "Commercial Use" means any deployment, execution, or utilization of the 
+     Software in connection with business operations, work-for-hire, corporate 
+     workflows, commercial translation, revenue-generating activities, or within 
+     an enterprise environment.
+
+1.5. "Evaluation Version" means an unregistered installation of the Software 
+     utilized within a Commercial Entity solely for testing and verification 
+     purposes as set forth in Section 2.
+
+1.6. "Registered Version" means an installation of the Software covered by an 
+     authorized, fully paid Commercial License Certificate or registration key 
+     issued directly by the Licensor.
 
 ================================================================================
-3. THIRD-PARTY COMPONENTS & API USAGE
+2. EVALUATION (SHAREWARE / TRIAL) LICENSE FOR COMMERCIAL ENTITIES
 ================================================================================
 
-This Software interfaces with the Google Gemini API. Users provide their own API 
-credentials and remain subject to Google's applicable terms of service and usage quotas. 
-Third-party libraries bundled within this Software remain subject to their respective 
-open-source licenses.
+2.1. 40-Day Evaluation Period:
+     The Software is distributed on a "try-before-you-buy" evaluation model for 
+     commercial and enterprise users. A Commercial Entity is granted a temporary, 
+     revocable, non-exclusive, non-transferable evaluation license to deploy and 
+     test the Software on its systems for an evaluation period of up to forty (40) 
+     consecutive calendar days commencing from the initial date of installation.
+
+2.2. Purpose of Evaluation:
+     The sole purpose of the evaluation period is to permit the Commercial Entity 
+     to determine whether the Software satisfies its operational, security, and 
+     technical requirements.
+
+2.3. Mandatory Registration Upon Expiration:
+     Upon expiration of the forty (40) day evaluation period, if the Commercial 
+     Entity desires to continue using the Software, it MUST purchase a valid 
+     Commercial License as provided in Section 4. Continued commercial deployment 
+     or execution of the Software beyond the 40-day trial without acquiring a 
+     valid Commercial License is strictly prohibited and constitutes a direct 
+     infringement of the Author's copyright.
 
 ================================================================================
-4. DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY
+3. GRANT OF PERSONAL & NON-COMMERCIAL LICENSE (FREE)
 ================================================================================
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION 
-OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE 
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+3.1. Perpetual Free Individual License:
+     The Licensor hereby grants to individual private persons a free, non-exclusive, 
+     perpetual license to download, install, execute, and use the Software solely 
+     for Personal & Non-Commercial Use on an unlimited number of personal computers 
+     owned or operated by such individuals.
+
+3.2. Community & Academic Exemption:
+     Students, educators, and academic institutions may utilize the Software free 
+     of charge for strictly non-commercial classroom instruction and educational 
+     learning.
 
 ================================================================================
-5. COMMERCIAL LICENSING & INQUIRIES
+4. COMMERCIAL & ENTERPRISE LICENSING TIERS
 ================================================================================
 
-For commercial licensing, enterprise volume deployment, custom feature integrations, 
-or corporate inquiries, please contact the author via the GitHub repository:
+Following the 40-day evaluation period, commercial and organizational usage 
+requires the acquisition of one of the following licensing options:
+
+4.1. Single-User Commercial License:
+     Grants one designated named employee, contractor, or workstation within a 
+     Commercial Entity the right to install and execute the Software on up to two 
+     (2) computing devices (e.g., a primary office PC and a mobile laptop), 
+     provided that both devices are operated exclusively by the same licensed 
+     individual.
+
+4.2. Multi-User Corporate Volume License:
+     Grants a Commercial Entity the right to deploy the Software across a fixed 
+     number of authorized seats, endpoints, or concurrent users as specified in 
+     the applicable commercial purchase order or invoice.
+
+4.3. Enterprise Site License:
+     Grants a Commercial Entity the unrestricted right to deploy and operate the 
+     Software across all workstations, virtual desktops, and computing devices 
+     situated within specified corporate facilities, legal subsidiaries, or worldwide 
+     divisions, as mutually agreed upon in writing with the Licensor.
+
+================================================================================
+5. REDISTRIBUTION & SHARING TERMS
+================================================================================
+
+5.1. Redistribution of Evaluation Package:
+     You are granted a non-exclusive license to redistribute unmodified copies of 
+     the official NativeLingo evaluation distribution package (including official 
+     installers, zip archives, or release packages) via the Internet, cover media, 
+     software repositories, or corporate intranets, provided that:
+     (a) The original distribution archive is delivered in its entirety, without 
+         modification, addition, deletion, or bundling with unauthorized toolbars, 
+         malware, adware, or third-party installers;
+     (b) No separate fee or surcharge is demanded for the Software itself (reasonable 
+         media production or download bandwidth fees are permitted);
+     (c) The Author's copyright notices, trademarks, and documentation are retained intact;
+     (d) You do not claim or imply endorsement, sponsorship, or official affiliation 
+         with the Author.
+
+5.2. Prohibition on Sharing License Credentials:
+     Any commercial registration keys, license certificates, activation tokens, 
+     or custom enterprise configuration files issued by the Licensor are strictly 
+     confidential and proprietary to the designated licensee. You may NOT publish, 
+     distribute, rent, lease, sublicense, resell, or share such credentials with 
+     any third party or outside the authorized scope of your organization.
+
+================================================================================
+6. RESTRICTIONS & PROHIBITED CONDUCT
+================================================================================
+
+Except as expressly authorized under this Agreement or mandatory statutory law, 
+Licensee shall not:
+(a) Decompile, disassemble, reverse engineer, or attempt to derive the proprietary 
+    algorithms of the Software, except to the extent permitted by applicable law 
+    or open-source dependencies;
+(b) Modify, disable, or circumvent any licensing enforcement mechanisms, trial 
+    timers, registration dialogs, or security features;
+(c) Remove, obscure, or alter any copyright, trademark, logo, or legal notices 
+    affixed to or embedded within the Software;
+(d) Use the Software to translate, generate, or transmit unlawful, defamatory, 
+    harassing, or harmful materials, or to violate any local, national, or 
+    international privacy or export control regulations;
+(e) Sublicense, lease, lend, host as a commercial cloud service bureau, or 
+    resell the Software to third parties without prior written consent from the Licensor.
+
+================================================================================
+7. THIRD-PARTY APIS, BYOM ARCHITECTURE & PRIVACY GUARANTEE
+================================================================================
+
+7.1. Bring-Your-Own-Model (BYOM) Independence:
+     NativeLingo is built as an independent client interface and local assistant. 
+     The Software connects directly to third-party language model providers 
+     (such as Google Gemini, OpenAI-compatible APIs) or local offline inference 
+     servers (such as Ollama or LM Studio) designated by the Licensee.
+
+7.2. End User API Obligations:
+     Licensee acknowledges that access to third-party cloud AI APIs may require 
+     separate API keys, accounts, and fee arrangements directly with such providers. 
+     Licensor does not provide, resell, or guarantee third-party cloud API services, 
+     token quotas, or service availability.
+
+7.3. Privacy and Local Data Confidentiality:
+     NativeLingo contains zero built-in behavioral tracking, zero background telemetry, 
+     and zero cloud intermediary proxy servers. When operating in local BYOM mode 
+     (e.g., via Ollama or LM Studio), 100% of text processing and translation remains 
+     strictly confined to the Licensee's local hardware memory. Licensor never has 
+     access to, collects, inspects, or stores Licensee's clipboard content, prompts, 
+     or translation outputs.
+
+================================================================================
+8. TITLE & INTELLECTUAL PROPERTY RIGHTS
+================================================================================
+
+All title, copyright, industrial property rights, trademarks, and intellectual 
+property rights in and to the Software, the accompanying documentation, and any 
+derivative works thereof remain the sole and exclusive property of pkoryaka. 
+This Agreement grants Licensee only specific, limited contractual rights to use 
+the Software in accordance with this EULA. All rights not expressly granted are 
+reserved by the Author.
+
+================================================================================
+9. DISCLAIMER OF WARRANTY
+================================================================================
+
+THE SOFTWARE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITH ALL 
+FAULTS AND WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY 
+APPLICABLE LAW, THE AUTHOR AND CONTRIBUTORS DISCLAIM ALL WARRANTIES, EXPRESS, 
+IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A PARTICULAR 
+PURPOSE, ACCURACY OF TRANSLATION OR AI-GENERATED TEXT, TIMELINESS, NON-INFRINGEMENT, 
+AND FREEDOM FROM PROGRAM ERRORS, DEFECTS, OR SYSTEM INTERRUPTIONS.
+
+LICENSEE ASSUMES THE ENTIRE RISK AS TO THE QUALITY, PERFORMANCE, AND USEFULNESS 
+OF THE SOFTWARE, AND THE ENTIRE RESPONSIBILITY FOR VERIFYING THE ACCURACY OF 
+ANY REWRITTEN, TRANSLATED, OR GENERATED CONTENT BEFORE RELYING UPON OR 
+PUBLISHING SUCH OUTPUT.
+
+================================================================================
+10. LIMITATION OF LIABILITY
+================================================================================
+
+TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, IN NO EVENT SHALL THE 
+AUTHOR, COPYRIGHT HOLDER, OR AFFILIATED CONTRIBUTORS BE LIABLE FOR ANY SPECIAL, 
+INCIDENTAL, INDIRECT, CONSEQUENTIAL, OR PUNITIVE DAMAGES WHATSOEVER (INCLUDING, 
+WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, 
+LOSS OF WORK PRODUCT, LOSS OF DATA OR PRIVACY, INACCURATE MACHINE TRANSLATION, 
+THIRD-PARTY API CHARGES, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF 
+OR INABILITY TO USE THIS SOFTWARE, EVEN IF THE AUTHOR HAS BEEN ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGES.
+
+IN ANY CASE, THE AUTHOR'S TOTAL AGGREGATE LIABILITY UNDER ANY PROVISION OF THIS 
+AGREEMENT SHALL BE STRICTLY LIMITED TO THE GREATER OF: (A) THE AMOUNT ACTUALLY 
+PAID BY THE LICENSEE FOR THE SOFTWARE LICENSE DURING THE TWELVE (12) MONTHS 
+PRECEDING THE CLAIM, OR (B) FIVE UNITED STATES DOLLARS ($5.00 USD).
+
+================================================================================
+11. TERMINATION
+================================================================================
+
+This Agreement remains effective until terminated. Your rights under this Agreement 
+will terminate automatically and immediately without notice from the Author if 
+you fail to comply with any term or condition of this Agreement. Upon termination, 
+you must cease all execution of the Software and permanently destroy or delete all 
+copies of the Software and associated documentation in your possession or control. 
+Sections 1, 6, 7, 8, 9, 10, and 12 shall survive any termination of this Agreement.
+
+================================================================================
+12. GOVERNING LAW & SEVERABILITY
+================================================================================
+
+This Agreement shall be governed by and construed in accordance with the laws of 
+applicable jurisdiction, without regard to conflicts of law provisions. If any 
+provision of this Agreement is held to be invalid, illegal, or unenforceable by 
+a court of competent jurisdiction, the remaining provisions shall continue in full 
+force and effect.
+
+================================================================================
+13. COMMERCIAL LICENSING, REGISTRATION & INQUIRIES
+================================================================================
+
+To purchase a Commercial License, request corporate volume pricing, obtain 
+enterprise site licensing agreements, or inquire regarding custom business 
+integrations, please contact the Author via the official repository:
+
+Official Website / Repository:
 https://github.com/pkoryaka/gemini-desktop-translator
 
+Copyright (c) 2026 pkoryaka. All rights reserved.
+NativeLingo™ is a trademark of pkoryaka.
+================================================================================
