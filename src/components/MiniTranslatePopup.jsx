@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Copy, 
   Check, 
@@ -14,6 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../services/geminiService';
+import { storageService } from '../services/storageService';
 
 export function MiniTranslatePopup({
   sourceText,
@@ -34,6 +35,16 @@ export function MiniTranslatePopup({
 
   const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
   const sourceLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang);
+
+  const preferredCodes = storageService.getPreferredLanguages();
+  const { preferredList, otherList } = useMemo(() => {
+    const nonAuto = SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto');
+    const pref = preferredCodes
+      .map((c) => nonAuto.find((l) => l.code === c))
+      .filter(Boolean);
+    const other = nonAuto.filter((l) => !preferredCodes.includes(l.code));
+    return { preferredList: pref, otherList: other };
+  }, [preferredCodes]);
 
   const handleCopy = async () => {
     if (!translatedText) return;
@@ -111,11 +122,22 @@ export function MiniTranslatePopup({
                 outline: 'none'
               }}
             >
-              {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((l) => (
-                <option key={`mini-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
-                  {l.name}
-                </option>
-              ))}
+              {preferredList.length > 0 && (
+                <optgroup label="⭐ Preferred" style={{ background: '#0f172a', color: '#f59e0b' }}>
+                  {preferredList.map((l) => (
+                    <option key={`mini-pref-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
+                      {l.name} ({l.nativeName})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              <optgroup label="All Languages" style={{ background: '#0f172a', color: '#94a3b8' }}>
+                {otherList.map((l) => (
+                  <option key={`mini-all-${l.code}`} value={l.code} style={{ background: '#0f172a', color: '#fff' }}>
+                    {l.name} ({l.nativeName})
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <ChevronDown size={12} color="#818cf8" style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>

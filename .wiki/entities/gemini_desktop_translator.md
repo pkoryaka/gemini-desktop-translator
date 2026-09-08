@@ -52,12 +52,16 @@ When Jargon Explainer mode is activated, Gemini returns structured JSON:
 - **Rogue Registry Guard**: Automatically purges any unpackaged `electron.app.Electron` keys in `HKCU\...\Run` on boot.
 - **Ready-to-Show Display**: `BrowserWindow` is initialized with `show: false`, deferring display to `mainWindow.once('ready-to-show')`. When launched with `--hidden` at Windows logon, the window is never shown and the app loads directly into the system tray in <100ms.
 
-## Tabbed Settings Architecture & Theme Engine
-- **Categorized Tabs Navigation**: Settings modal is organized into 4 distinct workflow tabs:
-  1. `models`: AI Engine & BYOM (Gemini Cloud vs Local Offline LLMs via Ollama/LM Studio with live test connections and live catalog discovery).
-  2. `languages`: Default Target Language configuration (Ukrainian, English, Spanish, Russian, German, French, Polish) and translation temperature control.
+## Vertical Sidebar Settings Architecture & Preferred Languages Pinning
+- **Two-Pane Desktop Sidebar Layout**: The Settings modal uses a native desktop sidebar layout (left 220px navigation pane, right scrollable content cards) inspired by VS Code and Discord:
+  1. `models`: AI Models & BYOM (Gemini Cloud vs Local Offline LLMs via Ollama/LM Studio with live test connections and live catalog discovery).
+  2. `languages`: Expanded catalog of 53+ world languages, live search filtering, 1-click star/unstar (⭐) preferred languages pinning, and default target language selection.
   3. `shortcuts`: Global hardware hotkeys (`Alt+T`, `Alt+J`) and the 3 custom in-place prompt slots with conflict detection.
   4. `appearance`: Dual-theme switcher (Obsidian Dark vs Crisp Light modern mode) and system auto-start controls.
+- **Preferred Languages System**:
+  - Languages can be starred/pinned with a 1-click golden star (⭐).
+  - Starred languages stay pinned at the top of the Settings list and render inside `<optgroup label="⭐ Preferred Languages">` at the very top of dropdowns across `LanguageSelector.jsx` and `MiniTranslatePopup.jsx`.
+  - Stored in persistent `storageService.getPreferredLanguages()` / `setPreferredLanguages()`.
 - **Theme Engine**: Document root tokens switch via `[data-theme="light"]` attribute, synchronized instantly through `storageService` and quick toggled from Header or Settings.
 - **Prompt Isolation Protocol**: One-shot slot prompts are cleanly scoped to the active execution and reset on standard translations or window close to prevent prompt leakage.
 

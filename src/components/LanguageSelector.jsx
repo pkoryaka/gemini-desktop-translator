@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ArrowLeftRight, ChevronDown, Lightbulb, Sparkles } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../services/geminiService';
+import { storageService } from '../services/storageService';
 
 export function LanguageSelector({
   sourceLang,
@@ -10,6 +11,17 @@ export function LanguageSelector({
   explainJargon,
   setExplainJargon
 }) {
+  const preferredCodes = storageService.getPreferredLanguages();
+
+  const { preferredList, otherList } = useMemo(() => {
+    const nonAuto = SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto');
+    const pref = preferredCodes
+      .map((c) => nonAuto.find((l) => l.code === c))
+      .filter(Boolean);
+    const other = nonAuto.filter((l) => !preferredCodes.includes(l.code));
+    return { preferredList: pref, otherList: other };
+  }, [preferredCodes]);
+
   const handleSwap = () => {
     if (sourceLang === 'auto') {
       // If auto-detect, swap target into source and default target to English or Ukrainian
@@ -32,11 +44,23 @@ export function LanguageSelector({
             value={sourceLang}
             onChange={(e) => setSourceLang(e.target.value)}
           >
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <option key={`src-${lang.code}`} value={lang.code}>
-                {lang.name} {lang.nativeName !== lang.name ? `(${lang.nativeName})` : ''}
-              </option>
-            ))}
+            <option value="auto">Auto-Detect (Автовизначення)</option>
+            {preferredList.length > 0 && (
+              <optgroup label="⭐ Preferred Languages">
+                {preferredList.map((lang) => (
+                  <option key={`src-pref-${lang.code}`} value={lang.code}>
+                    {lang.name} ({lang.nativeName})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="All Languages">
+              {otherList.map((lang) => (
+                <option key={`src-all-${lang.code}`} value={lang.code}>
+                  {lang.name} ({lang.nativeName})
+                </option>
+              ))}
+            </optgroup>
           </select>
           <ChevronDown size={16} className="lang-select-arrow" />
         </div>
@@ -59,11 +83,22 @@ export function LanguageSelector({
             value={targetLang}
             onChange={(e) => setTargetLang(e.target.value)}
           >
-            {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((lang) => (
-              <option key={`tgt-${lang.code}`} value={lang.code}>
-                {lang.name} ({lang.nativeName})
-              </option>
-            ))}
+            {preferredList.length > 0 && (
+              <optgroup label="⭐ Preferred Languages">
+                {preferredList.map((lang) => (
+                  <option key={`tgt-pref-${lang.code}`} value={lang.code}>
+                    {lang.name} ({lang.nativeName})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="All Languages">
+              {otherList.map((lang) => (
+                <option key={`tgt-all-${lang.code}`} value={lang.code}>
+                  {lang.name} ({lang.nativeName})
+                </option>
+              ))}
+            </optgroup>
           </select>
           <ChevronDown size={16} className="lang-select-arrow" />
         </div>

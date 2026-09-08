@@ -776,7 +776,194 @@ body {
   gap: 16px;
 }
 
-/* Settings Tabs Navigation */
+/* Two-Pane Settings Modal with Left Sidebar Tabs */
+.modal-content.settings-modal-dialog {
+  width: 900px;
+  max-width: 95vw;
+  height: 650px;
+  max-height: 90vh;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  gap: 0;
+}
+
+.settings-sidebar {
+  width: 230px;
+  min-width: 230px;
+  background: rgba(0, 0, 0, 0.22);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  gap: 16px;
+}
+
+[data-theme="light"] .settings-sidebar {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.settings-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 12px 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.settings-tab-btn-vertical {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.settings-tab-btn-vertical:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .settings-tab-btn-vertical:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.settings-tab-btn-vertical.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+.settings-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.settings-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-main-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-main-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .settings-main-footer {
+  background: rgba(15, 23, 42, 0.02);
+}
+
+/* Starred / Preferred Language Card */
+.language-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .language-card-item {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.language-card-item:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--text-primary);
+}
+
+.language-card-item.active {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--text-primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.star-btn:hover {
+  color: #f59e0b;
+  transform: scale(1.15);
+}
+
+.star-btn.starred {
+  color: #f59e0b;
+}
+
+/* Search input container */
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrapper input {
+  padding-left: 36px;
+  padding-right: 32px;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* Settings Tabs Navigation (Horizontal fallback) */
 .settings-tabs-nav {
   display: flex;
   align-items: center;

@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS = {
   translateHotkey: 'CommandOrControl+Alt+T',
   explainHotkey: 'CommandOrControl+Alt+J',
   theme: 'dark', // 'dark' | 'light'
+  preferredLanguages: ['uk', 'en', 'es', 'ru', 'de', 'fr', 'pl'],
   // BYOM (Bring Your Own Model) Settings
   aiProvider: 'gemini', // 'gemini' | 'openai_compatible'
   customGeminiModel: '',
@@ -138,6 +139,22 @@ export const storageService = {
     const settings = storageService.getSettings();
     storageService.saveSettings({ ...settings, theme });
     document.documentElement.setAttribute('data-theme', theme);
+  },
+
+  getPreferredLanguages: () => {
+    try {
+      const settings = storageService.getSettings();
+      return Array.isArray(settings.preferredLanguages) && settings.preferredLanguages.length > 0
+        ? settings.preferredLanguages
+        : ['uk', 'en', 'es', 'ru', 'de', 'fr', 'pl'];
+    } catch {
+      return ['uk', 'en', 'es', 'ru', 'de', 'fr', 'pl'];
+    }
+  },
+
+  setPreferredLanguages: (langs) => {
+    const settings = storageService.getSettings();
+    storageService.saveSettings({ ...settings, preferredLanguages: langs });
   },
 
 
