@@ -140,7 +140,7 @@ function getIconPath() {
   if (fs.existsSync(icoPath)) return icoPath;
   const pngPath = path.join(__dirname, 'app-icon.png');
   if (fs.existsSync(pngPath)) return pngPath;
-  return path.join(__dirname, 'icon.svg');
+  return icoPath;
 }
 
 function getStartupShortcutPath() {
