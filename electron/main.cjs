@@ -208,33 +208,48 @@ function setAutoStartEnabled(enable) {
   return enable;
 }
 
-// Create Windows Start Menu Shortcut automatically (with app-icon.ico)
+// Create Windows Start Menu & Desktop Shortcuts automatically (with app-icon.ico)
 function ensureStartMenuShortcut() {
   if (process.platform === 'win32') {
     try {
       const appData = process.env.APPDATA || path.join(process.env.USERPROFILE, 'AppData', 'Roaming');
       const startMenuDir = path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-      const shortcutPath = path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk');
-      if (fs.existsSync(shortcutPath)) return;
+      const startShortcutPath = path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk');
+      const desktopDir = path.join(process.env.USERPROFILE, 'Desktop');
+      const desktopShortcutPath = path.join(desktopDir, 'Gemini AI Clipboard Assistant.lnk');
+      const oldDesktopShortcut = path.join(desktopDir, 'Gemini Translator.lnk');
+      
+      // Clean up legacy desktop shortcut if present
+      if (fs.existsSync(oldDesktopShortcut)) {
+        try { fs.unlinkSync(oldDesktopShortcut); } catch {}
+      }
+
       const vbsScript = path.join(__dirname, '..', 'launch.vbs');
       const iconFile = getIconPath();
 
       const psScript = [
         '$WshShell = New-Object -comObject WScript.Shell',
-        `$Shortcut = $WshShell.CreateShortcut('${shortcutPath.replace(/'/g, "''")}')`,
-        `$Shortcut.TargetPath = 'wscript.exe'`,
-        `$Shortcut.Arguments = '\"${vbsScript.replace(/'/g, "''")}\"'`,
-        `$Shortcut.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
-        `$Shortcut.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
-        `$Shortcut.Description = 'Gemini AI Clipboard Assistant'`,
-        '$Shortcut.Save()'
+        `$s1 = $WshShell.CreateShortcut('${startShortcutPath.replace(/'/g, "''")}')`,
+        `$s1.TargetPath = 'wscript.exe'`,
+        `$s1.Arguments = '"${vbsScript.replace(/'/g, "''")}"'`,
+        `$s1.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
+        `$s1.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
+        `$s1.Description = 'Gemini AI Clipboard Assistant'`,
+        '$s1.Save()',
+        `$s2 = $WshShell.CreateShortcut('${desktopShortcutPath.replace(/'/g, "''")}')`,
+        `$s2.TargetPath = 'wscript.exe'`,
+        `$s2.Arguments = '"${vbsScript.replace(/'/g, "''")}"'`,
+        `$s2.WorkingDirectory = '${path.join(__dirname, '..').replace(/'/g, "''")}'`,
+        `$s2.IconLocation = '${iconFile.replace(/'/g, "''")}'`,
+        `$s2.Description = 'Gemini AI Clipboard Assistant'`,
+        '$s2.Save()'
       ].join('; ');
 
       execFile('powershell', ['-NoProfile', '-Command', psScript], (err) => {
-        if (err) console.warn('Start menu shortcut creation warning:', err);
+        if (err) console.warn('Shortcut creation warning:', err);
       });
     } catch (e) {
-      console.warn('Could not create start menu shortcut:', e);
+      console.warn('Could not create shortcuts:', e);
     }
   }
 }
@@ -250,22 +265,17 @@ function getAppIcon() {
 
 function createWindow() {
   const icon = getAppIcon();
-  const loginSettings = app.getLoginItemSettings();
   const isHiddenArg = process.argv.some(arg => 
     typeof arg === 'string' && (arg.includes('hidden') || arg.includes('minimized'))
   );
-  const shouldStartHidden = isHiddenArg || 
-    Boolean(loginSettings.wasOpenedAsHidden) ||
-    Boolean(loginSettings.wasOpenedAtLogin) ||
-    Boolean(startMinimized);
-
+  const shouldStartHidden = isHiddenArg;
 
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
     minWidth: 460,
     minHeight: 280,
-    show: false, // NEVER show immediately to prevent white/empty frame flashing
+    show: !shouldStartHidden, // Show immediately on manual launch; hide if launched with --hidden
     title: 'Gemini AI Clipboard Assistant',
     backgroundColor: '#090d16',
     autoHideMenuBar: true,
@@ -278,9 +288,15 @@ function createWindow() {
     }
   });
 
+  if (!shouldStartHidden) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+
   mainWindow.once('ready-to-show', () => {
-    if (!shouldStartHidden) {
+    if (!shouldStartHidden && mainWindow && !mainWindow.isVisible()) {
       mainWindow.show();
+      mainWindow.focus();
     }
   });
 
@@ -384,8 +400,13 @@ function updateTrayMenu() {
 }
 
 function createTray() {
-  const icon = getAppIcon();
-  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  const icoPath = getIconPath();
+  try {
+    tray = new Tray(icoPath);
+  } catch {
+    const icon = getAppIcon();
+    tray = new Tray(icon);
+  }
 
   updateTrayMenu();
 
