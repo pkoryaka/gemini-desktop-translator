@@ -290,25 +290,23 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
         {/* ================= LEFT SIDEBAR (VERTICAL TABS) ================= */}
         <aside className="settings-sidebar">
           <div className="settings-sidebar-brand">
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              flexShrink: 0
-            }}>
-              <Sliders size={18} />
-            </div>
+            <img 
+              src="/app-icon.png" 
+              alt="NativeLingo" 
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                objectFit: 'cover',
+                flexShrink: 0
+              }}
+            />
             <div style={{ overflow: 'hidden' }}>
               <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 Settings
               </h2>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                NativeLingo AI
+                NativeLingo Desktop
               </p>
             </div>
           </div>

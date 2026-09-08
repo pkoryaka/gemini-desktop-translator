@@ -218,11 +218,12 @@ function ensureStartMenuShortcut() {
       const desktopDir = path.join(process.env.USERPROFILE, 'Desktop');
       const desktopShortcutPath = path.join(desktopDir, 'NativeLingo.lnk');
       
-      // Clean up legacy desktop shortcuts if present
+      // Clean up legacy desktop & start menu shortcuts if present
       const oldShortcuts = [
         path.join(desktopDir, 'Gemini AI Clipboard Assistant.lnk'),
         path.join(desktopDir, 'Gemini Translator.lnk'),
-        path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk')
+        path.join(startMenuDir, 'Gemini AI Clipboard Assistant.lnk'),
+        path.join(startMenuDir, 'Gemini Translator.lnk')
       ];
       for (const oldSc of oldShortcuts) {
         if (fs.existsSync(oldSc)) {

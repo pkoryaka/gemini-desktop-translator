@@ -7,7 +7,7 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey,
       <div className="brand-section">
         <img 
           src="/app-icon.png" 
-          alt="Gemini AI Assistant Logo" 
+          alt="NativeLingo Logo" 
           className="brand-logo" 
           style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }}
         />
@@ -21,7 +21,7 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey,
         <button 
           className="badge-model" 
           onClick={onOpenSettings}
-          title="Click to configure Gemini API Key and Model"
+          title="Click to configure AI Model and API Key"
         >
           <span className={`badge-pulse-dot ${hasApiKey ? '' : 'warning'}`} />
           <Sparkles size={13} />

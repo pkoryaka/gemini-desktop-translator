@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./public/app-icon.png" width="128" height="128" alt="NativeLingo Logo" style="border-radius: 28px;" />
+
 # ⚡ NativeLingo
 ### *Native In-Place AI Translator, Clipboard Assistant & Jargon Demystifier*
 #### *With Full BYOM (Bring Your Own Model) & Local Offline AI Support*
