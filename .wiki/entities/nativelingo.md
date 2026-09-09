@@ -57,8 +57,16 @@ When Jargon Explainer mode is activated, Gemini returns structured JSON:
   1. `models`: AI Models & BYOM (Gemini Cloud vs Local Offline LLMs via Ollama/LM Studio with live test connections and live catalog discovery).
   2. `languages`: Expanded catalog of 53+ world languages, live search filtering, 1-click star/unstar (⭐) preferred languages pinning, and default target language selection.
   3. `shortcuts`: Global hardware hotkeys (`Alt+T`, `Alt+J`) and the 3 custom in-place prompt slots with conflict detection.
-  4. `appearance`: Dual-theme switcher (Obsidian Dark vs Crisp Light modern mode) and system auto-start controls.
-- **Preferred Languages System**:
+## Role-Specific Preset Packs
+NativeLingo provides 1-click curated prompt configuration packs in `storageService.js` and `SettingsModal.jsx`:
+- **Customer Support & CX Pack**: Tuned for customer ticket resolution, polite clarity, empathetic de-escalation, and instant English translation.
+- **Developer & Engineering Pack**: Tuned for code review comments, standups, and documentation phrasing without altering variable names or technical terminology.
+- **Executive & Deal Closer Pack**: Tuned for corporate executive tone, crisp action-item summaries, and client correspondence.
+
+## Data Routing Transparency
+The UI explicitly renders transparent data routing badges across both `Header.jsx` and `MiniTranslatePopup.jsx`:
+- `Cloud Direct`: Encrypted TLS request sent directly from the local Node.js client to Google AI Studio with user's private key. Zero intermediate servers.
+- `Local AI`: Direct HTTP request to user-configured local endpoint (e.g. `http://localhost:11434/v1` for Ollama). 100% of data remains on the physical machine for air-gapped security and GDPR/HIPAA compliance.- **Preferred Languages System**:
   - Languages can be starred/pinned with a 1-click golden star (⭐).
   - Starred languages stay pinned at the top of the Settings list and render inside `<optgroup label="⭐ Preferred Languages">` at the very top of dropdowns across `LanguageSelector.jsx` and `MiniTranslatePopup.jsx`.
   - Stored in persistent `storageService.getPreferredLanguages()` / `setPreferredLanguages()`.
