@@ -95,11 +95,11 @@ export const AVAILABLE_MODELS = [
     bestFor: 'Real-time sentence streaming and nuanced translation.'
   },
   {
-    id: 'gemini-3.5-flash',
-    name: 'Gemini 3.5 Flash',
+    id: 'gemini-3-flash-preview',
+    name: 'Gemini 3 Flash Preview',
     tag: '⚡ High Efficiency',
     badgeColor: '#6366f1',
-    description: 'Stable Gemini 3 architecture model with broad multi-language support.',
+    description: 'Fast preview model with broad multi-language support.',
     bestFor: 'General sentence and paragraph translation.'
   }
 ];
@@ -286,7 +286,8 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  const targetModel = (model && !model.includes('3.8') && model !== 'gemini-2.0-flash' && model !== 'gemini-2.5-flash') ? model : 'gemini-flash-lite-latest';
+  const isSlow = !model || model === 'gemini-3.5-flash' || model === 'gemini-3.6-flash' || model === 'gemini-2.5-flash' || model === 'gemini-2.0-flash' || model.includes('3.8');
+  const targetModel = isSlow ? 'gemini-flash-lite-latest' : model;
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
@@ -341,10 +342,9 @@ Respond ONLY in JSON format:
   };
 
   const isBYOM = storageService.getSettings().aiProvider === 'openai_compatible';
-  const isStreaming = Boolean(onStreamChunk) && !explainJargon && !isBYOM;
 
-  // For BYOM (local LLMs) or structured Jargon JSON explanation, use native Node translation engine
-  if ((isBYOM || explainJargon || !isStreaming) && window.electronAPI?.nativeTranslate) {
+  // Primary Engine: Native Node Translation Engine with direct SSE streaming (Bypasses Chromium background throttling)
+  if (window.electronAPI?.nativeTranslate) {
     try {
       const nativeRes = await window.electronAPI.nativeTranslate({
         apiKey: apiKey.trim(),

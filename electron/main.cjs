@@ -16,11 +16,12 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason);
 });
 
-// Chromium Memory Optimizations for background utility app
-app.commandLine.appendSwitch('disable-background-networking');
+// Chromium Performance & Responsiveness flags for background utility app
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-domain-reliability');
 app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 function trimMemory() {
   if (process.platform === 'win32') {
@@ -98,7 +99,7 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) {
-        if (data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash' || data.model === 'gemini-3.6-flash' || data.model === 'gemini-2.0-flash') {
+        if (data.model === 'gemini-3.5-flash' || data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash' || data.model === 'gemini-3.6-flash' || data.model === 'gemini-2.0-flash') {
           savedModel = 'gemini-flash-lite-latest';
         } else {
           savedModel = data.model;
@@ -632,7 +633,8 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       throw new Error('Please configure your Google Gemini API Key.');
     }
 
-    const safeRequested = (requestedModel && !requestedModel.includes('3.8') && requestedModel !== 'gemini-2.0-flash' && requestedModel !== 'gemini-2.5-flash')
+    const isSlowModel = requestedModel === 'gemini-3.5-flash' || requestedModel === 'gemini-3.6-flash' || requestedModel === 'gemini-2.5-flash' || requestedModel === 'gemini-2.0-flash' || requestedModel.includes('3.8');
+    const safeRequested = (requestedModel && !isSlowModel)
       ? requestedModel
       : 'gemini-flash-lite-latest';
 
@@ -640,7 +642,6 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       safeRequested,
       'gemini-flash-lite-latest',
       'gemini-3.5-flash-lite',
-      'gemini-3.1-flash-lite',
       'gemini-3.7-flash'
     ].filter(Boolean)));
 
@@ -650,7 +651,7 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       const candidateModel = candidates[i];
       const isLast = (i === candidates.length - 1);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
 
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${key.trim()}`;
@@ -1001,21 +1002,98 @@ ipcMain.handle('window:set-size', (event, { width, height }) => {
 
 // High-speed Native Translation Engine (Gemini Cloud OR Local BYOM)
 ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, customPrompt, explainJargon, model }) => {
-  const systemInstructionText = explainJargon
+  const isExplain = Boolean(explainJargon);
+  const prompt = (customPrompt && customPrompt.trim()) ? customPrompt.trim() : '';
+
+  const systemInstructionText = isExplain
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
-    : customPrompt && customPrompt.trim()
-    ? `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
+    : prompt
+    ? `You are a precision text transformer. Follow this user instruction precisely: "${prompt}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
     : `Translate into ${targetLang}. Output direct translation only without quotes, preamble, or commentary.`;
 
-  const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
+  const key = (apiKey && apiKey.trim()) || savedApiKey;
+  const requested = model || savedModel || 'gemini-flash-lite-latest';
+  const isSlow = requested === 'gemini-3.5-flash' || requested === 'gemini-3.6-flash' || requested === 'gemini-2.5-flash' || requested === 'gemini-2.0-flash' || requested.includes('3.8');
+  const targetModel = isSlow ? 'gemini-flash-lite-latest' : requested;
 
+  // Ultra-fast streaming path in Node.js: bypasses Chromium renderer throttling
+  if (!isExplain && savedAiProvider === 'gemini' && key) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${key.trim()}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemInstructionText }] },
+          contents: [{ role: 'user', parts: [{ text }] }],
+          generationConfig: {
+            temperature: 0.0,
+            maxOutputTokens: Math.max(128, Math.min(1024, text.length * 3)),
+            candidateCount: 1
+          }
+        })
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let accumulatedText = '';
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data:')) {
+              const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+              if (jsonStr) {
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  const candidate = parsed.candidates?.[0];
+                  const chunk = candidate?.content?.parts?.[0]?.text || '';
+                  if (chunk) {
+                    accumulatedText += chunk;
+                    event.sender.send('quick-translate-chunk', accumulatedText);
+                  }
+                  if (candidate?.finishReason) {
+                    try { reader.cancel(); } catch {}
+                    break;
+                  }
+                } catch {}
+              }
+            }
+          }
+        }
+
+        if (accumulatedText && accumulatedText.trim()) {
+          return { success: true, rawOutput: accumulatedText.trim() };
+        }
+      }
+    } catch (streamErr) {
+      console.warn('Native stream failed, falling back to runAiGeneration:', streamErr.message);
+    }
+  }
+
+  // Fallback to non-streaming runAiGeneration
+  const maxTokens = isExplain ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
   const rawOutput = await runAiGeneration({
     text,
     systemInstructionText,
-    isJson: Boolean(explainJargon),
+    isJson: isExplain,
     maxTokens,
-    model,
-    apiKey
+    model: targetModel,
+    apiKey: key
   });
 
   return { success: true, rawOutput };

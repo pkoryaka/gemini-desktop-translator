@@ -44,3 +44,15 @@ The In-Place Rewrite feature allows users to select text in any Windows applicat
   2. **Direct Real-Time SSE Streaming**: Enabled direct Server-Sent Events (SSE) streaming (`streamGenerateContent?alt=sse`) in `geminiService.js` for Gemini translations. Tokens stream into the UI with Time-To-First-Token (TTFT) under **250ms**.
   3. **Greedy Decoding & Direct Prompt**: Set `temperature: 0.0` for fastest decoding and removed conversational preamble overhead from the system instruction.
   4. **Eliminated Duplicate Requests**: Removed the redundant background stream in `main.cjs`, leaving a single, ultra-fast streaming pipeline.
+
+---
+
+## 6. Translation Speed Relapse Prevention & Native Node SSE Pipeline
+- **Problem**: Users observed translation latency increasing again.
+- **Root Causes**:
+  1. **Chromium Background Networking Throttling**: Chromium flag `--disable-background-networking` was actively suspending network sockets and DNS resolution when the utility app was minimized to tray. Upon pressing the global hotkey, Chromium took several seconds to wake its network stack and establish TLS handshakes.
+  2. **Non-Lite Fallback Hang**: `gemini-3.5-flash` (non-lite) was benchmarked taking **10,000–15,000ms+** due to heavy reasoning overhead, compared to **600–750ms** on `gemini-flash-lite-latest` and `gemini-3.5-flash-lite`.
+- **Solutions**:
+  1. **Replaced Chromium Throttling Flags**: Removed `--disable-background-networking` and added `--disable-background-timer-throttling` and `--disable-renderer-backgrounding` to keep Chromium's timer and execution engine at 100% responsiveness even when popping up from tray.
+  2. **Native Node.js SSE Streaming Pipeline**: Routed all Electron translations through `native:translate` in `electron/main.cjs`. Node.js maintains persistent keep-alive HTTPS connections and streams real-time SSE chunks (`quick-translate-chunk`) into React with sub-250ms TTFT and ~650ms total completion.
+  3. **Strict Lite Auto-Migration**: Filtered non-lite models (`gemini-3.5-flash`, `gemini-3.6-flash`, etc.) in `storageService.js` and `main.cjs` to automatically map to `gemini-flash-lite-latest`.
