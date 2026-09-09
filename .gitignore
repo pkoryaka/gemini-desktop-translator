@@ -91,3 +91,6 @@ Thumbs.db
 
 # Wiki vector cache
 .wiki/.cache/
+
+# Scratch & test logs
+electron_*.txt

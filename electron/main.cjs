@@ -345,6 +345,10 @@ function createWindow() {
   });
 
   const distHtml = path.join(__dirname, '../dist/index.html');
+  mainWindow.webContents.on('did-fail-load', (e, errorCode, errorDescription) => {
+    console.error('mainWindow failed to load:', errorCode, errorDescription);
+  });
+
   if (fs.existsSync(distHtml) && process.env.VITE_DEV !== 'true') {
     mainWindow.loadFile(distHtml);
   } else {
