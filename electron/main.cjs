@@ -370,6 +370,13 @@ function createWindow() {
   mainWindow.on('minimize', () => {
     setTimeout(trimMemory, 1000);
   });
+
+  mainWindow.on('maximize', () => {
+    isMiniWindowMode = false;
+    mainWindow.setAlwaysOnTop(false);
+    mainWindow.setMinimumSize(800, 600);
+    mainWindow.webContents.send('show-full-window');
+  });
 }
 
 function updateTrayMenu() {
@@ -967,15 +974,20 @@ ipcMain.handle('window:set-mode', (event, mode) => {
   if (!mainWindow) return false;
   isMiniWindowMode = (mode === 'mini');
   if (mode === 'mini') {
-    mainWindow.setMinimumSize(420, 240);
-    mainWindow.setSize(540, 360);
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    }
+    mainWindow.setMinimumSize(480, 260);
+    mainWindow.setSize(660, 420);
     positionWindowAtCursor();
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
   } else {
     mainWindow.setAlwaysOnTop(false);
     mainWindow.setMinimumSize(800, 600);
-    mainWindow.setSize(1200, 820);
-    mainWindow.center();
+    if (!mainWindow.isMaximized()) {
+      mainWindow.setSize(1200, 820);
+      mainWindow.center();
+    }
   }
   return true;
 });

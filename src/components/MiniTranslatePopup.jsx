@@ -4,8 +4,6 @@ import {
   Check, 
   Volume2, 
   VolumeX, 
-  Maximize2, 
-  X, 
   BookOpen, 
   ArrowRight, 
   Loader2,
@@ -25,9 +23,7 @@ export function MiniTranslatePopup({
   explanationData,
   isLoading,
   errorMessage,
-  onExpandToFull,
   onOpenSettings,
-  onClose,
   onCopy
 }) {
   const [copied, setCopied] = useState(false);
@@ -72,7 +68,7 @@ export function MiniTranslatePopup({
     }
 
     const utterance = new SpeechSynthesisUtterance(translatedText);
-    const langMap = { uk: 'uk-UA', ru: 'ru-RU', es: 'es-ES', en: 'en-US' };
+    const langMap = { uk: 'uk-UA', ru: 'ru-RU', es: 'es-ES', en: 'en-US', de: 'de-DE', fr: 'fr-FR', pl: 'pl-PL' };
     if (langMap[targetLang]) utterance.lang = langMap[targetLang];
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -82,45 +78,25 @@ export function MiniTranslatePopup({
     window.speechSynthesis.speak(utterance);
   };
 
+  const sourceCharCount = sourceText ? sourceText.trim().length : 0;
+  const targetCharCount = translatedText ? translatedText.trim().length : 0;
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      background: 'var(--bg-secondary)',
-      backdropFilter: 'blur(20px)',
-      color: 'var(--text-primary)',
-      padding: '14px 18px',
-      gap: '10px',
-      userSelect: 'text',
-      overflowY: 'auto',
-      boxSizing: 'border-box'
-    }}>
+    <div className="mini-popup-container">
       {/* Top Header Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+      <div className="mini-popup-header">
+        <div className="mini-lang-selector-group">
+          <span className="mini-lang-badge">
             {sourceLangObj?.name || 'Auto-Detect'}
           </span>
           <ArrowRight size={13} color="var(--primary)" />
 
-          {/* Quick Target Language Selector */}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          {/* Target Language Dropdown Selector */}
+          <div className="mini-lang-select-wrapper">
             <select
               value={targetLang}
               onChange={(e) => setTargetLang && setTargetLang(e.target.value)}
-              style={{
-                appearance: 'none',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '6px',
-                padding: '3px 22px 3px 8px',
-                color: 'var(--primary)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
+              className="mini-lang-select"
             >
               {preferredList.length > 0 && (
                 <optgroup label="⭐ Preferred" style={{ background: 'var(--bg-secondary)', color: 'var(--accent-amber)' }}>
@@ -139,25 +115,35 @@ export function MiniTranslatePopup({
                 ))}
               </optgroup>
             </select>
-            <ChevronDown size={12} color="var(--primary)" style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <ChevronDown size={12} color="var(--primary)" style={{ position: 'absolute', right: '6px', pointerEvents: 'none' }} />
           </div>
 
           {explanationData && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(168,85,247,0.15)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600 }}>
-              <BookOpen size={10} /> Jargon Mode
+            <span style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '4px', 
+              background: 'rgba(168,85,247,0.15)', 
+              color: 'var(--accent-purple)', 
+              padding: '2px 8px', 
+              borderRadius: '999px', 
+              fontSize: '0.72rem', 
+              fontWeight: 600 
+            }}>
+              <BookOpen size={11} /> Jargon Mode
             </span>
           )}
         </div>
 
-        {/* Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Quick Utility Actions (Copy & TTS only - no duplicate close or special buttons) */}
+        <div className="mini-header-actions">
           {translatedText && (
             <>
               <button
                 type="button"
                 className="btn-icon"
                 onClick={handleCopy}
-                title={copied ? 'Copied!' : 'Copy Translation'}
+                title={copied ? 'Copied to Clipboard!' : 'Copy Translation'}
                 style={{ width: '28px', height: '28px' }}
               >
                 {copied ? <Check size={14} color="#10b981" /> : <Copy size={13} />}
@@ -167,160 +153,116 @@ export function MiniTranslatePopup({
                 type="button"
                 className={`btn-icon ${isSpeaking ? 'active' : ''}`}
                 onClick={handleSpeak}
-                title="Listen (Text-to-Speech)"
+                title={isSpeaking ? 'Stop Listening' : 'Listen (Text-to-Speech)'}
                 style={{ width: '28px', height: '28px' }}
               >
-                {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                {isSpeaking ? <VolumeX size={13} color="var(--accent-cyan)" /> : <Volume2 size={13} />}
               </button>
             </>
           )}
 
-          {/* Prominent Expand Button */}
-          <button
-            type="button"
-            onClick={onExpandToFull}
-            title="Open Full NativeLingo Application"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '6px',
-              padding: '4px 8px',
-              fontSize: '0.72rem',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: 600,
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Maximize2 size={12} />
-            <span>Full App</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-icon"
-            onClick={onClose}
-            title="Close to Tray (Esc)"
-            style={{ width: '28px', height: '28px' }}
-          >
-            <X size={14} />
-          </button>
-        </div>
-      </div>
-
-      {/* Source Selected Text snippet */}
-      {sourceText && (
-        <div style={{
-          fontSize: '0.78rem',
-          color: 'var(--text-secondary)',
-          background: 'var(--bg-input)',
-          borderRadius: '6px',
-          padding: '6px 10px',
-          maxHeight: '50px',
-          overflowY: 'auto',
-          borderLeft: '3px solid var(--primary)',
-          lineHeight: 1.4,
-          wordBreak: 'normal',
-          overflowWrap: 'break-word',
-          hyphens: 'none',
-          whiteSpace: 'pre-wrap'
-        }}>
-          "{sourceText}"
-        </div>
-      )}
-
-      {/* Error Message Box (if any) */}
-      {errorMessage && (
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid rgba(239, 68, 68, 0.4)',
-          borderRadius: '8px',
-          padding: '10px 12px',
-          color: '#fca5a5',
-          fontSize: '0.82rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-            <AlertCircle size={15} color="#f87171" />
-            <span>Translation Issue</span>
-          </div>
-          <div style={{ color: '#fecaca', lineHeight: 1.4 }}>{errorMessage}</div>
           {onOpenSettings && (
             <button
               type="button"
+              className="btn-icon"
               onClick={onOpenSettings}
-              style={{
-                alignSelf: 'flex-start',
-                marginTop: '4px',
-                background: '#ef4444',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
+              title="Settings"
+              style={{ width: '28px', height: '28px' }}
             >
-              <Settings size={12} /> Open Settings
+              <Settings size={13} />
             </button>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Main Translated Text Area */}
-      {!errorMessage && (
-        <div style={{
-          flex: 1,
-          fontSize: '1.05rem',
-          lineHeight: 1.5,
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-main)',
-          minHeight: '70px',
-          display: 'flex',
-          alignItems: isLoading && !translatedText ? 'center' : 'flex-start',
-          justifyContent: isLoading && !translatedText ? 'center' : 'flex-start'
-        }}>
-          {isLoading && !translatedText ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.9rem' }}>
-              <Loader2 size={18} className="spinner" />
-              <span>Translating into {targetLangObj?.name || targetLang}...</span>
-            </div>
-          ) : (
-            <div style={{
-              width: '100%',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'normal',
-              overflowWrap: 'break-word',
-              hyphens: 'none',
-              fontWeight: 500
-            }}>
-              {translatedText}
-            </div>
-          )}
+      {/* Dual-Panel Aligned Content Grid */}
+      <div className="mini-panels-grid">
+        {/* Left Panel: Original Source Text */}
+        <div className="mini-panel-card mini-panel-source">
+          <div className="mini-panel-header">
+            <span>ORIGINAL ({sourceLangObj?.name || 'Detected'})</span>
+            <span>{sourceCharCount} chars</span>
+          </div>
+          <div className="mini-panel-body">
+            {sourceText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No text selected...</span>}
+          </div>
         </div>
-      )}
 
-      {/* Plain Language & Jargon Breakdown (if active) */}
+        {/* Right Panel: Translated Output */}
+        <div className="mini-panel-card mini-panel-target">
+          <div className="mini-panel-header">
+            <span>TRANSLATION ({targetLangObj?.name || targetLang})</span>
+            {isLoading && !translatedText ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textTransform: 'none', fontWeight: 600 }}>
+                <Loader2 size={11} className="spinner" /> Streaming...
+              </span>
+            ) : (
+              <span>{targetCharCount} chars</span>
+            )}
+          </div>
+
+          <div className="mini-panel-body">
+            {errorMessage ? (
+              <div style={{
+                color: '#fca5a5',
+                fontSize: '0.85rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                  <AlertCircle size={14} color="#f87171" />
+                  <span>Translation Error</span>
+                </div>
+                <div style={{ lineHeight: 1.4 }}>{errorMessage}</div>
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    style={{
+                      alignSelf: 'flex-start',
+                      marginTop: '4px',
+                      background: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '3px 8px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Open Settings
+                  </button>
+                )}
+              </div>
+            ) : isLoading && !translatedText ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                color: 'var(--primary)',
+                gap: '8px',
+                fontSize: '0.88rem'
+              }}>
+                <Loader2 size={16} className="spinner" />
+                <span>Translating in real-time...</span>
+              </div>
+            ) : (
+              translatedText || (
+                <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                  {isLoading ? 'Waiting for response...' : 'Translation will appear here...'}
+                </span>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Jargon & Nuance Breakdown (if active) */}
       {!errorMessage && explanationData && (
-        <div style={{
-          background: 'rgba(168, 85, 247, 0.1)',
-          border: '1px solid rgba(168, 85, 247, 0.25)',
-          borderRadius: '8px',
-          padding: '8px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-          fontSize: '0.8rem'
-        }}>
+        <div className="mini-jargon-section">
           {explanationData.plainLanguageMeaning && (
             <div>
               <strong style={{ color: 'var(--accent-purple)' }}>Meaning: </strong>
@@ -344,7 +286,7 @@ export function MiniTranslatePopup({
                     border: '1px solid rgba(168,85,247,0.3)',
                     padding: '2px 6px',
                     borderRadius: '4px',
-                    fontSize: '0.72rem',
+                    fontSize: '0.7rem',
                     color: 'var(--text-primary)'
                   }}
                   title={`Literal: ${j.literalMeaning || 'N/A'} | Nuance: ${j.nuance || ''}`}
