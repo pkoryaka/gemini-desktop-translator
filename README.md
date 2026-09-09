@@ -109,9 +109,9 @@ NativeLingo uses a **14-Day Reverse Trial** and a **client-side software license
 | :--- | :---: | :--- |
 | **Free Edition** | **$0** (Forever) | Unlimited translation hotkey, Slot 1 rewrite HUD preview + manual copy, $0 BYOK inference. |
 | **14-Day Pro Trial** | **$0** (No Card) | Full Pro Edition access for 14 days on first install. Gracefully continues as Free Edition. |
-| **Pro Annual** | **$69 / year** | Instant in-place auto-paste (<250ms), all 3 rewrite slots, 2 personal devices, all updates ($5.75/mo). |
-| **Pro Perpetual** | **$149 one-time** | **$119 Launch Deal** (first 200 copies). Own your version forever + 12 months updates ($49/yr renewal). |
-| **Team Annual** | **$99 / seat / yr** | Minimum 3 seats. Centralized license dashboard, standard business invoicing, priority support. |
+| **Pro Annual** | **$34 / year** | Instant in-place auto-paste (<250ms), all 3 rewrite slots, 2 personal devices, all updates ($2.85/mo). |
+| **Pro Perpetual** | **$74 one-time** | **$59 Launch Deal** (first 200 copies). Own your version forever + 12 months updates ($24/yr renewal). |
+| **Team Annual** | **$49 / seat / yr** | Minimum 3 seats. Centralized license dashboard, standard business invoicing, priority support. |
 
 ---
 

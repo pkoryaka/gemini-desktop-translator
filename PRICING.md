@@ -22,7 +22,7 @@ For users downloading the official installer:
 
 ## 2. Edition & Feature Matrix
 
-| Capability | Free Edition | Pro Edition ($69/yr or $149 Perpetual) | Team / Studio ($99/seat/yr) |
+| Capability | Free Edition | Pro Edition ($34/yr or $74 Perpetual) | Team / Studio ($49/seat/yr) |
 | :--- | :---: | :---: | :---: |
 | **Instant Translation Hotkey** | ✅ Unlimited | ✅ Unlimited | ✅ Unlimited |
 | **BYOK (Gemini API & Local Ollama)** | ✅ 100% Free ($0) | ✅ 100% Free ($0) | ✅ 100% Free ($0) |
@@ -40,7 +40,7 @@ For users downloading the official installer:
 ## 3. Commercial Pricing Tiers
 
 ### A. Pro Annual (Recommended)
-- **Price**: **$69 / year** (~$5.75 / month, billed annually)
+- **Price**: **$34 / year** (~$2.85 / month, billed annually)
 - **Included**:
   - Full Pro Edition access across up to 2 personal workstations.
   - All minor and major software updates released during the subscription.
@@ -48,22 +48,22 @@ For users downloading the official installer:
   - 14-day no-questions-asked money-back guarantee.
 
 ### B. Pro Monthly
-- **Price**: **$8 / month** (billed monthly)
+- **Price**: **$4 / month** (billed monthly)
 - **Included**:
   - Flexible month-to-month access for seasonal projects or short contracts.
   - Cancel anytime with one click in the customer portal.
 
 ### C. Pro Perpetual (Lifetime License)
-- **Price**: **$149 one-time**
-- **Launch Special**: **$119** (limited to the first 200 copies with promo code `EARLYBIRD`)
+- **Price**: **$74 one-time**
+- **Launch Special**: **$59** (limited to the first 200 copies with promo code `EARLYBIRD`)
 - **Included**:
   - Permanent right to use the software forever.
   - 12 full months of major and minor updates and feature additions.
   - Never expires; after 12 months, continue running the latest version you have indefinitely.
-  - Optional subsequent year maintenance renewal at **$49 / year** for continued updates.
+  - Optional subsequent year maintenance renewal at **$24 / year** for continued updates.
 
 ### D. Team & Enterprise
-- **Price**: **$99 / seat / year** (minimum 3 seats)
+- **Price**: **$49 / seat / year** (minimum 3 seats)
 - **Included**:
   - Unified license key management and seat reassignment dashboard.
   - Corporate VAT / GST compliant invoices and wire / ACH payment options.

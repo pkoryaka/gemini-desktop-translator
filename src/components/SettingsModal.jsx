@@ -1668,11 +1668,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                       <div>
                         <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Pro Annual</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '6px 0 8px' }}>
-                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$69</span>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$34</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>/ year</span>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--accent-emerald)', fontWeight: 600, marginBottom: '8px' }}>
-                          $5.75/month • Save 28%
+                          $2.85/month • Save 29%
                         </div>
                         <ul style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', paddingLeft: '14px', margin: 0, lineHeight: 1.6 }}>
                           <li>Instant in-place auto-paste</li>
@@ -1695,7 +1695,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                           textDecoration: 'none'
                         }}
                       >
-                        Upgrade Annual
+                        Upgrade Annual ($34)
                       </a>
                     </div>
 
@@ -1726,8 +1726,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                       <div>
                         <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Pro Perpetual</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', margin: '6px 0 8px' }}>
-                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$119</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textDecoration: 'line-through' }}>$149</span>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$59</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textDecoration: 'line-through' }}>$74</span>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--accent-amber)', fontWeight: 600, marginBottom: '8px' }}>
                           One-time purchase • First 200 copies
@@ -1736,7 +1736,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                           <li>Own your license forever</li>
                           <li>12 months of version updates</li>
                           <li>2 personal devices included</li>
-                          <li>Optional renewals at $49/yr</li>
+                          <li>Optional renewals at $24/yr</li>
                         </ul>
                       </div>
                       <a
@@ -1755,7 +1755,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                           color: 'var(--accent-amber)'
                         }}
                       >
-                        Get Perpetual ($119)
+                        Get Perpetual ($59)
                       </a>
                     </div>
 
@@ -1769,7 +1769,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                       <div>
                         <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Team Annual</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '6px 0 8px' }}>
-                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$99</span>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$49</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>/ seat / yr</span>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>

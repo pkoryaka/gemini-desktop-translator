@@ -16,10 +16,10 @@ NativeLingo implements a client-side commercial model with zero token markups, b
 
 ## Pricing Tiers
 - **Free Edition**: $0 forever. Includes unlimited translation hotkey, Slot 1 rewrite HUD preview + manual copy.
-- **Pro Annual**: $69 / year ($5.75/month equivalent, 28% discount). Full in-place auto-paste (<250ms), 3 rewrite slots, 2 personal devices, all updates.
-- **Pro Monthly**: $8 / month.
-- **Pro Perpetual**: $149 one-time. Launch promotion of $119 for first 200 licenses. 12 months updates included, optional $49/year subsequent renewal.
-- **Team Annual**: $99 / seat / year (min 3 seats). Centralized license management, corporate invoicing, priority support.
+- **Pro Annual**: $34 / year ($2.85/month equivalent, 29% discount). Full in-place auto-paste (<250ms), 3 rewrite slots, 2 personal devices, all updates.
+- **Pro Monthly**: $4 / month.
+- **Pro Perpetual**: $74 one-time. Launch promotion of $59 for first 200 licenses. 12 months updates included, optional $24/year subsequent renewal.
+- **Team Annual**: $49 / seat / year (min 3 seats). Centralized license management, corporate invoicing, priority support.
 
 ## Implementation Details
 - **Engine**: `src/services/licenseService.js` manages persistent license state in `localStorage`:
