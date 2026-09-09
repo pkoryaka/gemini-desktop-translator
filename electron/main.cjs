@@ -9,14 +9,18 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
 // Chromium Memory Optimizations for background utility app
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
 app.commandLine.appendSwitch('disable-background-networking');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-domain-reliability');
 app.commandLine.appendSwitch('disable-sync');
-app.commandLine.appendSwitch('disable-features', 'SpareRendererForSitePerProcess,WinDelaySpellcheckServiceInit');
-app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 
 function trimMemory() {
   if (process.platform === 'win32') {
@@ -438,33 +442,43 @@ function updateTrayMenu() {
 }
 
 function createTray() {
-  const icoPath = getIconPath();
   try {
-    tray = new Tray(icoPath);
-  } catch {
-    const icon = getAppIcon();
-    tray = new Tray(icon);
-  }
-
-  updateTrayMenu();
-
-  tray.on('click', () => {
-    if (mainWindow) {
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else {
-        focusAppWindow();
-        mainWindow.webContents.send('show-full-window');
+    const icoPath = getIconPath();
+    try {
+      tray = new Tray(icoPath);
+    } catch {
+      try {
+        const icon = getAppIcon();
+        tray = new Tray(icon);
+      } catch (e) {
+        console.warn('Fallback tray icon creation failed:', e);
       }
     }
-  });
 
-  tray.on('double-click', () => {
-    focusAppWindow();
-    if (mainWindow) {
-      mainWindow.webContents.send('show-full-window');
+    if (tray) {
+      updateTrayMenu();
+
+      tray.on('click', () => {
+        if (mainWindow) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide();
+          } else {
+            focusAppWindow();
+            mainWindow.webContents.send('show-full-window');
+          }
+        }
+      });
+
+      tray.on('double-click', () => {
+        focusAppWindow();
+        if (mainWindow) {
+          mainWindow.webContents.send('show-full-window');
+        }
+      });
     }
-  });
+  } catch (err) {
+    console.warn('Could not initialize system tray:', err);
+  }
 }
 
 let isMiniWindowMode = false;
@@ -977,14 +991,6 @@ app.whenReady().then(() => {
   registerGlobalHotkeys(translateHotkey, explainHotkey);
   ensureStartMenuShortcut();
   prewarmGoogleSocket();
-
-  // Initial background trim if started hidden/minimized
-  const isHiddenArg = process.argv.some(arg => 
-    typeof arg === 'string' && (arg.includes('hidden') || arg.includes('minimized'))
-  );
-  if (isHiddenArg) {
-    setTimeout(trimMemory, 3500);
-  }
 
   // Periodic memory sweep every 15 minutes when app is idle in background
   setInterval(() => {
