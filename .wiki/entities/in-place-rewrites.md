@@ -30,3 +30,17 @@ The In-Place Rewrite feature allows users to select text in any Windows applicat
   2. Updated fallback candidates in `electron/main.cjs` to `[requestedModel, 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-3.5-flash']`.
   3. Optimized `triggerQuickSlotAction` to prioritize `fastModel` (`gemini-flash-lite-latest`) for in-place replacements.
   4. Optimized `CopyNative.cs` keybd_event sequence for `isPaste` to drop redundant settling delays and reduced the setTimeout delay to 10ms, dropping end-to-end replacement time from ~16s to <1s.
+
+---
+
+## 5. Main Window & Hotkey Translation Latency Optimization
+- **Problem**: Translation in the main window or via `Alt+Q` was taking significantly longer than text replacement.
+- **Root Causes Identified**:
+  1. **18-Second 503 Hang**: The user's configuration file had `"model": "gemini-3.8-flash"`. Benchmark revealed `gemini-3.8-flash` hung for **18,063 ms** before returning `HTTP 503 Service Unavailable`, delaying translation by 18 seconds before falling back.
+  2. **Blocking Non-Streaming Path**: `translateText` routed through a blocking IPC handler `nativeTranslate` (`generateContent`), preventing token streaming and keeping the UI on a loading spinner for the entire duration.
+  3. **Duplicate Concurrent Requests**: When pressing `Alt+Q`, `main.cjs` fired a background prefetch `startNativeStream` while the React UI simultaneously invoked `executeTranslationWithMode`, sending two competing parallel requests with the same API key.
+- **Solutions Implemented**:
+  1. **Migrated to `gemini-flash-lite-latest`**: Updated `config.json` and added auto-migration in `storageService.js` and `main.cjs`. Replaced 18-second fallback loops with sub-second (~700ms) execution.
+  2. **Direct Real-Time SSE Streaming**: Enabled direct Server-Sent Events (SSE) streaming (`streamGenerateContent?alt=sse`) in `geminiService.js` for Gemini translations. Tokens stream into the UI with Time-To-First-Token (TTFT) under **250ms**.
+  3. **Greedy Decoding & Direct Prompt**: Set `temperature: 0.0` for fastest decoding and removed conversational preamble overhead from the system instruction.
+  4. **Eliminated Duplicate Requests**: Removed the redundant background stream in `main.cjs`, leaving a single, ultra-fast streaming pipeline.
