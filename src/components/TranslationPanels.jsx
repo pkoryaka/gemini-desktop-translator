@@ -10,6 +10,7 @@ import {
   Loader2,
   CornerDownLeft
 } from 'lucide-react';
+import { ttsService } from '../services/ttsService';
 
 export function TranslationPanels({
   sourceText,
@@ -26,13 +27,13 @@ export function TranslationPanels({
   const [isSpeakingTarget, setIsSpeakingTarget] = useState(false);
 
   // Copy to clipboard
-  const handleCopy = async () => {
-    if (!translatedText) return;
+  const handleCopy = async (text) => {
+    if (!text) return;
     try {
       if (window.electronAPI?.copyToClipboard) {
-        await window.electronAPI.copyToClipboard(translatedText);
+        await window.electronAPI.copyToClipboard(text);
       } else {
-        await navigator.clipboard.writeText(translatedText);
+        await navigator.clipboard.writeText(text);
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -58,34 +59,24 @@ export function TranslationPanels({
     }
   };
 
-  // Text-To-Speech
-  const speakText = (text, langCode, setSpeakingState) => {
-    if (!('speechSynthesis' in window) || !text) return;
+  // Text-To-Speech with Studio Neural Quality
+  const speakText = async (text, langCode, setSpeakingState) => {
+    if (!text || !text.trim()) return;
 
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      setSpeakingState(false);
+    if (ttsService.isSpeaking()) {
+      ttsService.stop();
+      setIsSpeakingSource(false);
+      setIsSpeakingTarget(false);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Map langCode to BCP-47
-    const langMap = {
-      uk: 'uk-UA',
-      ru: 'ru-RU',
-      es: 'es-ES',
-      en: 'en-US'
-    };
-    if (langMap[langCode]) {
-      utterance.lang = langMap[langCode];
-    }
-
-    utterance.onstart = () => setSpeakingState(true);
-    utterance.onend = () => setSpeakingState(false);
-    utterance.onerror = () => setSpeakingState(false);
-
-    window.speechSynthesis.speak(utterance);
+    await ttsService.speak({
+      text,
+      lang: langCode,
+      onStart: () => setSpeakingState(true),
+      onEnd: () => setSpeakingState(false),
+      onError: () => setSpeakingState(false)
+    });
   };
 
   const handleKeyDown = (e) => {

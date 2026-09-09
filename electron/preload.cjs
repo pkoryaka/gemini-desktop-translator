@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   fetchLiveModels: (apiKey) => ipcRenderer.invoke('models:fetch', apiKey),
   testEndpoint: (cfg) => ipcRenderer.invoke('endpoint:test', cfg),
   syncConfig: (cfg) => ipcRenderer.invoke('config:sync', cfg),
+  synthesizeSpeech: (options) => ipcRenderer.invoke('tts:synthesize', options),
   onStreamChunk: (callback) => {
     const subscription = (event, data) => callback(data);
     ipcRenderer.on('quick-translate-chunk', subscription);

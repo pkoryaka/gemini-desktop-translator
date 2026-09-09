@@ -3,10 +3,11 @@ import {
   X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, 
   Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, 
   AppWindow, Cpu, Server, Sun, Moon, Palette, Sliders, History,
-  Star, Search, Check
+  Star, Search, Check, Volume2, VolumeX
 } from 'lucide-react';
 import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService } from '../services/storageService';
+import { ttsService } from '../services/ttsService';
 import { HotkeyRecorder } from './HotkeyRecorder';
 import appLogo from '../assets/app-icon.png';
 
@@ -45,6 +46,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
   const [preferredLanguages, setPreferredLanguages] = useState(() => storageService.getPreferredLanguages());
   const [langSearch, setLangSearch] = useState('');
   const [instantPopupMode, setInstantPopupMode] = useState(currentSettings.instantPopupMode !== false);
+
+  // High-Quality Text-to-Speech Settings
+  const [ttsVoiceGender, setTtsVoiceGender] = useState(currentSettings.ttsVoiceGender || 'female');
+  const [ttsSpeed, setTtsSpeed] = useState(currentSettings.ttsSpeed || 1.0);
+  const [isTestingTts, setIsTestingTts] = useState(false);
 
   // Global Hotkeys (Customizable strings)
   const [translateHotkey, setTranslateHotkey] = useState(currentSettings.translateHotkey || 'CommandOrControl+Alt+T');
@@ -215,8 +221,41 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
     });
   };
 
+  const handleTestTts = async () => {
+    if (isTestingTts) {
+      ttsService.stop();
+      setIsTestingTts(false);
+      return;
+    }
+
+    const demoPhrases = {
+      uk: 'Привіт! Якість голосу тепер кришталево чиста та природна.',
+      en: 'Hello! Voice quality is now crystal clear, human, and natural.',
+      es: '¡Hola! La calidad de voz ahora es natural y de alta definición.',
+      de: 'Hallo! Die Sprachqualität ist jetzt kristallklar und natürlich.',
+      pl: 'Cześć! Jakość głosu jest teraz naturalna i krystalicznie czysta.',
+      fr: 'Bonjour! La qualité vocale est désormais naturelle et d\'une clarté cristalline.',
+      ru: 'Привет! Качество голоса теперь чистое и естественное.'
+    };
+
+    const phrase = demoPhrases[primaryTargetLanguage] || demoPhrases['en'];
+
+    await ttsService.speak({
+      text: phrase,
+      lang: primaryTargetLanguage,
+      gender: ttsVoiceGender,
+      rate: ttsSpeed,
+      onStart: () => setIsTestingTts(true),
+      onEnd: () => setIsTestingTts(false),
+      onError: () => setIsTestingTts(false)
+    });
+  };
+
   const handleSave = () => {
     if (hasConflict) return;
+
+    ttsService.stop();
+    setIsTestingTts(false);
 
     storageService.setApiKey(apiKey.trim());
     storageService.saveSettings({
@@ -230,6 +269,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
       saveHistory,
       translateHotkey,
       explainHotkey,
+      ttsVoiceGender,
+      ttsSpeed,
       aiProvider,
       customGeminiModel,
       customEndpoint,
@@ -849,6 +890,109 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                     <span>0.0 (Precise / Literal)</span>
                     <span>0.1 - 0.2 (Optimal Speed)</span>
                     <span>1.0 (Creative Nuance)</span>
+                  </div>
+                </div>
+
+                {/* Natural Neural Voice & TTS Settings */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <div className="settings-card-title">
+                      <Volume2 size={16} color="var(--primary)" />
+                      <span>Natural Neural Voice (Edge AI)</span>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#10b981', background: 'rgba(16,185,129,0.12)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600, border: '1px solid rgba(16,185,129,0.25)' }}>
+                      Studio HD
+                    </span>
+                  </div>
+                  <p className="settings-card-desc">
+                    NativeLingo synthesizes studio-grade neural speech across Ukrainian, English, and all supported languages. Select your preferred persona and pacing below.
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '6px' }}>
+                    {/* Voice Persona / Gender */}
+                    <div>
+                      <label className="form-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.78rem' }}>Voice Gender</label>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setTtsVoiceGender('female')}
+                          className={`btn-secondary ${ttsVoiceGender === 'female' ? 'active' : ''}`}
+                          style={{
+                            flex: 1,
+                            padding: '6px 10px',
+                            fontSize: '0.78rem',
+                            justifyContent: 'center',
+                            borderColor: ttsVoiceGender === 'female' ? 'var(--primary)' : 'var(--border-color)',
+                            background: ttsVoiceGender === 'female' ? 'rgba(99,102,241,0.15)' : 'var(--bg-secondary)',
+                            fontWeight: ttsVoiceGender === 'female' ? 600 : 400
+                          }}
+                        >
+                          Female (Polina/Jenny)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTtsVoiceGender('male')}
+                          className={`btn-secondary ${ttsVoiceGender === 'male' ? 'active' : ''}`}
+                          style={{
+                            flex: 1,
+                            padding: '6px 10px',
+                            fontSize: '0.78rem',
+                            justifyContent: 'center',
+                            borderColor: ttsVoiceGender === 'male' ? 'var(--primary)' : 'var(--border-color)',
+                            background: ttsVoiceGender === 'male' ? 'rgba(99,102,241,0.15)' : 'var(--bg-secondary)',
+                            fontWeight: ttsVoiceGender === 'male' ? 600 : 400
+                          }}
+                        >
+                          Male (Ostap/Guy)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Speech Speed */}
+                    <div>
+                      <label className="form-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.78rem' }}>Speaking Speed</label>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {[
+                          { label: '0.85x', val: 0.85 },
+                          { label: '1.0x (Normal)', val: 1.0 },
+                          { label: '1.15x', val: 1.15 }
+                        ].map((spd) => (
+                          <button
+                            key={spd.label}
+                            type="button"
+                            onClick={() => setTtsSpeed(spd.val)}
+                            className={`btn-secondary ${ttsSpeed === spd.val ? 'active' : ''}`}
+                            style={{
+                              flex: 1,
+                              padding: '6px 8px',
+                              fontSize: '0.78rem',
+                              justifyContent: 'center',
+                              borderColor: ttsSpeed === spd.val ? 'var(--primary)' : 'var(--border-color)',
+                              background: ttsSpeed === spd.val ? 'rgba(99,102,241,0.15)' : 'var(--bg-secondary)',
+                              fontWeight: ttsSpeed === spd.val ? 600 : 400
+                            }}
+                          >
+                            {spd.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Button */}
+                  <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      Preview audio in <strong>{primaryTargetLanguage.toUpperCase()}</strong> ({ttsVoiceGender}):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleTestTts}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', padding: '5px 12px' }}
+                    >
+                      {isTestingTts ? <VolumeX size={14} color="var(--accent-cyan)" /> : <Volume2 size={14} />}
+                      <span>{isTestingTts ? 'Stop Preview' : 'Test Speech'}</span>
+                    </button>
                   </div>
                 </div>
 

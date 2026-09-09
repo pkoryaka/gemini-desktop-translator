@@ -28,6 +28,7 @@ export function MiniTranslatePopup({
 }) {
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeakingSource, setIsSpeakingSource] = useState(false);
 
   const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
   const sourceLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang);
@@ -58,24 +59,48 @@ export function MiniTranslatePopup({
     }
   };
 
-  const handleSpeak = () => {
-    if (!('speechSynthesis' in window) || !translatedText) return;
+  const handleSpeak = async () => {
+    if (!translatedText || !translatedText.trim()) return;
 
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
+    if (ttsService.isSpeaking()) {
+      ttsService.stop();
       setIsSpeaking(false);
+      setIsSpeakingSource(false);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(translatedText);
-    const langMap = { uk: 'uk-UA', ru: 'ru-RU', es: 'es-ES', en: 'en-US', de: 'de-DE', fr: 'fr-FR', pl: 'pl-PL' };
-    if (langMap[targetLang]) utterance.lang = langMap[targetLang];
+    await ttsService.speak({
+      text: translatedText,
+      lang: targetLang,
+      onStart: () => {
+        setIsSpeaking(true);
+        setIsSpeakingSource(false);
+      },
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false)
+    });
+  };
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+  const handleSpeakSource = async () => {
+    if (!sourceText || !sourceText.trim()) return;
 
-    window.speechSynthesis.speak(utterance);
+    if (ttsService.isSpeaking()) {
+      ttsService.stop();
+      setIsSpeaking(false);
+      setIsSpeakingSource(false);
+      return;
+    }
+
+    await ttsService.speak({
+      text: sourceText,
+      lang: sourceLang,
+      onStart: () => {
+        setIsSpeakingSource(true);
+        setIsSpeaking(false);
+      },
+      onEnd: () => setIsSpeakingSource(false),
+      onError: () => setIsSpeakingSource(false)
+    });
   };
 
   const sourceCharCount = sourceText ? sourceText.trim().length : 0;
@@ -181,7 +206,20 @@ export function MiniTranslatePopup({
         <div className="mini-panel-card mini-panel-source">
           <div className="mini-panel-header">
             <span>ORIGINAL ({sourceLangObj?.name || 'Detected'})</span>
-            <span>{sourceCharCount} chars</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>{sourceCharCount} chars</span>
+              {sourceText && (
+                <button
+                  type="button"
+                  className={`btn-icon ${isSpeakingSource ? 'active' : ''}`}
+                  onClick={handleSpeakSource}
+                  title={isSpeakingSource ? 'Stop Listening' : 'Listen (Original)'}
+                  style={{ width: '20px', height: '20px', padding: 0 }}
+                >
+                  {isSpeakingSource ? <VolumeX size={11} color="var(--accent-cyan)" /> : <Volume2 size={11} />}
+                </button>
+              )}
+            </div>
           </div>
           <div className="mini-panel-body">
             {sourceText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No text selected...</span>}

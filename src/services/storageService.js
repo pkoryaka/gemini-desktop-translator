@@ -39,6 +39,8 @@ const DEFAULT_SETTINGS = {
   temperature: 0.1,
   autoDetectLanguage: true,
   autoSpeak: false,
+  ttsVoiceGender: 'female', // 'female' | 'male'
+  ttsSpeed: 1.0, // 0.85 | 1.0 | 1.15
   saveHistory: true,
   enableStreaming: true,
   primaryTargetLanguage: 'uk',

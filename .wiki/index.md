@@ -8,6 +8,7 @@
 | **Overview** | [system-overview](entities/system-overview.md) | High-level system design and architecture | Active |
 | **Architecture** | [nativelingo](entities/nativelingo.md) | NativeLingo desktop architecture & BYOM design | Active |
 | **Features** | [in-place-rewrites](entities/in-place-rewrites.md) | In-place text transformation, latency optimizations, and model fallbacks | Active |
+| **Audio** | [tts-audio-system](entities/tts-audio-system.md) | Studio-grade Edge Neural Voice synthesis & intelligent fallback | Active |
 | **Performance** | [memory-optimization](entities/memory-optimization.md) | Windows working set trimming and background memory reduction | Active |
 
 ## Recent Activity

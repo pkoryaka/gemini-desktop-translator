@@ -1079,5 +1079,118 @@ ipcMain.handle('config:sync', (event, cfg = {}) => {
   return true;
 });
 
+// High-Fidelity Neural Speech Synthesis (Powered by Edge TTS)
+const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+
+const NEURAL_VOICES = {
+  uk: { female: 'uk-UA-PolinaNeural', male: 'uk-UA-OstapNeural' },
+  en: { female: 'en-US-JennyNeural', male: 'en-US-GuyNeural' },
+  es: { female: 'es-ES-ElviraNeural', male: 'es-ES-AlvaroNeural' },
+  de: { female: 'de-DE-KatjaNeural', male: 'de-DE-ConradNeural' },
+  fr: { female: 'fr-FR-DeniseNeural', male: 'fr-FR-HenriNeural' },
+  pl: { female: 'pl-PL-ZofiaNeural', male: 'pl-PL-MarekNeural' },
+  it: { female: 'it-IT-ElsaNeural', male: 'it-IT-DiegoNeural' },
+  pt: { female: 'pt-PT-RaquelNeural', male: 'pt-PT-DuarteNeural' },
+  'pt-br': { female: 'pt-BR-FranciscaNeural', male: 'pt-BR-AntonioNeural' },
+  ru: { female: 'ru-RU-SvetlanaNeural', male: 'ru-RU-DmitryNeural' },
+  ja: { female: 'ja-JP-NanamiNeural', male: 'ja-JP-KeitaNeural' },
+  'zh-cn': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
+  'zh-tw': { female: 'zh-TW-HsiaoChenNeural', male: 'zh-TW-YunJheNeural' },
+  ko: { female: 'ko-KR-SunHiNeural', male: 'ko-KR-InJoonNeural' },
+  ar: { female: 'ar-SA-ZariyahNeural', male: 'ar-SA-HamedNeural' },
+  tr: { female: 'tr-TR-EmelNeural', male: 'tr-TR-AhmetNeural' },
+  nl: { female: 'nl-NL-FennaNeural', male: 'nl-NL-MaartenNeural' },
+  cs: { female: 'cs-CZ-VlastaNeural', male: 'cs-CZ-AntoninNeural' },
+  sv: { female: 'sv-SE-SofieNeural', male: 'sv-SE-MattiasNeural' },
+  ro: { female: 'ro-RO-AlinaNeural', male: 'ro-RO-EmilNeural' },
+  hu: { female: 'hu-HU-NoemiNeural', male: 'hu-HU-TamasNeural' },
+  el: { female: 'el-GR-AthinaNeural', male: 'el-GR-NestorasNeural' },
+  he: { female: 'he-IL-HilaNeural', male: 'he-IL-AvriNeural' },
+  hi: { female: 'hi-IN-SwaraNeural', male: 'hi-IN-MadhurNeural' },
+  vi: { female: 'vi-VN-HoaiMyNeural', male: 'vi-VN-NamMinhNeural' },
+  id: { female: 'id-ID-GadisNeural', male: 'id-ID-ArdiNeural' },
+  th: { female: 'th-TH-PremwadeeNeural', male: 'th-TH-NiwatNeural' },
+  da: { female: 'da-DK-ChristelNeural', male: 'da-DK-JeppeNeural' },
+  fi: { female: 'fi-FI-NooraNeural', male: 'fi-FI-HarriNeural' },
+  no: { female: 'nb-NO-PernilleNeural', male: 'nb-NO-FinnNeural' },
+  sk: { female: 'sk-SK-ViktoriaNeural', male: 'sk-SK-LukasNeural' },
+  bg: { female: 'bg-BG-KalinaNeural', male: 'bg-BG-BorislavNeural' },
+  hr: { female: 'hr-HR-GabrijelaNeural', male: 'hr-HR-SreckoNeural' },
+  sr: { female: 'sr-RS-NicholasNeural', male: 'sr-RS-NicholasNeural' },
+  lt: { female: 'lt-LT-OnaNeural', male: 'lt-LT-LeonasNeural' },
+  lv: { female: 'lv-LV-EveritaNeural', male: 'lv-LV-NilsNeural' },
+  et: { female: 'et-EE-AnuNeural', male: 'et-EE-KertNeural' },
+  sl: { female: 'sl-SI-PetraNeural', male: 'sl-SI-RokNeural' },
+  ga: { female: 'ga-IE-OrlaNeural', male: 'ga-IE-ColmNeural' },
+  bn: { female: 'bn-IN-TanishaaNeural', male: 'bn-IN-BashkarNeural' },
+  fa: { female: 'fa-IR-DilaraNeural', male: 'fa-IR-FaridNeural' },
+  tl: { female: 'fil-PH-BlessicaNeural', male: 'fil-PH-AngeloNeural' },
+  ms: { female: 'ms-MY-YasminNeural', male: 'ms-MY-OsmanNeural' },
+  ca: { female: 'ca-ES-JoanaNeural', male: 'ca-ES-EnricNeural' },
+  eu: { female: 'eu-ES-AinhoaNeural', male: 'eu-ES-AnderNeural' },
+  gl: { female: 'gl-ES-SabelaNeural', male: 'gl-ES-RoiNeural' },
+  ka: { female: 'ka-GE-EkaNeural', male: 'ka-GE-GiorgiNeural' },
+  hy: { female: 'hy-AM-AnahitNeural', male: 'hy-AM-HaykNeural' },
+  az: { female: 'az-AZ-BanuNeural', male: 'az-AZ-BabekNeural' },
+  kk: { female: 'kk-KZ-AigulNeural', male: 'kk-KZ-DauletNeural' },
+  uz: { female: 'uz-UZ-MadinaNeural', male: 'uz-UZ-SardorNeural' }
+};
+
+ipcMain.handle('tts:synthesize', async (event, { text, lang = 'en', gender = 'female', rate = '+0%' }) => {
+  if (!text || !text.trim()) return { ok: false, error: 'Empty text' };
+
+  let targetLang = (lang || 'en').toLowerCase().trim();
+  if (targetLang === 'auto' || !NEURAL_VOICES[targetLang]) {
+    const baseCode = targetLang.split('-')[0];
+    if (NEURAL_VOICES[baseCode]) {
+      targetLang = baseCode;
+    } else {
+      const isCyrillic = /[\u0400-\u04FF]/.test(text);
+      if (isCyrillic) {
+        targetLang = /[іїєґІЇЄҐ]/.test(text) ? 'uk' : 'ru';
+      } else {
+        targetLang = 'en';
+      }
+    }
+  }
+
+  const voiceObj = NEURAL_VOICES[targetLang] || NEURAL_VOICES['en'];
+  const voiceName = (gender === 'male' && voiceObj.male) ? voiceObj.male : voiceObj.female;
+
+  try {
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(voiceName, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+
+    const audioData = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        try { tts.close(); } catch {}
+        reject(new Error('TTS synthesis timed out after 10s'));
+      }, 10000);
+
+      const { audioStream } = tts.toStream(text.trim(), { rate: rate || '+0%' });
+      const chunks = [];
+
+      audioStream.on('data', chunk => chunks.push(chunk));
+      audioStream.on('end', () => {
+        clearTimeout(timeout);
+        try { tts.close(); } catch {}
+        const buffer = Buffer.concat(chunks);
+        resolve('data:audio/mp3;base64,' + buffer.toString('base64'));
+      });
+      audioStream.on('error', err => {
+        clearTimeout(timeout);
+        try { tts.close(); } catch {}
+        reject(err);
+      });
+    });
+
+    return { ok: true, audioData };
+  } catch (err) {
+    console.warn('Edge TTS synthesis failed:', err.message);
+    return { ok: false, error: err.message };
+  }
+});
+
+
 
 

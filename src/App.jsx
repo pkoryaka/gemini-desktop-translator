@@ -9,6 +9,7 @@ import { HistoryDrawer } from './components/HistoryDrawer';
 import { MiniTranslatePopup } from './components/MiniTranslatePopup';
 import { translateText } from './services/geminiService';
 import { storageService } from './services/storageService';
+import { ttsService } from './services/ttsService';
 import { Zap } from 'lucide-react';
 
 export function App() {
@@ -239,6 +240,7 @@ export function App() {
   useEffect(() => {
     if (window.electronAPI?.onWindowHidden) {
       const unsubscribe = window.electronAPI.onWindowHidden(() => {
+        ttsService.stop();
         setTranslatedText('');
         setExplanationData(null);
         setErrorMessage('');
