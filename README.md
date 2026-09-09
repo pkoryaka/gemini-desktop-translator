@@ -103,15 +103,15 @@ NativeLingo works natively across standard Windows applications via custom Win32
 
 ## 💳 Pricing & Commercial Licenses
 
-NativeLingo is a **client-side software license**. You bring your own free Gemini API key or local Ollama model—meaning **zero unexpected monthly subscription markups** on tokens.
+NativeLingo uses a **14-Day Reverse Trial** and a **client-side software license**. You bring your own free Gemini API key or local Ollama model—meaning **zero token markups** or surprise usage bills. See [`PRICING.md`](./PRICING.md) for the full commercial and refund policy.
 
 | Tier | Price | What's Included |
 | :--- | :---: | :--- |
-| **Free Evaluation** | **$0** | Full 14-day evaluation of all features with your own API key or Ollama. |
-| **Pro Annual** | **$79 / year** | Full commercial license, all updates, 2 Windows devices per user, priority support. |
-| **Pro Perpetual** | **$149 one-time** | Own the current version forever + 12 months of updates included ($49/yr optional renewal). |
-| **Team License** | **$12 / user / mo** | Billed annually ($720/yr min for 5 seats). Shared team presets, onboarding session, and priority support. |
-| **5-Person Paid Pilot** | **$99 flat** | 14-day guided team pilot for support or dev teams. 100% credited toward an annual team purchase. |
+| **Free Edition** | **$0** (Forever) | Unlimited translation hotkey, Slot 1 rewrite HUD preview + manual copy, $0 BYOK inference. |
+| **14-Day Pro Trial** | **$0** (No Card) | Full Pro Edition access for 14 days on first install. Gracefully continues as Free Edition. |
+| **Pro Annual** | **$69 / year** | Instant in-place auto-paste (<250ms), all 3 rewrite slots, 2 personal devices, all updates ($5.75/mo). |
+| **Pro Perpetual** | **$149 one-time** | **$119 Launch Deal** (first 200 copies). Own your version forever + 12 months updates ($49/yr renewal). |
+| **Team Annual** | **$99 / seat / yr** | Minimum 3 seats. Centralized license dashboard, standard business invoicing, priority support. |
 
 ---
 

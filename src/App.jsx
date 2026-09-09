@@ -36,7 +36,13 @@ export function App() {
 
   // Modals & Drawers
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('models');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const handleOpenSettings = (tab = 'models') => {
+    setSettingsTab(typeof tab === 'string' ? tab : 'models');
+    setIsSettingsOpen(true);
+  };
 
   const [theme, setTheme] = useState(() => storageService.getTheme());
 
@@ -353,7 +359,7 @@ export function App() {
         hasApiKey={Boolean(apiKey)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={handleOpenSettings}
         onOpenHistory={() => setIsHistoryOpen(true)}
       />
 
@@ -399,6 +405,7 @@ export function App() {
         onSettingsUpdated={refreshSettings}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        initialTab={settingsTab}
       />
 
       {/* History Drawer */}

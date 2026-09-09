@@ -1,11 +1,17 @@
-import React from 'react';
-import { Languages, Settings, History, Sparkles, Sun, Moon, ShieldCheck, Cloud } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Languages, Settings, History, Sparkles, Sun, Moon, ShieldCheck, Cloud, BadgeCheck, Clock } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { licenseService } from '../services/licenseService';
 import appLogo from '../assets/app-icon.png';
 
 export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey, theme, onToggleTheme }) {
   const settings = storageService.getSettings();
   const isLocalAi = settings.aiProvider === 'openai_compatible';
+  const [license, setLicense] = useState(() => licenseService.getLicenseState());
+
+  useEffect(() => {
+    setLicense(licenseService.getLicenseState());
+  }, [currentModel]);
 
   return (
     <header className="app-header">
@@ -23,6 +29,53 @@ export function Header({ currentModel, onOpenSettings, onOpenHistory, hasApiKey,
       </div>
 
       <div className="header-actions">
+        {/* License Status Badge */}
+        <button
+          type="button"
+          onClick={() => onOpenSettings && onOpenSettings('license')}
+          title={license.isPro 
+            ? (license.plan === 'trial' ? `Reverse Trial: ${license.trialDaysRemaining} days remaining` : 'NativeLingo Pro Active') 
+            : 'NativeLingo Free Edition - Click to upgrade'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            background: license.isPro
+              ? (license.plan === 'trial' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)')
+              : 'rgba(100, 116, 139, 0.12)',
+            border: `1px solid ${
+              license.isPro
+                ? (license.plan === 'trial' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)')
+                : 'rgba(100, 116, 139, 0.25)'
+            }`,
+            color: license.isPro
+              ? (license.plan === 'trial' ? 'var(--accent-amber)' : 'var(--accent-emerald)')
+              : 'var(--text-secondary)',
+            padding: '4px 9px',
+            borderRadius: '999px',
+            fontSize: '0.72rem',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          {license.plan === 'trial' ? (
+            <>
+              <Clock size={12} />
+              <span>{license.trialDaysRemaining}d Trial</span>
+            </>
+          ) : license.isPro ? (
+            <>
+              <BadgeCheck size={12} />
+              <span>Pro</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={12} />
+              <span>Free</span>
+            </>
+          )}
+        </button>
+
         {/* Transparent Data Routing Badge */}
         <button
           type="button"

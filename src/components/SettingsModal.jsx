@@ -3,22 +3,34 @@ import {
   X, Key, ExternalLink, CheckCircle2, AlertCircle, Loader2, Sparkles, 
   Monitor, RotateCw, Power, Keyboard, Zap, BookOpen, Languages, 
   AppWindow, Cpu, Server, Sun, Moon, Palette, Sliders, History,
-  Star, Search, Check, Volume2, VolumeX
+  Star, Search, Check, Volume2, VolumeX, CreditCard, BadgeCheck, ShieldAlert, Award
 } from 'lucide-react';
 import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
 import { storageService, ROLE_PRESET_PACKS } from '../services/storageService';
+import { licenseService } from '../services/licenseService';
 import { ttsService } from '../services/ttsService';
 import { HotkeyRecorder } from './HotkeyRecorder';
 import appLogo from '../assets/app-icon.png';
 
-export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initialTheme, onToggleTheme }) {
+export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initialTheme, onToggleTheme, initialTab = 'models' }) {
   if (!isOpen) return null;
 
   const currentSettings = storageService.getSettings();
   const currentKey = storageService.getApiKey();
 
-  const [activeTab, setActiveTab] = useState('models'); // 'models' | 'languages' | 'shortcuts' | 'appearance'
+  const [activeTab, setActiveTab] = useState(initialTab || 'models');
   const [themeMode, setThemeMode] = useState(() => initialTheme || storageService.getTheme());
+
+  const [licenseState, setLicenseState] = useState(() => licenseService.getLicenseState());
+  const [inputLicenseKey, setInputLicenseKey] = useState(licenseState.licenseKey || '');
+  const [activationMsg, setActivationMsg] = useState(null);
+  const [isActivating, setIsActivating] = useState(false);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const initialModel = currentSettings.model || 'gemini-flash-lite-latest';
 
@@ -262,6 +274,28 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
     });
   };
 
+  const handleActivateLicense = async () => {
+    setIsActivating(true);
+    setActivationMsg(null);
+    const res = await licenseService.activateLicense(inputLicenseKey);
+    setIsActivating(false);
+    if (res.success) {
+      setLicenseState(licenseService.getLicenseState());
+      setActivationMsg({ success: true, text: res.message });
+      if (onSettingsUpdated) onSettingsUpdated();
+    } else {
+      setActivationMsg({ success: false, text: res.error });
+    }
+  };
+
+  const handleDeactivate = () => {
+    licenseService.deactivateLicense();
+    setInputLicenseKey('');
+    setLicenseState(licenseService.getLicenseState());
+    setActivationMsg({ success: true, text: 'License deactivated. Returned to Free / Trial mode.' });
+    if (onSettingsUpdated) onSettingsUpdated();
+  };
+
   const handleSave = () => {
     if (hasConflict) return;
 
@@ -401,6 +435,20 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
               <Palette size={17} />
               <span>Appearance & System</span>
             </button>
+
+            <button
+              type="button"
+              className={`settings-tab-btn-vertical ${activeTab === 'license' ? 'active' : ''}`}
+              onClick={() => setActiveTab('license')}
+            >
+              <CreditCard size={17} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' }}>
+                <span>Plan & License</span>
+                <span style={{ fontSize: '0.65rem', color: licenseState.isPro ? '#10b981' : 'var(--accent-amber)' }}>
+                  {licenseState.plan === 'trial' ? `Trial (${licenseState.trialDaysRemaining}d)` : (licenseState.isPro ? 'Pro Active' : 'Free Edition')}
+                </span>
+              </div>
+            </button>
           </nav>
 
           {/* Sidebar Footer Hint */}
@@ -420,12 +468,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 {activeTab === 'languages' && 'Languages & Target Preferences'}
                 {activeTab === 'shortcuts' && 'Global Hotkeys & Quick Rewrite Slots'}
                 {activeTab === 'appearance' && 'Appearance & System Startup'}
+                {activeTab === 'license' && 'Plan & Licensing Management'}
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                 {activeTab === 'models' && 'Configure Gemini Cloud or Local Offline LLMs (Ollama / LM Studio)'}
                 {activeTab === 'languages' && 'Manage default translation target, starred favorites, and creativity'}
                 {activeTab === 'shortcuts' && 'Configure global hotkeys and 3 in-place paste-back slot actions'}
                 {activeTab === 'appearance' && 'Customize theme modes, instant floating HUD, and Windows startup'}
+                {activeTab === 'license' && '14-day reverse trial status, license key activation, and commercial tiers'}
               </p>
             </div>
             <button className="btn-icon" onClick={onClose} aria-label="Close modal">
@@ -1453,6 +1503,319 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                       }} />
                     </span>
                   </label>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'license' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* 1. Current Plan Status Banner */}
+                <div className="settings-card" style={{
+                  background: licenseState.isPro 
+                    ? (licenseState.plan === 'trial' 
+                        ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)' 
+                        : 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)')
+                    : 'rgba(255, 255, 255, 0.02)',
+                  borderColor: licenseState.isPro 
+                    ? (licenseState.plan === 'trial' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.35)') 
+                    : 'var(--border-color)',
+                  padding: '16px 20px',
+                  position: 'relative'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: licenseState.isPro 
+                          ? (licenseState.plan === 'trial' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)') 
+                          : 'rgba(100, 116, 139, 0.15)',
+                        color: licenseState.isPro 
+                          ? (licenseState.plan === 'trial' ? 'var(--accent-amber)' : 'var(--accent-emerald)') 
+                          : 'var(--text-secondary)'
+                      }}>
+                        {licenseState.plan === 'trial' ? <Sparkles size={22} /> : (licenseState.isPro ? <BadgeCheck size={22} /> : <CreditCard size={22} />)}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            {licenseState.plan === 'perpetual' && 'NativeLingo Pro (Perpetual License)'}
+                            {licenseState.plan === 'pro' && 'NativeLingo Pro (Annual / Monthly)'}
+                            {licenseState.plan === 'trial' && `14-Day Pro Reverse Trial (${licenseState.trialDaysRemaining} days remaining)`}
+                            {licenseState.plan === 'free' && 'NativeLingo Free Edition'}
+                          </span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            padding: '2px 8px',
+                            borderRadius: '999px',
+                            backgroundColor: licenseState.isPro ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)',
+                            color: licenseState.isPro ? 'var(--accent-emerald)' : 'var(--text-secondary)'
+                          }}>
+                            {licenseState.isPro ? 'Active' : 'Free Tier'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          {licenseState.plan === 'trial' && 'All Pro capabilities are active. No credit card required. Gracefully continues as Free Edition after trial.'}
+                          {licenseState.plan === 'free' && 'Unlimited translation and Slot 1 HUD active. Upgrade or activate a key for direct in-place auto-paste.'}
+                          {(licenseState.plan === 'pro' || licenseState.plan === 'perpetual') && `License active: ${licenseState.licenseKey.slice(0, 12)}••••`}
+                        </div>
+                      </div>
+                    </div>
+
+                    {licenseState.licenseKey && (
+                      <button
+                        type="button"
+                        onClick={handleDeactivate}
+                        className="preset-chip"
+                        style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#f87171' }}
+                      >
+                        Deactivate
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. License Key Activation Section */}
+                <div className="settings-card" style={{ padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <Key size={16} color="var(--primary)" />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      Activate License Key
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="settings-input"
+                      placeholder="e.g. NL-PRO-88F2-31CA-99B4"
+                      value={inputLicenseKey}
+                      onChange={(e) => setInputLicenseKey(e.target.value)}
+                      style={{ flex: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={isActivating || !inputLicenseKey.trim()}
+                      onClick={handleActivateLicense}
+                      style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}
+                    >
+                      {isActivating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                      Activate
+                    </button>
+                  </div>
+
+                  {activationMsg && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      backgroundColor: activationMsg.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: activationMsg.success ? 'var(--accent-emerald)' : '#f87171',
+                      border: `1px solid ${activationMsg.success ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
+                    }}>
+                      {activationMsg.success ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                      <span>{activationMsg.text}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Pricing Cards */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Available Commercial Plans
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      14-day no-questions-asked refund policy
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                    {/* Plan A: Pro Annual */}
+                    <div className="settings-card" style={{
+                      padding: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      border: '1px solid var(--primary)',
+                      position: 'relative',
+                      background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%)'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '-9px',
+                        right: '12px',
+                        backgroundColor: 'var(--primary)',
+                        color: 'white',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        padding: '1px 8px',
+                        borderRadius: '999px',
+                        textTransform: 'uppercase'
+                      }}>
+                        Most Popular
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Pro Annual</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '6px 0 8px' }}>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$69</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>/ year</span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--accent-emerald)', fontWeight: 600, marginBottom: '8px' }}>
+                          $5.75/month • Save 28%
+                        </div>
+                        <ul style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', paddingLeft: '14px', margin: 0, lineHeight: 1.6 }}>
+                          <li>Instant in-place auto-paste</li>
+                          <li>All 3 rewrite hotkey slots</li>
+                          <li>2 personal devices included</li>
+                          <li>All future Pro updates</li>
+                        </ul>
+                      </div>
+                      <a
+                        href="https://nativelingo.studiopk.dev/pricing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                        style={{
+                          marginTop: '12px',
+                          textAlign: 'center',
+                          padding: '7px 0',
+                          fontSize: '0.78rem',
+                          display: 'block',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Upgrade Annual
+                      </a>
+                    </div>
+
+                    {/* Plan B: Perpetual Lifetime */}
+                    <div className="settings-card" style={{
+                      padding: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%)',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '-9px',
+                        right: '12px',
+                        backgroundColor: 'var(--accent-amber)',
+                        color: '#1e293b',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        padding: '1px 8px',
+                        borderRadius: '999px',
+                        textTransform: 'uppercase'
+                      }}>
+                        Launch Deal
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Pro Perpetual</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', margin: '6px 0 8px' }}>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$119</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textDecoration: 'line-through' }}>$149</span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--accent-amber)', fontWeight: 600, marginBottom: '8px' }}>
+                          One-time purchase • First 200 copies
+                        </div>
+                        <ul style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', paddingLeft: '14px', margin: 0, lineHeight: 1.6 }}>
+                          <li>Own your license forever</li>
+                          <li>12 months of version updates</li>
+                          <li>2 personal devices included</li>
+                          <li>Optional renewals at $49/yr</li>
+                        </ul>
+                      </div>
+                      <a
+                        href="https://nativelingo.studiopk.dev/pricing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="preset-chip"
+                        style={{
+                          marginTop: '12px',
+                          textAlign: 'center',
+                          padding: '7px 0',
+                          fontSize: '0.78rem',
+                          display: 'block',
+                          textDecoration: 'none',
+                          borderColor: 'var(--accent-amber)',
+                          color: 'var(--accent-amber)'
+                        }}
+                      >
+                        Get Perpetual ($119)
+                      </a>
+                    </div>
+
+                    {/* Plan C: Team Annual */}
+                    <div className="settings-card" style={{
+                      padding: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>Team Annual</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '6px 0 8px' }}>
+                          <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>$99</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>/ seat / yr</span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
+                          Minimum 3 seats • Commercial
+                        </div>
+                        <ul style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', paddingLeft: '14px', margin: 0, lineHeight: 1.6 }}>
+                          <li>Central license management</li>
+                          <li>Standard invoice & tax receipts</li>
+                          <li>Priority bug fixes & support</li>
+                          <li>Shared team glossary templates</li>
+                        </ul>
+                      </div>
+                      <a
+                        href="https://nativelingo.studiopk.dev/pricing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="preset-chip"
+                        style={{
+                          marginTop: '12px',
+                          textAlign: 'center',
+                          padding: '7px 0',
+                          fontSize: '0.78rem',
+                          display: 'block',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Contact Team Sales
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. BYOK Privacy & Zero-Markup Promise */}
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px'
+                }}>
+                  <ShieldAlert size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>100% BYOK & Zero Inference Markup:</strong> NativeLingo never bills per-token or acts as a middleman for your data. You use your own free Gemini API key (generous free tier) or run 100% offline with local Ollama models. Your text never touches third-party relay servers.
+                  </div>
                 </div>
               </div>
             )}
