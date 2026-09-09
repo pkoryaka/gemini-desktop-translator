@@ -3,6 +3,8 @@
  * Ultra-Optimized for Speed: Real-time token streaming, greedy decoding, preconnect, zero thinking delay.
  */
 
+import { storageService } from './storageService.js';
+
 export const SUPPORTED_LANGUAGES = [
   { code: 'auto', name: 'Auto-Detect', nativeName: 'Автовизначення' },
   { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' },
