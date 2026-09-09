@@ -13,24 +13,20 @@ NativeLingo implements a multi-tier memory mitigation architecture that reduces 
 - **Mechanism**: Integrated Windows API calls (`EmptyWorkingSet` from `psapi.dll` and `SetProcessWorkingSetSize` from `kernel32.dll`) directly into [`electron/CopyNative.cs`](file:///c:/AI%20Projects/Personal/Translation/electron/CopyNative.cs).
 - **CLI Command**: `copy_native.exe trim` sweeps all active `electron` and `nativelingo` processes, signaling the Windows kernel to purge inactive pages from physical RAM to pagefile.
 - **Triggers**:
-  - **Startup**: 3.5 seconds post-startup when launched hidden (`--hidden`).
   - **Window Hide / Minimize**: 1 second after `mainWindow.on('hide')` or `mainWindow.on('minimize')`.
   - **Post In-Place Rewrite**: 2.5 seconds after `Alt+A` / slot in-place paste action concludes.
   - **Idle Sweep**: Every 15 minutes when the window is inactive/hidden.
+  - *(Note: Startup trim was removed to prevent race conditions while Chromium/V8 initialize the initial DOM/bundle).*
 
 ### 2. Chromium V8 & Process Optimization Flags
 In [`electron/main.cjs`](file:///c:/AI%20Projects/Personal/Translation/electron/main.cjs):
 ```javascript
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
 app.commandLine.appendSwitch('disable-background-networking');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-domain-reliability');
 app.commandLine.appendSwitch('disable-sync');
-app.commandLine.appendSwitch('disable-features', 'SpareRendererForSitePerProcess,WinDelaySpellcheckServiceInit');
-app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 ```
-- Restricts V8 heap overhead from 2GB–4GB defaults down to 128 MB max.
-- Suppresses Chromium telemetry, sync, component auto-updates, and redundant background threads.
+- Suppresses Chromium telemetry, sync, component auto-updates, and redundant background networking threads without destabilizing the renderer or causing V8 heap exhaustion.
 
 ### 3. Window & Renderer Optimization
 - `backgroundThrottling: true`: Pauses render loops, animations, and non-essential timers when window is concealed.
