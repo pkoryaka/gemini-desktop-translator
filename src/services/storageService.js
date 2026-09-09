@@ -35,7 +35,7 @@ export const DEFAULT_QUICK_SLOTS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  model: 'gemini-3.6-flash',
+  model: 'gemini-flash-lite-latest',
   temperature: 0.1,
   autoDetectLanguage: true,
   autoSpeak: false,
@@ -121,7 +121,7 @@ export const storageService = {
       window.electronAPI.syncConfig({
         apiKey,
         primaryTargetLanguage: settings.primaryTargetLanguage || 'uk',
-        model: settings.model || 'gemini-3.6-flash',
+        model: settings.model || 'gemini-flash-lite-latest',
         aiProvider: settings.aiProvider || 'gemini',
         customGeminiModel: settings.customGeminiModel || '',
         customEndpoint: settings.customEndpoint || 'http://localhost:11434/v1',

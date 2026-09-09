@@ -8,11 +8,11 @@
 
 **The ultra-fast desktop assistant that translates across 53+ languages, rewrites text in-place, fixes grammar, demystifies slang, and integrates natively across any Windows application — powered by Google Gemini or 100% offline local LLMs.**
 
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=for-the-badge&logo=windows)](https://github.com/pkoryaka/gemini-desktop-translator)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=for-the-badge&logo=windows)](https://github.com/pkoryaka/nativelingo)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini%20%7C%20Ollama%20%7C%20LM%20Studio-8A2BE2?style=for-the-badge&logo=google)](https://aistudio.google.com/)
 [![BYOM](https://img.shields.io/badge/BYOM-Local%20%26%20OpenAI--Compatible-success?style=for-the-badge)](https://ollama.com/)
 [![License](https://img.shields.io/badge/License-Free%20for%20Personal%20Use-brightgreen?style=for-the-badge)](./LICENSE)
-[![Privacy](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped%20Option-orange?style=for-the-badge)](https://github.com/pkoryaka/gemini-desktop-translator)
+[![Privacy](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped%20Option-orange?style=for-the-badge)](https://github.com/pkoryaka/nativelingo)
 
 <p align="center">
   <a href="#-why-byom-bring-your-own-model">🧠 BYOM Engine</a> •
@@ -117,10 +117,9 @@ Bidirectional fluency across **Ukrainian (Українська)**, **English**, 
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/pkoryaka/gemini-desktop-translator.git
-   cd gemini-desktop-translator
+   git clone https://github.com/pkoryaka/nativelingo.git
+   cd nativelingo
    ```
-   *(Note: Repository name on GitHub is `gemini-desktop-translator`)*
 
 2. **Install Dependencies & Build:**
    ```bash

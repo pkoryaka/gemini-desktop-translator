@@ -9,6 +9,24 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
+// Chromium Memory Optimizations for background utility app
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
+app.commandLine.appendSwitch('disable-background-networking');
+app.commandLine.appendSwitch('disable-component-update');
+app.commandLine.appendSwitch('disable-domain-reliability');
+app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('disable-features', 'SpareRendererForSitePerProcess,WinDelaySpellcheckServiceInit');
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+
+function trimMemory() {
+  if (process.platform === 'win32') {
+    const copyExe = path.join(__dirname, 'copy_native.exe');
+    if (fs.existsSync(copyExe)) {
+      execFile(copyExe, ['trim'], () => {});
+    }
+  }
+}
+
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
@@ -18,7 +36,7 @@ let explainHotkey = 'CommandOrControl+Alt+J';
 let startMinimized = false;
 let savedApiKey = '';
 let savedTargetLang = 'uk';
-let savedModel = 'gemini-3.6-flash';
+let savedModel = 'gemini-flash-lite-latest';
 
 // BYOM (Bring Your Own Model) state
 let savedAiProvider = 'gemini'; // 'gemini' | 'openai_compatible'
@@ -76,8 +94,8 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) {
-        if (data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash') {
-          savedModel = 'gemini-3.6-flash';
+        if (data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash' || data.model === 'gemini-3.6-flash' || data.model === 'gemini-2.0-flash') {
+          savedModel = 'gemini-flash-lite-latest';
         } else {
           savedModel = data.model;
         }
@@ -297,7 +315,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false
+      sandbox: false,
+      backgroundThrottling: true,
+      spellcheck: false
     }
   });
 
@@ -340,6 +360,11 @@ function createWindow() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('window-hidden');
     }
+    setTimeout(trimMemory, 1000);
+  });
+
+  mainWindow.on('minimize', () => {
+    setTimeout(trimMemory, 1000);
   });
 }
 
@@ -491,13 +516,14 @@ async function startNativeStream({ text, targetLang, apiKey, model, explainJargo
   }
   activeStreamController = new AbortController();
 
-  const primaryModel = model || savedModel || 'gemini-3.6-flash';
+  const primaryModel = model || savedModel || 'gemini-flash-lite-latest';
   const candidates = Array.from(new Set([
     primaryModel,
-    'gemini-3.6-flash',
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash-lite',
     'gemini-3.7-flash',
-    'gemini-2.0-flash'
-  ]));
+    'gemini-3.5-flash'
+  ].filter(Boolean)));
 
   const systemInstructionText = explainJargon
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
@@ -698,7 +724,7 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
     }
   } else {
     // Google Gemini Provider with Multi-Model Auto-Fallback
-    const requestedModel = savedCustomGeminiModel || model || savedModel || 'gemini-3.6-flash';
+    const requestedModel = savedCustomGeminiModel || model || savedModel || 'gemini-flash-lite-latest';
     const key = (apiKey && apiKey.trim()) || savedApiKey;
     if (!key) {
       throw new Error('Please configure your Google Gemini API Key.');
@@ -706,10 +732,11 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
 
     const candidates = Array.from(new Set([
       requestedModel,
-      'gemini-3.6-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3.5-flash-lite',
       'gemini-3.7-flash',
-      'gemini-2.0-flash'
-    ]));
+      'gemini-3.5-flash'
+    ].filter(Boolean)));
 
     let lastError = null;
 
@@ -814,27 +841,33 @@ function triggerQuickSlotAction(slotId) {
           try {
             const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`;
 
+            // For in-place text replacement, prioritize ultra-low latency model
+            const fastModel = (savedModel && savedModel.includes('lite')) ? savedModel : 'gemini-flash-lite-latest';
+
             const outputText = await runAiGeneration({
               text: trimmed,
+              model: fastModel,
               systemInstructionText,
               isJson: false,
-              maxTokens: Math.max(256, Math.min(2048, trimmed.length * 4))
+              maxTokens: Math.max(4096, trimmed.length * 8)
             });
 
             if (outputText && outputText.trim()) {
               const cleanOutput = outputText.trim();
               clipboard.writeText(cleanOutput);
 
-              // Synthesize in-place Paste (Ctrl + V)
+              // Synthesize in-place Paste (Ctrl + V) with minimal delay
               setTimeout(() => {
                 if (fs.existsSync(copyExe)) {
                   execFile(copyExe, ['paste'], (err) => {
                     if (err) console.warn('Native paste execution error:', err);
+                    setTimeout(trimMemory, 2500);
                   });
                 } else if (fs.existsSync(copyVbs)) {
                   exec(`wscript.exe "${copyVbs}" paste`);
+                  setTimeout(trimMemory, 2500);
                 }
-              }, 40);
+              }, 10);
             } else {
               if (previousClipboard) {
                 clipboard.writeText(previousClipboard);
@@ -944,6 +977,21 @@ app.whenReady().then(() => {
   registerGlobalHotkeys(translateHotkey, explainHotkey);
   ensureStartMenuShortcut();
   prewarmGoogleSocket();
+
+  // Initial background trim if started hidden/minimized
+  const isHiddenArg = process.argv.some(arg => 
+    typeof arg === 'string' && (arg.includes('hidden') || arg.includes('minimized'))
+  );
+  if (isHiddenArg) {
+    setTimeout(trimMemory, 3500);
+  }
+
+  // Periodic memory sweep every 15 minutes when app is idle in background
+  setInterval(() => {
+    if (!mainWindow || !mainWindow.isVisible()) {
+      trimMemory();
+    }
+  }, 15 * 60 * 1000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -1056,7 +1104,7 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
     ? `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
     : `Translate into ${targetLang}. Output translation only.`;
 
-  const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
+  const maxTokens = explainJargon ? 4096 : Math.max(4096, text.length * 8);
 
   const rawOutput = await runAiGeneration({
     text,

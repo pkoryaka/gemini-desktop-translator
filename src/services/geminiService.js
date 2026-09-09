@@ -61,28 +61,28 @@ export const SUPPORTED_LANGUAGES = [
 
 export const AVAILABLE_MODELS = [
   {
-    id: 'gemini-3.6-flash',
-    name: 'Gemini 3.6 Flash',
-    tag: '⚡ Ultra Fast & Generous Free Tier (Recommended)',
+    id: 'gemini-flash-lite-latest',
+    name: 'Gemini Flash Lite (Latest)',
+    tag: '⚡ Ultra Fast (Recommended for In-Place Rewriting)',
     badgeColor: '#10b981',
-    description: 'Optimized efficiency model designed for lightning-fast phrasing, instant hotkey replacement, and generous free quotas.',
-    bestFor: 'Instant hotkey translation, quick in-place rewrites, everyday chatting.'
+    description: 'Ultra-low latency model engineered for sub-second hotkey translation and instant in-place rewrites.',
+    bestFor: 'Instant hotkey translation, quick in-place rewrites, sub-second typing.'
+  },
+  {
+    id: 'gemini-3.5-flash-lite',
+    name: 'Gemini 3.5 Flash Lite',
+    tag: '⚡ Ultra Fast & Stable',
+    badgeColor: '#06b6d4',
+    description: 'High-speed Gemini 3.5 Lite model with consistent sub-second response times.',
+    bestFor: 'Fast sentence replacement and daily text tasks.'
   },
   {
     id: 'gemini-3.7-flash',
     name: 'Gemini 3.7 Flash',
     tag: '⚡ High Speed & Accuracy',
-    badgeColor: '#06b6d4',
-    description: 'High-speed Gemini 3 series model with low token latency and precise translation fidelity.',
-    bestFor: 'Real-time sentence streaming and everyday translation.'
-  },
-  {
-    id: 'gemini-3.8-flash',
-    name: 'Gemini 3.8 Flash',
-    tag: '⚡ Frontier Flash Preview',
-    badgeColor: '#f59e0b',
-    description: 'Google\'s newest frontier workhorse preview. Exceptional multi-lingual reasoning, subject to strict free-tier limits.',
-    bestFor: 'Everyday chatting and technical documentation when quota allows.'
+    badgeColor: '#3b82f6',
+    description: 'High-speed Gemini 3 series model with balanced reasoning and precise translation fidelity.',
+    bestFor: 'Real-time sentence streaming and nuanced translation.'
   },
   {
     id: 'gemini-3.5-flash',
@@ -93,28 +93,12 @@ export const AVAILABLE_MODELS = [
     bestFor: 'General sentence and paragraph translation.'
   },
   {
-    id: 'gemini-3.1-pro',
-    name: 'Gemini 3.1 Pro',
-    tag: '🧠 Frontier Flagship Reasoning',
-    badgeColor: '#a855f7',
-    description: 'Premier flagship model for complex cultural nuances, literary prose, legal contracts, and deep technical jargon.',
-    bestFor: 'Demystifying complex cultural slang, technical documentation, literary nuance.'
-  },
-  {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    tag: '⚡ Stable Fast 2.5',
-    badgeColor: '#10b981',
-    description: 'High-speed 2.5 generation translation model with consistent rate limits.',
-    bestFor: 'Standard document and chat translation.'
-  },
-  {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    tag: '🧠 Deep Nuance 2.5',
-    badgeColor: '#8b5cf6',
-    description: 'High capability 2.5 series model for complex linguistic context.',
-    bestFor: 'Idiomatic and slang translation.'
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    tag: '⚡ Frontier Flash Preview',
+    badgeColor: '#f59e0b',
+    description: 'Google\'s newest frontier workhorse preview. Note: subject to strict free-tier limits (20 requests/day).',
+    bestFor: 'Everyday chatting and technical documentation when quota allows.'
   }
 ];
 
@@ -206,8 +190,18 @@ export async function fetchLiveAvailableModels(apiKey) {
       });
     }
 
-    // 5. Intelligent Ordering: Flash models first (sorted numerically descending by version), then Pro
+    // 5. Intelligent Ordering: Prioritize Ultra-Fast Lite models first for speed, then Flash, deprioritize strict quota models (3.8), then Pro
     valid.sort((a, b) => {
+      const aLite = a.id.includes('lite');
+      const bLite = b.id.includes('lite');
+      if (aLite && !bLite) return -1;
+      if (!aLite && bLite) return 1;
+
+      const a38 = a.id.includes('3.8');
+      const b38 = b.id.includes('3.8');
+      if (a38 && !b38) return 1;
+      if (!a38 && b38) return -1;
+
       if (a.isFlash && !b.isFlash) return -1;
       if (!a.isFlash && b.isFlash) return 1;
       return b.id.localeCompare(a.id, undefined, { numeric: true });
@@ -229,7 +223,7 @@ export async function fetchLiveAvailableModels(apiKey) {
   }
 }
 
-export async function testGeminiApiKey(apiKey, model = 'gemini-2.0-flash') {
+export async function testGeminiApiKey(apiKey, model = 'gemini-flash-lite-latest') {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Please enter a valid Gemini API Key.');
   }

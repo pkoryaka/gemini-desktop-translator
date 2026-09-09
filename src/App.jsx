@@ -123,7 +123,7 @@ export function App() {
         targetLang: effectiveTarget,
         customPrompt: effectivePrompt,
         explainJargon: mode,
-        model: currentSettings.model || 'gemini-3.6-flash',
+        model: currentSettings.model || 'gemini-flash-lite-latest',
         temperature: currentSettings.temperature ?? 0.1,
         onStreamChunk: (partialText) => {
           if (!mode) {
@@ -347,7 +347,7 @@ export function App() {
 
       {/* Header */}
       <Header
-        currentModel={settings.model || 'gemini-3.6-flash'}
+        currentModel={settings.model || 'gemini-flash-lite-latest'}
         hasApiKey={Boolean(apiKey)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
