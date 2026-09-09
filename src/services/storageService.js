@@ -82,6 +82,9 @@ export const storageService = {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (!data) return DEFAULT_SETTINGS;
       const parsed = JSON.parse(data);
+      if (parsed.model === 'gemini-3.8-flash' || parsed.model === 'gemini-2.0-flash' || parsed.model === 'gemini-2.5-flash' || parsed.model === 'gemini-3.6-flash' || !parsed.model || parsed.model.includes('3.8')) {
+        parsed.model = 'gemini-flash-lite-latest';
+      }
       return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SETTINGS;

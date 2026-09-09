@@ -522,109 +522,6 @@ function focusAppWindow(isMini = false) {
   mainWindow.focus();
 }
 
-let activeStreamController = null;
-
-async function startNativeStream({ text, targetLang, apiKey, model, explainJargon, onChunk, onError }) {
-  if (activeStreamController) {
-    try { activeStreamController.abort(); } catch {}
-  }
-  activeStreamController = new AbortController();
-
-  const primaryModel = model || savedModel || 'gemini-flash-lite-latest';
-  const candidates = Array.from(new Set([
-    primaryModel,
-    'gemini-flash-lite-latest',
-    'gemini-3.5-flash-lite',
-    'gemini-3.7-flash',
-    'gemini-3.5-flash'
-  ].filter(Boolean)));
-
-  const systemInstructionText = explainJargon
-    ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
-    : `Translate into ${targetLang}. Output translation only.`;
-
-  const payload = {
-    systemInstruction: { parts: [{ text: systemInstructionText }] },
-    contents: [{ role: 'user', parts: [{ text }] }],
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3)),
-      candidateCount: 1,
-      ...(explainJargon ? { responseMimeType: 'application/json' } : {})
-    }
-  };
-
-  for (let i = 0; i < candidates.length; i++) {
-    const candidateModel = candidates[i];
-    const isLast = (i === candidates.length - 1);
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: activeStreamController.signal,
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        if ((response.status === 429 || response.status === 503 || response.status === 404) && !isLast) {
-          console.warn(`Stream with ${candidateModel} failed with HTTP ${response.status}. Falling back to next candidate...`);
-          continue;
-        }
-        const err = await response.json().catch(() => ({}));
-        onError(new Error(err.error?.message || `HTTP ${response.status}`));
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let accumulated = '';
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split(/\r?\n/);
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data:')) {
-            const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
-            if (jsonStr) {
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const candidate = parsed.candidates?.[0];
-                const chunk = candidate?.content?.parts?.[0]?.text || '';
-                if (chunk) {
-                  accumulated += chunk;
-                  onChunk(accumulated);
-                }
-                if (candidate?.finishReason) {
-                  try { reader.cancel(); } catch {}
-                  return;
-                }
-              } catch {}
-            }
-          }
-        }
-      }
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      if (!isLast) {
-        console.warn(`Stream attempt with ${candidateModel} error: ${err.message}. Trying next candidate...`);
-        continue;
-      }
-      onError(err);
-      return;
-    }
-  }
-}
-
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
@@ -639,7 +536,7 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
         const trimmed = selectedText.trim();
 
         if (mainWindow) {
-          // 1. Tell React to reset state and load the new snippet FIRST
+          // 1. Tell React to reset state and load the new snippet
           mainWindow.webContents.send('quick-translate', {
             text: trimmed,
             explainJargon
@@ -647,25 +544,6 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
 
           // 2. Position and show the window immediately with a clean, fresh UI
           focusAppWindow(true);
-
-          // 3. Instant Native Prefetch Streaming directly from Node.js (Zero UI lag)
-          if (savedApiKey && savedApiKey.trim()) {
-            startNativeStream({
-              text: trimmed,
-              targetLang: savedTargetLang || 'uk',
-              apiKey: savedApiKey.trim(),
-              model: savedModel || 'gemini-3.8-flash',
-              explainJargon,
-              onChunk: (chunk) => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                  mainWindow.webContents.send('quick-translate-chunk', chunk);
-                }
-              },
-              onError: (err) => {
-                console.warn('Native prefetch stream warning:', err.message);
-              }
-            });
-          }
         }
       }, 10);
     };
@@ -673,7 +551,10 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
     if (fs.existsSync(copyExe)) {
       execFile(copyExe, (err) => {
         if (err) {
-          exec(`wscript.exe "${copyVbs}"`, handleClipboardResult);
+          console.warn('Native copy failed, trying fallback vbs:', err);
+          if (fs.existsSync(copyVbs)) {
+            exec(`wscript.exe "${copyVbs}" copy`, handleClipboardResult);
+          }
         } else {
           handleClipboardResult();
         }
@@ -744,12 +625,16 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       throw new Error('Please configure your Google Gemini API Key.');
     }
 
+    const safeRequested = (requestedModel && !requestedModel.includes('3.8') && requestedModel !== 'gemini-2.0-flash' && requestedModel !== 'gemini-2.5-flash')
+      ? requestedModel
+      : 'gemini-flash-lite-latest';
+
     const candidates = Array.from(new Set([
-      requestedModel,
+      safeRequested,
       'gemini-flash-lite-latest',
       'gemini-3.5-flash-lite',
-      'gemini-3.7-flash',
-      'gemini-3.5-flash'
+      'gemini-3.1-flash-lite',
+      'gemini-3.7-flash'
     ].filter(Boolean)));
 
     let lastError = null;
@@ -758,7 +643,7 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       const candidateModel = candidates[i];
       const isLast = (i === candidates.length - 1);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${key.trim()}`;
@@ -1108,9 +993,9 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
     : customPrompt && customPrompt.trim()
     ? `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`
-    : `Translate into ${targetLang}. Output translation only.`;
+    : `Translate into ${targetLang}. Output direct translation only without quotes, preamble, or commentary.`;
 
-  const maxTokens = explainJargon ? 4096 : Math.max(4096, text.length * 8);
+  const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, text.length * 3));
 
   const rawOutput = await runAiGeneration({
     text,

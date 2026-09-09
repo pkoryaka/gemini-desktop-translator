@@ -63,7 +63,7 @@ export const AVAILABLE_MODELS = [
   {
     id: 'gemini-flash-lite-latest',
     name: 'Gemini Flash Lite (Latest)',
-    tag: '⚡ Ultra Fast (Recommended for In-Place Rewriting)',
+    tag: '⚡ Ultra Fast (Recommended for Instant Translation & Rewriting)',
     badgeColor: '#10b981',
     description: 'Ultra-low latency model engineered for sub-second hotkey translation and instant in-place rewrites.',
     bestFor: 'Instant hotkey translation, quick in-place rewrites, sub-second typing.'
@@ -75,6 +75,14 @@ export const AVAILABLE_MODELS = [
     badgeColor: '#06b6d4',
     description: 'High-speed Gemini 3.5 Lite model with consistent sub-second response times.',
     bestFor: 'Fast sentence replacement and daily text tasks.'
+  },
+  {
+    id: 'gemini-3.1-flash-lite',
+    name: 'Gemini 3.1 Flash Lite',
+    tag: '⚡ Ultra Fast Lite',
+    badgeColor: '#0ea5e9',
+    description: 'Ultra-lightweight high-throughput model for instantaneous vocabulary and sentence translation.',
+    bestFor: 'Sub-second lookup and low-latency translations.'
   },
   {
     id: 'gemini-3.7-flash',
@@ -91,14 +99,6 @@ export const AVAILABLE_MODELS = [
     badgeColor: '#6366f1',
     description: 'Stable Gemini 3 architecture model with broad multi-language support.',
     bestFor: 'General sentence and paragraph translation.'
-  },
-  {
-    id: 'gemini-3.8-flash',
-    name: 'Gemini 3.8 Flash',
-    tag: '⚡ Frontier Flash Preview',
-    badgeColor: '#f59e0b',
-    description: 'Google\'s newest frontier workhorse preview. Note: subject to strict free-tier limits (20 requests/day).',
-    bestFor: 'Everyday chatting and technical documentation when quota allows.'
   }
 ];
 
@@ -284,7 +284,7 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  const targetModel = model || 'gemini-2.0-flash';
+  const targetModel = (model && !model.includes('3.8') && model !== 'gemini-2.0-flash' && model !== 'gemini-2.5-flash') ? model : 'gemini-flash-lite-latest';
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
@@ -323,24 +323,26 @@ Respond ONLY in JSON format:
     // Custom prompt slot / precision instruction mode: strictly follow prompt instruction
     systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${customPrompt.trim()}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`;
   } else {
-    // Pure translation mode
-    systemInstructionText = `Translate into ${targetName}. Output translation only.`;
+    // Pure translation mode: concise prompt for lowest TTFT
+    systemInstructionText = `Translate into ${targetName}. Output direct translation only without quotes, preamble, or commentary.`;
   }
 
   // Generation configuration tuned for lowest latency:
   // - temperature: 0 (greedy decoding - fastest token generation)
   // - maxOutputTokens: dynamically sized so KV cache isn't over-allocated
-  // - thinkingBudget: 0 disables any reasoning pauses
   const maxTokens = explainJargon ? 2048 : Math.max(128, Math.min(1024, userText.length * 3));
   const generationConfig = {
-    temperature: 0.1,
+    temperature: 0.0,
     maxOutputTokens: maxTokens,
     candidateCount: 1,
     ...(explainJargon ? { responseMimeType: 'application/json' } : {})
   };
 
-  // FASTEST PATH: Native Node.js Translation Engine (Direct libuv/Undici OS sockets, zero Chromium IPC overhead)
-  if (window.electronAPI?.nativeTranslate) {
+  const isBYOM = storageService.getSettings().aiProvider === 'openai_compatible';
+  const isStreaming = Boolean(onStreamChunk) && !explainJargon && !isBYOM;
+
+  // For BYOM (local LLMs) or structured Jargon JSON explanation, use native Node translation engine
+  if ((isBYOM || explainJargon || !isStreaming) && window.electronAPI?.nativeTranslate) {
     try {
       const nativeRes = await window.electronAPI.nativeTranslate({
         apiKey: apiKey.trim(),
@@ -395,8 +397,6 @@ Respond ONLY in JSON format:
       console.warn('Native translation encountered error, falling back to web fetch:', nativeErr);
     }
   }
-
-  const isStreaming = Boolean(onStreamChunk) && !explainJargon;
 
   // FAST PATH: Real-time streaming for instant TTFT (<150ms)
   if (isStreaming) {
