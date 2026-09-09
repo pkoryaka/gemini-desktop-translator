@@ -230,7 +230,7 @@ export async function testGeminiApiKey(apiKey, model = 'gemini-flash-lite-latest
     throw new Error('Please enter a valid Gemini API Key.');
   }
 
-  const targetModel = model || 'gemini-2.0-flash';
+  const targetModel = model || 'gemini-flash-lite-latest';
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey.trim()}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -275,7 +275,7 @@ export async function translateText({
   targetLang = 'en',
   customPrompt = '',
   explainJargon = false,
-  model = 'gemini-2.0-flash',
+  model = 'gemini-flash-lite-latest',
   temperature = 0.0,
   onStreamChunk = null
 }) {
@@ -286,8 +286,9 @@ export async function translateText({
   const trimmedText = text ? text.trim() : '';
   if (!trimmedText) return null;
 
-  const isSlow = !model || model === 'gemini-3.5-flash' || model === 'gemini-3.6-flash' || model === 'gemini-2.5-flash' || model === 'gemini-2.0-flash' || model.includes('3.8');
-  const targetModel = isSlow ? 'gemini-flash-lite-latest' : model;
+  const currentSettings = storageService.getSettings();
+  const isBYOM = currentSettings.aiProvider === 'openai_compatible';
+  const targetModel = isBYOM ? (model || currentSettings.customModel || 'llama3.2') : (currentSettings.customGeminiModel || 'gemini-flash-lite-latest');
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);
@@ -340,8 +341,6 @@ Respond ONLY in JSON format:
     candidateCount: 1,
     ...(explainJargon ? { responseMimeType: 'application/json' } : {})
   };
-
-  const isBYOM = storageService.getSettings().aiProvider === 'openai_compatible';
 
   // Primary Engine: Native Node Translation Engine with direct SSE streaming (Bypasses Chromium background throttling)
   if (window.electronAPI?.nativeTranslate) {

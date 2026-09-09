@@ -24,12 +24,8 @@ app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 function trimMemory() {
-  if (process.platform === 'win32') {
-    const copyExe = path.join(__dirname, 'copy_native.exe');
-    if (fs.existsSync(copyExe)) {
-      execFile(copyExe, ['trim'], () => {});
-    }
-  }
+  // Purposely disabled: Calling EmptyWorkingSet / trim purges Chromium V8 heap and DOM
+  // into Windows pagefile, causing multi-second hard page faults on hotkey activation.
 }
 
 let mainWindow = null;
@@ -99,11 +95,13 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) {
-        if (data.model === 'gemini-3.5-flash' || data.model === 'gemini-3.8-flash' || data.model === 'gemini-2.5-flash' || data.model === 'gemini-3.6-flash' || data.model === 'gemini-2.0-flash') {
+        if (data.model !== 'gemini-flash-lite-latest' && data.model.startsWith('gemini-') && !data.customGeminiModel) {
           savedModel = 'gemini-flash-lite-latest';
         } else {
           savedModel = data.model;
         }
+      } else {
+        savedModel = 'gemini-flash-lite-latest';
       }
       if (data.aiProvider) savedAiProvider = data.aiProvider;
       if (data.customGeminiModel) savedCustomGeminiModel = data.customGeminiModel;
@@ -321,7 +319,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      backgroundThrottling: true,
+      backgroundThrottling: false,
       spellcheck: false
     }
   });
@@ -365,12 +363,9 @@ function createWindow() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('window-hidden');
     }
-    setTimeout(trimMemory, 1000);
   });
 
-  mainWindow.on('minimize', () => {
-    setTimeout(trimMemory, 1000);
-  });
+  mainWindow.on('minimize', () => {});
 
   mainWindow.on('maximize', () => {
     isMiniWindowMode = false;
@@ -530,6 +525,88 @@ function focusAppWindow(isMini = false) {
   mainWindow.focus();
 }
 
+let activeDirectStream = null;
+
+async function executeDirectNodeStream({ text, targetLang }) {
+  const key = savedApiKey;
+  if (!key) return null;
+
+  const target = targetLang || savedTargetLang || 'ru';
+  const fastModel = 'gemini-flash-lite-latest';
+  const systemInstructionText = `Translate into ${target}. Output direct translation only without quotes, preamble, or commentary.`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fastModel}:streamGenerateContent?alt=sse&key=${key.trim()}`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemInstructionText }] },
+        contents: [{ role: 'user', parts: [{ text }] }],
+        generationConfig: {
+          temperature: 0.0,
+          maxOutputTokens: Math.max(128, Math.min(1024, text.length * 3)),
+          candidateCount: 1
+        }
+      })
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulatedText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data:')) {
+            const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+            if (jsonStr) {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const candidate = parsed.candidates?.[0];
+                const chunk = candidate?.content?.parts?.[0]?.text || '';
+                if (chunk) {
+                  accumulatedText += chunk;
+                  if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send('quick-translate-chunk', accumulatedText);
+                  }
+                }
+                if (candidate?.finishReason) {
+                  try { reader.cancel(); } catch {}
+                  break;
+                }
+              } catch {}
+            }
+          }
+        }
+      }
+
+      if (accumulatedText && accumulatedText.trim()) {
+        return accumulatedText.trim();
+      }
+    }
+  } catch (err) {
+    console.warn('Direct stream notice:', err.message);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  return null;
+}
+
 // Global hotkey handler: Grabs highlighted text from any Windows app and translates it
 function triggerGlobalSelectionTranslation(explainJargon = false) {
   if (process.platform === 'win32') {
@@ -552,6 +629,16 @@ function triggerGlobalSelectionTranslation(explainJargon = false) {
 
           // 2. Position and show the window immediately with a clean, fresh UI
           focusAppWindow(true);
+
+          // 3. Immediately start streaming in Node.js concurrently with window paint (sub-200ms TTFT)
+          if (!explainJargon && savedAiProvider === 'gemini') {
+            const streamPromise = executeDirectNodeStream({ text: trimmed, targetLang: savedTargetLang });
+            activeDirectStream = {
+              text: trimmed,
+              targetLang: savedTargetLang,
+              promise: streamPromise
+            };
+          }
         }
       }, 10);
     };
@@ -633,16 +720,10 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       throw new Error('Please configure your Google Gemini API Key.');
     }
 
-    const isSlowModel = requestedModel === 'gemini-3.5-flash' || requestedModel === 'gemini-3.6-flash' || requestedModel === 'gemini-2.5-flash' || requestedModel === 'gemini-2.0-flash' || requestedModel.includes('3.8');
-    const safeRequested = (requestedModel && !isSlowModel)
-      ? requestedModel
-      : 'gemini-flash-lite-latest';
-
+    const safeRequested = savedCustomGeminiModel || 'gemini-flash-lite-latest';
     const candidates = Array.from(new Set([
       safeRequested,
-      'gemini-flash-lite-latest',
-      'gemini-3.5-flash-lite',
-      'gemini-3.7-flash'
+      'gemini-flash-lite-latest'
     ].filter(Boolean)));
 
     let lastError = null;
@@ -749,14 +830,14 @@ function triggerQuickSlotAction(slotId) {
             const systemInstructionText = `You are a precision text transformer. Follow this user instruction precisely: "${slot.prompt}". Keep the original language unless the instruction explicitly specifies a different language. Output ONLY the transformed text directly without conversational preamble, introduction, markdown commentary, or quotes.`;
 
             // For in-place text replacement, prioritize ultra-low latency model
-            const fastModel = (savedModel && savedModel.includes('lite')) ? savedModel : 'gemini-flash-lite-latest';
+            const fastModel = 'gemini-flash-lite-latest';
 
             const outputText = await runAiGeneration({
               text: trimmed,
               model: fastModel,
               systemInstructionText,
               isJson: false,
-              maxTokens: Math.max(4096, trimmed.length * 8)
+              maxTokens: Math.max(128, Math.min(2048, trimmed.length * 4))
             });
 
             if (outputText && outputText.trim()) {
@@ -768,11 +849,9 @@ function triggerQuickSlotAction(slotId) {
                 if (fs.existsSync(copyExe)) {
                   execFile(copyExe, ['paste'], (err) => {
                     if (err) console.warn('Native paste execution error:', err);
-                    setTimeout(trimMemory, 2500);
                   });
                 } else if (fs.existsSync(copyVbs)) {
                   exec(`wscript.exe "${copyVbs}" paste`);
-                  setTimeout(trimMemory, 2500);
                 }
               }, 10);
             } else {
@@ -1005,6 +1084,20 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
   const isExplain = Boolean(explainJargon);
   const prompt = (customPrompt && customPrompt.trim()) ? customPrompt.trim() : '';
 
+  // 1. If hotkey already initiated a direct Node.js stream concurrently with window paint, reuse it!
+  if (activeDirectStream && activeDirectStream.text === text && !isExplain && !prompt) {
+    try {
+      const rawOutput = await activeDirectStream.promise;
+      activeDirectStream = null;
+      if (rawOutput) {
+        return { success: true, rawOutput };
+      }
+    } catch (e) {
+      activeDirectStream = null;
+    }
+  }
+  activeDirectStream = null;
+
   const systemInstructionText = isExplain
     ? `Translate into ${targetLang}, clarify meaning, detect tone, and break down slang/idioms. Respond ONLY in JSON format: {"detectedSourceLanguage":"string","translation":"string","plainLanguageMeaning":"string","detectedTone":"string","jargonBreakdown":[{"term":"string","literalMeaning":"string","intendedMeaning":"string","nuance":"string"}],"culturalNotes":"string"}`
     : prompt
@@ -1012,9 +1105,9 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
     : `Translate into ${targetLang}. Output direct translation only without quotes, preamble, or commentary.`;
 
   const key = (apiKey && apiKey.trim()) || savedApiKey;
-  const requested = model || savedModel || 'gemini-flash-lite-latest';
-  const isSlow = requested === 'gemini-3.5-flash' || requested === 'gemini-3.6-flash' || requested === 'gemini-2.5-flash' || requested === 'gemini-2.0-flash' || requested.includes('3.8');
-  const targetModel = isSlow ? 'gemini-flash-lite-latest' : requested;
+  const targetModel = (savedAiProvider === 'gemini')
+    ? (savedCustomGeminiModel || 'gemini-flash-lite-latest')
+    : (model || savedModel || 'gemini-flash-lite-latest');
 
   // Ultra-fast streaming path in Node.js: bypasses Chromium renderer throttling
   if (!isExplain && savedAiProvider === 'gemini' && key) {
