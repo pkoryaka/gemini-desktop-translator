@@ -6,7 +6,7 @@ import {
   Star, Search, Check, Volume2, VolumeX
 } from 'lucide-react';
 import { AVAILABLE_MODELS, SUPPORTED_LANGUAGES, testGeminiApiKey, fetchLiveAvailableModels } from '../services/geminiService';
-import { storageService } from '../services/storageService';
+import { storageService, ROLE_PRESET_PACKS } from '../services/storageService';
 import { ttsService } from '../services/ttsService';
 import { HotkeyRecorder } from './HotkeyRecorder';
 import appLogo from '../assets/app-icon.png';
@@ -46,6 +46,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
   const [preferredLanguages, setPreferredLanguages] = useState(() => storageService.getPreferredLanguages());
   const [langSearch, setLangSearch] = useState('');
   const [instantPopupMode, setInstantPopupMode] = useState(currentSettings.instantPopupMode !== false);
+  const [safePreviewMode, setSafePreviewMode] = useState(currentSettings.safePreviewMode || false);
+  const [packFeedback, setPackFeedback] = useState(null);
 
   // High-Quality Text-to-Speech Settings
   const [ttsVoiceGender, setTtsVoiceGender] = useState(currentSettings.ttsVoiceGender || 'female');
@@ -58,6 +60,15 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
 
   // 3 Custom Prompt Slots
   const [quickSlots, setQuickSlots] = useState(() => storageService.getQuickSlots());
+
+  const handleApplyRolePack = (packId) => {
+    const pack = ROLE_PRESET_PACKS[packId];
+    if (pack && pack.slots) {
+      setQuickSlots(pack.slots);
+      setPackFeedback(`Loaded ${pack.name}!`);
+      setTimeout(() => setPackFeedback(null), 3500);
+    }
+  };
 
   const [testStatus, setTestStatus] = useState(null); // { loading, success, message }
 
@@ -265,6 +276,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
       primaryTargetLanguage,
       preferredLanguages,
       instantPopupMode,
+      safePreviewMode,
       startMinimized,
       saveHistory,
       translateHotkey,
@@ -487,6 +499,33 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                       <Server size={14} color={aiProvider === 'openai_compatible' ? 'var(--accent-purple)' : 'var(--text-muted)'} />
                       <span>BYOM (Ollama / Local LLM)</span>
                     </button>
+                  </div>
+
+                  {/* Transparent Data Routing & Privacy Notice */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    background: aiProvider === 'gemini' ? 'rgba(99, 102, 241, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                    border: `1px solid ${aiProvider === 'gemini' ? 'rgba(99, 102, 241, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px',
+                    fontSize: '0.75rem',
+                    lineHeight: '1.4'
+                  }}>
+                    <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                      {aiProvider === 'gemini' ? <Sparkles size={16} color="var(--primary)" /> : <CheckCircle2 size={16} color="#10b981" />}
+                    </div>
+                    <div>
+                      <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '2px' }}>
+                        {aiProvider === 'gemini' ? '☁️ Direct Cloud Routing (Google AI Studio)' : '🛡️ 100% Private Local Endpoint Routing'}
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {aiProvider === 'gemini'
+                          ? 'Text is sent over encrypted TLS directly to Google Gemini using your personal API key. Zero intermediate servers touch your text.'
+                          : `Text is sent directly to your endpoint (${customEndpoint || 'localhost'}). If using Ollama or LM Studio, 100% of data remains on your physical machine.`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Gemini Cloud Section */}
@@ -1058,6 +1097,77 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                   <p className="settings-card-desc">
                     Select text anywhere in Windows and press the slot's shortcut. The AI transforms text per prompt and pastes it back directly without opening windows!
                   </p>
+
+                  {/* 1-Click Role Preset Packs */}
+                  <div style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '12px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    marginBottom: '14px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={14} color="var(--primary)" /> 1-Click Role Preset Packs
+                      </span>
+                      {packFeedback ? (
+                        <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>
+                          ✓ {packFeedback}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          Instantly configure slots for your workflow
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                      {Object.values(ROLE_PRESET_PACKS).map((pack) => (
+                        <button
+                          key={pack.id}
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => handleApplyRolePack(pack.id)}
+                          style={{
+                            padding: '8px 10px',
+                            fontSize: '0.75rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: '3px',
+                            height: 'auto',
+                            border: '1px solid var(--border-color)',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{pack.badge}</span>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: '1.2' }}>{pack.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Safety & Preview Mode */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    background: 'rgba(99, 102, 241, 0.05)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: '16px'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>Safe Preview First</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Show transformed text in HUD preview before replacing in-place</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={safePreviewMode}
+                      onChange={(e) => setSafePreviewMode(e.target.checked)}
+                      style={{ accentColor: 'var(--primary)', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                  </div>
 
                   {quickSlots.map((slot, index) => {
                     const otherKeys = [

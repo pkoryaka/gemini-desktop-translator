@@ -34,6 +34,105 @@ export const DEFAULT_QUICK_SLOTS = [
   }
 ];
 
+export const ROLE_PRESET_PACKS = {
+  support: {
+    id: 'support',
+    name: 'Customer Support & CX',
+    badge: '🎧 Support',
+    description: 'Polite ticket responses, empathetic de-escalation, and instant English translation.',
+    slots: [
+      {
+        id: 1,
+        name: 'Polite Support Reply',
+        prompt: 'Rewrite this draft into a polite, clear, concise, and professional customer support response. Output ONLY the response.',
+        hotkey: 'CommandOrControl+Alt+1',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 2,
+        name: 'Empathetic De-escalation',
+        prompt: 'Rewrite this response with deep empathy, acknowledging customer frustration, reassuring them, and outlining next steps clearly. Output ONLY the response.',
+        hotkey: 'CommandOrControl+Alt+2',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 3,
+        name: 'Translate to Fluent English',
+        prompt: 'Translate this customer message or draft into fluent, natural business English. Output ONLY the translation without quotes.',
+        hotkey: 'CommandOrControl+Alt+3',
+        pasteBack: true,
+        enabled: true
+      }
+    ]
+  },
+  developer: {
+    id: 'developer',
+    name: 'Developer & Engineering',
+    badge: '💻 Dev',
+    description: 'Grammar polish, concise PR/Slack comments, and code context preservation.',
+    slots: [
+      {
+        id: 1,
+        name: 'Fix Grammar & Polish',
+        prompt: 'Fix grammar, spelling, typos, and phrasing. Keep code terminology, variable names, and technical meaning intact. Output ONLY the polished text.',
+        hotkey: 'CommandOrControl+Alt+1',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 2,
+        name: 'Concise PR/Slack Update',
+        prompt: 'Rewrite this into a concise, polite, and constructive technical update or PR comment for an engineering team. Output ONLY the rewritten text.',
+        hotkey: 'CommandOrControl+Alt+2',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 3,
+        name: 'Translate to English & Replace',
+        prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.',
+        hotkey: 'CommandOrControl+Alt+3',
+        pasteBack: true,
+        enabled: true
+      }
+    ]
+  },
+  business: {
+    id: 'business',
+    name: 'Executive & Deal Closer',
+    badge: '💼 Business',
+    description: 'Corporate executive tone, action-oriented summaries, and client correspondence.',
+    slots: [
+      {
+        id: 1,
+        name: 'Executive Corporate Tone',
+        prompt: 'Rewrite the text into clear, polite, concise, and professional corporate tone suitable for executives or clients. Output ONLY the rewritten text.',
+        hotkey: 'CommandOrControl+Alt+1',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 2,
+        name: 'Crisp Action Summary',
+        prompt: 'Condense this text into a crisp, direct summary with clear bullet points and action items. Output ONLY the result.',
+        hotkey: 'CommandOrControl+Alt+2',
+        pasteBack: true,
+        enabled: true
+      },
+      {
+        id: 3,
+        name: 'Translate to English & Replace',
+        prompt: 'Translate the text into fluent, natural English. Output ONLY the translated text without extra explanations or quotes.',
+        hotkey: 'CommandOrControl+Alt+3',
+        pasteBack: true,
+        enabled: true
+      }
+    ]
+  }
+};
+
 const DEFAULT_SETTINGS = {
   model: 'gemini-flash-lite-latest',
   temperature: 0.1,
@@ -43,6 +142,7 @@ const DEFAULT_SETTINGS = {
   ttsSpeed: 1.0, // 0.85 | 1.0 | 1.15
   saveHistory: true,
   enableStreaming: true,
+  safePreviewMode: false,
   primaryTargetLanguage: 'uk',
   secondaryTargetLanguage: 'en',
   instantPopupMode: true,

@@ -9,7 +9,9 @@ import {
   Loader2,
   ChevronDown,
   AlertCircle,
-  Settings
+  Settings,
+  ShieldCheck,
+  Cloud
 } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../services/geminiService';
 import { storageService } from '../services/storageService';
@@ -158,6 +160,25 @@ export function MiniTranslatePopup({
               <BookOpen size={11} /> Jargon Mode
             </span>
           )}
+
+          {/* Compact Data Routing Indicator */}
+          <span 
+            title={storageService.getSettings()?.aiProvider === 'openai_compatible' ? "Processing via Localhost (Ollama)" : "Processing via Google Gemini Direct Cloud"}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '3px', 
+              background: storageService.getSettings()?.aiProvider === 'openai_compatible' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)', 
+              color: storageService.getSettings()?.aiProvider === 'openai_compatible' ? '#10b981' : 'var(--primary)', 
+              padding: '2px 7px', 
+              borderRadius: '999px', 
+              fontSize: '0.68rem', 
+              fontWeight: 600 
+            }}
+          >
+            {storageService.getSettings()?.aiProvider === 'openai_compatible' ? <ShieldCheck size={10} /> : <Cloud size={10} />}
+            <span>{storageService.getSettings()?.aiProvider === 'openai_compatible' ? 'Local' : 'Cloud'}</span>
+          </span>
         </div>
 
         {/* Quick Utility Actions (Copy & TTS only - no duplicate close or special buttons) */}

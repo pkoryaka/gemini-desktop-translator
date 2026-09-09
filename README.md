@@ -3,175 +3,145 @@
 <img src="./public/app-icon.png" width="128" height="128" alt="NativeLingo Logo" style="border-radius: 28px;" />
 
 # ⚡ NativeLingo
-### *Native In-Place AI Translator, Clipboard Assistant & Jargon Demystifier*
-#### *With Full BYOM (Bring Your Own Model) & Local Offline AI Support*
+### *Understand messages and write clearer replies without leaving your Windows app.*
+#### *Zero-Tab-Switching AI Copilot • 53+ Languages • Jargon Demystifier • Cloud & 100% Offline Local LLMs*
 
-**The ultra-fast desktop assistant that translates across 53+ languages, rewrites text in-place, fixes grammar, demystifies slang, and integrates natively across any Windows application — powered by Google Gemini or 100% offline local LLMs.**
+**Highlight text anywhere in Windows, press a shortcut, and translate, demystify corporate jargon, or polish your draft in-place — powered by Google Gemini or 100% air-gapped local Ollama models.**
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=for-the-badge&logo=windows)](https://github.com/pkoryaka/nativelingo)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini%20%7C%20Ollama%20%7C%20LM%20Studio-8A2BE2?style=for-the-badge&logo=google)](https://aistudio.google.com/)
 [![BYOM](https://img.shields.io/badge/BYOM-Local%20%26%20OpenAI--Compatible-success?style=for-the-badge)](https://ollama.com/)
-[![License](https://img.shields.io/badge/License-Free%20for%20Personal%20Use-brightgreen?style=for-the-badge)](./LICENSE)
+[![Latency](https://img.shields.io/badge/Latency-%3C700ms%20TTFT-brightgreen?style=for-the-badge)](https://github.com/pkoryaka/nativelingo)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped%20Option-orange?style=for-the-badge)](https://github.com/pkoryaka/nativelingo)
 
 <p align="center">
+  <a href="#-the-three-jobs-nativelingo-solves">🎯 The 3 Jobs</a> •
+  <a href="#-role-preset-packs">📦 Role Preset Packs</a> •
   <a href="#-why-byom-bring-your-own-model">🧠 BYOM Engine</a> •
-  <a href="#-core-capabilities">✨ Core Capabilities</a> •
-  <a href="#-why-this-beats-other-tools">📊 Comparison</a> •
-  <a href="#-quick-start">🚀 Quick Start</a> •
-  <a href="#-custom-prompt-actions">⚡ In-Place Actions</a> •
-  <a href="#-license--commercial-terms">📜 License</a>
+  <a href="#-application-compatibility">🖥️ Compatibility</a> •
+  <a href="#-pricing--licensing">💳 Pricing & Licenses</a> •
+  <a href="#-quick-start">🚀 Quick Start</a>
 </p>
 
 </div>
 
 ---
 
-## 🎯 What is it?
+## 🎯 The Three Jobs NativeLingo Solves
 
-Tired of copying text, switching browser tabs, pasting into ChatGPT or DeepL, copying the answer, and switching back?
+Most translation tools were built for the browser era: *copy text $\rightarrow$ switch tabs $\rightarrow$ paste into ChatGPT/DeepL $\rightarrow$ copy response $\rightarrow$ switch back $\rightarrow$ paste*.
 
-**NativeLingo** lives quietly in your Windows system tray and hooks directly into your global keystrokes. Highlight text in **any software** (Slack, Microsoft Word, Visual Studio Code, Chrome, Outlook, Telegram, Discord, Notion, Notepad) and press a shortcut:
+NativeLingo keeps you completely in flow:
 
-* **⚡ Need a grammar fix?** Press `Ctrl + Alt + 1` &rarr; Instant correction replaces your text in-place.
-* **⚡ Need a professional tone?** Press `Ctrl + Alt + 2` &rarr; Rewritten in executive corporate phrasing in-place.
-* **⚡ Need English translation?** Press `Ctrl + Alt + 3` &rarr; Replaced with fluent English in-place.
-* **⚡ Need deep translation & slang breakdown?** Press `Ctrl + Alt + T` or `Ctrl + Alt + J` &rarr; Instant floating glassmorphic HUD appears right at your mouse cursor.
+| Job | The Daily Situation | The NativeLingo Solution |
+| :--- | :--- | :--- |
+| **1. Understand** | *"This customer or colleague message contains confusing slang, idioms, or subtle corporate pushback."* | **Press `Ctrl + Alt + J`**: Instant floating breakdown explaining literal meaning vs intended nuance, tone, and slang. |
+| **2. Respond** | *"I know what I want to say, but drafting it professionally in English takes too much time."* | **Press `Ctrl + Alt + 1` or `2`**: Replaces your rough bullet points with a clear, polite, empathetic reply directly in the text field. |
+| **3. Adapt** | *"I need this passage translated or reformatted without losing my place."* | **Press `Ctrl + Alt + T`**: Sub-700ms streaming translation in a floating cursor HUD across 53+ languages. |
+
+---
+
+## 📦 1-Click Role Preset Packs
+
+NativeLingo includes 1-click curated prompt packs configured for common professional workflows:
+
+### 🎧 Customer Support & CX Pack
+* **Slot 1 (`Ctrl + Alt + 1`)**: *Polite Support Reply* — Rewrites rough drafts into polite, clear, concise ticket responses.
+* **Slot 2 (`Ctrl + Alt + 2`)**: *Empathetic De-escalation* — Acknowledges customer frustration and clarifies next steps with reassurance.
+* **Slot 3 (`Ctrl + Alt + 3`)**: *Translate to Fluent English* — Translates incoming foreign tickets or outgoing drafts to natural business English.
+
+### 💻 Developer & Engineering Pack
+* **Slot 1 (`Ctrl + Alt + 1`)**: *Fix Grammar & Polish* — Fixes typos and phrasing while preserving code blocks, variable names, and technical terms.
+* **Slot 2 (`Ctrl + Alt + 2`)**: *Concise PR / Slack Update* — Transforms verbose thoughts into crisp, constructive technical comments.
+* **Slot 3 (`Ctrl + Alt + 3`)**: *Translate to English & Replace* — Flawless English transformation without preamble.
+
+### 💼 Executive & Deal Closer Pack
+* **Slot 1 (`Ctrl + Alt + 1`)**: *Executive Corporate Tone* — Polishes text into executive-level clarity for clients and leadership.
+* **Slot 2 (`Ctrl + Alt + 2`)**: *Crisp Action Summary* — Condenses verbose updates into bulleted action items with clear owners.
+* **Slot 3 (`Ctrl + Alt + 3`)**: *Translate to English & Replace* — Clean multilingual communication.
 
 ---
 
 ## 🧠 Why BYOM (Bring Your Own Model)?
 
-Workplaces, enterprise policies, and privacy-conscious users often cannot send sensitive code, legal documents, or private chats to cloud APIs. **NativeLingo solves this with native BYOM support:**
+Workplaces, enterprise policies, and privacy-conscious users cannot always upload sensitive customer tickets or proprietary source code to third-party cloud APIs.
 
 <div align="center">
-  <img src="public/bpmn-architecture-light.svg" alt="NativeLingo BPMN 2.0 Architectural Specification" width="100%" style="border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 20px rgba(0,0,0,0.06);" />
+  <img src="public/bpmn-architecture-light.svg" alt="NativeLingo BPMN 2.0 Architecture" width="100%" style="border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 20px rgba(0,0,0,0.06);" />
 </div>
 
 ### 1. 🦙 100% Offline Local LLMs (Ollama & LM Studio)
-* **Zero API Keys Required**: Plug-and-play with your existing Ollama or LM Studio installation.
-* **Total Air-Gapped Privacy**: No data leaves your machine. Perfect for confidential corporate codebases, legal documents, medical data, and offline travel.
-* **Presets Included**: 1-click configuration for `Ollama (localhost:11434)` and `LM Studio (localhost:1234)`.
-* Run any model: `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5`, `phi-4`, etc.
+* **Zero Cloud Data Transmission**: Run locally via `localhost:11434` (Ollama) or `localhost:1234` (LM Studio).
+* **Total Air-Gapped Privacy**: 100% of data remains on your physical machine. Ideal for HIPAA, GDPR, confidential customer communications, and NDA codebases.
+* Compatible with any model: `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5`, `phi-4`, etc.
 
 ### 2. ⚡ Google Gemini Cloud Powerhouse
-* Blazing fast sub-150ms Time-to-First-Token (TTFT).
-* Supports official `gemini-2.0-flash`, `gemini-2.5-flash`, `gemini-2.5-pro`, and experimental models.
-* Free tier available via Google AI Studio with high rate limits.
+* **Sub-700ms Streaming Latency**: Native Node.js Server-Sent Events (SSE) direct pipeline bypasses Chromium background throttling for instant token generation.
+* Free tier available with generous rate limits directly from Google AI Studio.
 
-### 3. 🌐 OpenAI-Compatible Endpoints
-* Point the assistant to **OpenRouter**, **Groq**, **DeepSeek**, **Together AI**, or internal corporate LLM gateways.
-* Test your endpoint with one click right from the Settings panel.
+### 3. 🌐 Custom OpenAI-Compatible Endpoints
+* Easily connect to **Groq**, **OpenRouter**, **DeepSeek**, **Together AI**, or internal company LLM gateways.
 
 ---
 
-## ✨ Core Capabilities
+## 🖥️ Application Compatibility
 
-### 1. ⚡ In-Place AI Rewriting (No Window Needed)
-Highlight text and trigger custom prompt actions. The text is captured in `<15ms`, processed through your chosen model, and **pasted directly back into your active cursor position**.
+NativeLingo works natively across standard Windows applications via custom Win32 low-level hooks:
 
-### 2. 💡 Jargon Demystifier & Plain Language Breakdown
-Translating idioms, metaphors, or corporate slang literally ruins context. The Jargon Explainer breaks down:
-* What the speaker **literally said** vs **what they actually meant**.
-* Detailed breakdown table of slang, idioms, acronyms, and cultural nuances.
-* Detected emotion, sentiment, and interpersonal tone.
+| Application | Highlight & Translate (`Ctrl+Alt+T`) | Jargon Explainer (`Ctrl+Alt+J`) | In-Place Rewrite (`Ctrl+Alt+1/2/3`) |
+| :--- | :---: | :---: | :---: |
+| **Zendesk / Intercom / Freshdesk** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
+| **Slack / Microsoft Teams / Discord** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
+| **VS Code / Cursor / Visual Studio** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
+| **Google Chrome / Microsoft Edge** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
+| **Microsoft Word / Outlook / Excel** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
+| **Notion / Obsidian / OneNote** | ✅ Supported | ✅ Supported | ✅ Direct In-Place Replace |
 
-### 3. 🪟 Cursor-Following Floating Mini HUD
-* Positioned smoothly next to your mouse cursor across multi-monitor setups.
-* Sub-150ms streaming response.
-* Built-in **Text-to-Speech (TTS)** playback, **1-click Copy**, and **Full Window Expand (↗️)**.
-
-### 4. 🌐 Multilingual Fluency
-Bidirectional fluency across **Ukrainian (Українська)**, **English**, **Spanish (Español)**, and **Russian (Русский)** with auto-language detection.
-
-### 5. 🚀 Ultra-Fast Native Windows Integration
-* **Sub-15ms Win32 Keystroke Synthesizer**: Custom compiled C# Win32 keystroke engine (`CopyNative.exe`) without polluting clipboard history.
-* **Zero-Logon Delay**: Starts silently directly into the system tray at Windows logon in `<100ms` without popup windows or consoles.
+*(Note: In read-only PDF viewers or elevated admin applications, NativeLingo copies the result to your clipboard with an on-screen confirmation instead of overwriting text).*
 
 ---
 
-## 📊 Why This Beats Other Tools
+## 💳 Pricing & Commercial Licenses
 
-| Feature | **NativeLingo** | **DeepL Desktop** | **Raycast AI** | **ChatGPT Web Tab** |
-| :--- | :---: | :---: | :---: | :---: |
-| **Bring Your Own Model (BYOM)** | ✅ **Yes (Ollama, LM Studio, Custom)** | ❌ No | ⚠️ Proprietary only | ❌ No |
-| **100% Offline / Air-Gapped Mode** | ✅ **Yes (via Local LLM)** | ❌ No | ❌ No | ❌ No |
-| **In-Place Replace (Paste-Back)** | ✅ **Yes (<150ms)** | ❌ No (Popup only) | ✅ Yes (Mac only) | ❌ No (Tab switching) |
-| **Windows 10 / 11 Native** | ✅ **Yes** | ✅ Yes | ❌ Mac Only | ❌ Web only |
-| **Jargon & Idiom Breakdown** | ✅ **Yes** | ❌ No | ❌ Manual prompt | ❌ Manual prompt |
-| **Custom Prompt Slots with Hotkeys** | ✅ **3 Hotkey Slots** | ❌ No | ⚠️ Paid Pro Plan | ❌ No |
-| **API Cost** | 🆓 **$0 (Local) or Free Tier** | 💲 Paid Subscription | 💲 Paid Subscription | 💲 Paid / Web Limit |
-| **Privacy & Telemetry** | 🔒 **100% Local / Zero Cloud Logs** | ⚠️ Cloud telemetry | ⚠️ Cloud telemetry | ⚠️ Cloud history |
+NativeLingo is a **client-side software license**. You bring your own free Gemini API key or local Ollama model—meaning **zero unexpected monthly subscription markups** on tokens.
 
----
-
-## 🚀 Quick Start (Under 2 Minutes)
-
-### Prerequisites
-* Windows 10 or Windows 11
-* Node.js 18+ (for building/running from source)
-* **Option A (Cloud)**: A Free Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-* **Option B (Local/BYOM)**: [Ollama](https://ollama.com/) or [LM Studio](https://lmstudio.ai/) running locally (No API key needed!)
-
-### Installation & Launch
-
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/pkoryaka/nativelingo.git
-   cd nativelingo
-   ```
-
-2. **Install Dependencies & Build:**
-   ```bash
-   npm install
-   npm run build
-   ```
-
-3. **Launch the Desktop Assistant:**
-   ```bash
-   npm start
-   ```
-   *(Or double-click [`launch.vbs`](file:///c:/AI%20Projects/Personal/Translation/launch.vbs) for instant silent background startup directly into your system tray!)*
-
-4. **Select Your AI Engine in Settings ⚙️:**
-   * **Google Gemini**: Paste your free Gemini API key and select your preferred model.
-   * **BYOM / Local AI**: Click the **BYOM (Local AI)** tab, click **Ollama (11434)** or **LM Studio (1234)**, enter your local model (e.g. `llama3.2`), and click **Test Endpoint Connection**.
+| Tier | Price | What's Included |
+| :--- | :---: | :--- |
+| **Free Evaluation** | **$0** | Full 14-day evaluation of all features with your own API key or Ollama. |
+| **Pro Annual** | **$79 / year** | Full commercial license, all updates, 2 Windows devices per user, priority support. |
+| **Pro Perpetual** | **$149 one-time** | Own the current version forever + 12 months of updates included ($49/yr optional renewal). |
+| **Team License** | **$12 / user / mo** | Billed annually ($720/yr min for 5 seats). Shared team presets, onboarding session, and priority support. |
+| **5-Person Paid Pilot** | **$99 flat** | 14-day guided team pilot for support or dev teams. 100% credited toward an annual team purchase. |
 
 ---
 
-## ⌨️ Default Global Shortcuts
+## 🚀 Quick Start
 
-| Shortcut | Action | Destination |
-| :--- | :--- | :--- |
-| `Ctrl + Alt + 1` | **Fix Grammar & Polish** | ⚡ In-Place Selection Replacement |
-| `Ctrl + Alt + 2` | **Professional Business Tone** | ⚡ In-Place Selection Replacement |
-| `Ctrl + Alt + 3` | **Translate to English & Replace** | ⚡ In-Place Selection Replacement |
-| `Ctrl + Alt + T` | **Quick Translate** | 🪟 Floating Mini HUD |
-| `Ctrl + Alt + J` | **Translate & Explain Jargon** | 🪟 Floating Mini HUD with Jargon Pills |
+### Installation
+1. Download the latest `NativeLingo-Setup-x64.exe` from the [Releases](https://github.com/pkoryaka/nativelingo/releases) tab.
+2. Run the installer. NativeLingo will launch silently into your Windows System Tray.
+3. Open Settings (`Ctrl + Alt + T` $\rightarrow$ Settings gear icon):
+   - Choose **Google Gemini** (paste your free key from [Google AI Studio](https://aistudio.google.com/)) or select **Local Ollama** (`localhost:11434`).
+4. Select your target language and you are ready!
 
-*(All hotkeys and prompt actions are 100% customizable in Settings with automatic conflict detection).*
+### Developer Setup (Build from Source)
+```bash
+# Clone the repository
+git clone https://github.com/pkoryaka/nativelingo.git
+cd nativelingo
 
----
+# Install dependencies (git hooks automatically configured)
+npm install
 
-## 🔒 Privacy & Security
+# Start development workstation
+npm run dev
 
-* **Local / Air-Gapped Mode**: When using Ollama or LM Studio, 100% of data stays on your local machine. No packets leave your computer.
-* **Direct Cloud Connection**: When using Google Gemini or OpenRouter, requests go directly to the provider endpoint without intermediary proxies or tracking servers.
-* **Local Storage**: Your API keys and history are stored exclusively on your local machine.
-
----
-
-## 📜 License & Commercial Terms
-
-This software is distributed under a **Dual-Use License**:
-
-* **🟢 Personal, Educational & Non-Commercial Use:** **100% Free of charge** for individual personal productivity and learning.
-* **🏢 Commercial & Enterprise Use:** Any deployment or use within commercial companies, businesses, or revenue-generating organizations requires an authorized **Commercial License** after a 40-day evaluation period.
-
-See the full terms in the [`LICENSE`](./LICENSE) file (End User License Agreement). For commercial licensing inquiries, please open an issue or contact the maintainer via GitHub.
+# Build production Windows distribution
+npm run build
+```
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ using React 19, Vite, Electron, Google Gemini, and Local LLMs (Ollama / LM Studio).</sub>
-</div>
+## 📜 License & Support
+* **Personal & Evaluation Use**: Free to use with personal Gemini or local models.
+* **Commercial Teams & Support Inquiries**: Open an issue or contact `support@nativelingo.app`.
