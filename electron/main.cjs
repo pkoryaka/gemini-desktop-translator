@@ -95,7 +95,8 @@ function loadSavedConfig() {
       if (data.apiKey) savedApiKey = data.apiKey;
       if (data.primaryTargetLanguage) savedTargetLang = data.primaryTargetLanguage;
       if (data.model) {
-        if (data.model !== 'gemini-flash-lite-latest' && data.model.startsWith('gemini-') && !data.customGeminiModel) {
+        const deprecated = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        if (deprecated.includes(data.model)) {
           savedModel = 'gemini-flash-lite-latest';
         } else {
           savedModel = data.model;
@@ -724,7 +725,7 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       throw new Error('Please configure your Google Gemini API Key.');
     }
 
-    const safeRequested = savedCustomGeminiModel || 'gemini-flash-lite-latest';
+    const safeRequested = requestedModel;
     const candidates = Array.from(new Set([
       safeRequested,
       'gemini-flash-lite-latest'
@@ -1110,7 +1111,7 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
 
   const key = (apiKey && apiKey.trim()) || savedApiKey;
   const targetModel = (savedAiProvider === 'gemini')
-    ? (savedCustomGeminiModel || 'gemini-flash-lite-latest')
+    ? (savedCustomGeminiModel || model || savedModel || 'gemini-flash-lite-latest')
     : (model || savedModel || 'gemini-flash-lite-latest');
 
   // Ultra-fast streaming path in Node.js: bypasses Chromium renderer throttling
@@ -1250,7 +1251,16 @@ ipcMain.handle('config:sync', (event, cfg = {}) => {
   if (cfg.customEndpoint !== undefined) savedCustomEndpoint = cfg.customEndpoint;
   if (cfg.customApiKey !== undefined) savedCustomApiKey = cfg.customApiKey;
   if (cfg.customModel !== undefined) savedCustomModel = cfg.customModel;
-  saveConfig({});
+  saveConfig({
+    apiKey: savedApiKey,
+    primaryTargetLanguage: savedTargetLang,
+    model: savedModel,
+    aiProvider: savedAiProvider,
+    customGeminiModel: savedCustomGeminiModel,
+    customEndpoint: savedCustomEndpoint,
+    customApiKey: savedCustomApiKey,
+    customModel: savedCustomModel
+  });
   return true;
 });
 

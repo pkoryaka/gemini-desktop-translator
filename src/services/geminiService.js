@@ -288,7 +288,8 @@ export async function translateText({
 
   const currentSettings = storageService.getSettings();
   const isBYOM = currentSettings.aiProvider === 'openai_compatible';
-  const targetModel = isBYOM ? (model || currentSettings.customModel || 'llama3.2') : (currentSettings.customGeminiModel || 'gemini-flash-lite-latest');
+  const effectiveModel = model || currentSettings.model || 'gemini-flash-lite-latest';
+  const targetModel = isBYOM ? (currentSettings.customModel || 'llama3.2') : (currentSettings.customGeminiModel || effectiveModel);
 
   // 1. Check Local Memory Cache (Instant 0ms response)
   const cacheKey = getCacheKey(trimmedText, sourceLang, targetLang, customPrompt, explainJargon, targetModel);

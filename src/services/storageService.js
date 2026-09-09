@@ -83,9 +83,10 @@ export const storageService = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (!data) return DEFAULT_SETTINGS;
-      if (parsed.aiProvider !== 'openai_compatible' && (!parsed.model || parsed.model !== 'gemini-flash-lite-latest')) {
+      const parsed = JSON.parse(data);
+      const deprecatedModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+      if (!parsed.model || deprecatedModels.includes(parsed.model)) {
         parsed.model = 'gemini-flash-lite-latest';
-        try { localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsed)); } catch {}
       }
       return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
