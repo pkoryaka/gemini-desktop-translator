@@ -401,6 +401,7 @@ Respond ONLY in JSON format:
   }
 
   // FAST PATH: Real-time streaming for instant TTFT (<150ms)
+  const isStreaming = Boolean(onStreamChunk) && !explainJargon;
   if (isStreaming) {
     const streamEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`;
     const payload = {
@@ -410,7 +411,8 @@ Respond ONLY in JSON format:
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    let accumulatedText = '';
 
     try {
       const response = await fetch(streamEndpoint, {
@@ -424,7 +426,6 @@ Respond ONLY in JSON format:
       if (response.ok && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
-        let accumulatedText = '';
         let buffer = '';
         let isComplete = false;
 
@@ -449,10 +450,9 @@ Respond ONLY in JSON format:
                     accumulatedText += chunk;
                     onStreamChunk(accumulatedText);
                   }
-                  // IMMEDIATE TERMINATION on STOP: Do not hang waiting for socket to close
+                  // IMMEDIATE TERMINATION on finishReason: break cleanly without throwing
                   if (candidate?.finishReason) {
                     isComplete = true;
-                    try { reader.cancel(); } catch {}
                     break;
                   }
                 } catch {
@@ -462,6 +462,7 @@ Respond ONLY in JSON format:
             }
           }
         }
+        try { reader.cancel(); } catch {}
 
         const finalText = accumulatedText.trim();
         if (finalText) {
@@ -471,7 +472,12 @@ Respond ONLY in JSON format:
         }
       }
     } catch (streamErr) {
-      console.warn('Streaming encountered issue, falling back to direct generateContent:', streamErr);
+      console.warn('Streaming encountered issue, checking accumulated buffer:', streamErr);
+      if (accumulatedText && accumulatedText.trim()) {
+        const result = { isExplained: false, translation: accumulatedText.trim() };
+        translationCache.set(cacheKey, result);
+        return result;
+      }
     }
   }
 

@@ -541,7 +541,8 @@ async function executeDirectNodeStream({ text, targetLang }) {
   const systemInstructionText = `Translate into ${target}. Output direct translation only without quotes, preamble, or commentary.`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let accumulatedText = '';
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fastModel}:streamGenerateContent?alt=sse&key=${key.trim()}`;
@@ -564,10 +565,10 @@ async function executeDirectNodeStream({ text, targetLang }) {
     if (response.ok && response.body) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      let accumulatedText = '';
       let buffer = '';
+      let isDone = false;
 
-      while (true) {
+      while (!isDone) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -591,7 +592,7 @@ async function executeDirectNodeStream({ text, targetLang }) {
                   }
                 }
                 if (candidate?.finishReason) {
-                  try { reader.cancel(); } catch {}
+                  isDone = true;
                   break;
                 }
               } catch {}
@@ -599,6 +600,7 @@ async function executeDirectNodeStream({ text, targetLang }) {
           }
         }
       }
+      try { reader.cancel(); } catch {}
 
       if (accumulatedText && accumulatedText.trim()) {
         return accumulatedText.trim();
@@ -606,6 +608,9 @@ async function executeDirectNodeStream({ text, targetLang }) {
     }
   } catch (err) {
     console.warn('Direct stream notice:', err.message);
+    if (accumulatedText && accumulatedText.trim()) {
+      return accumulatedText.trim();
+    }
   } finally {
     clearTimeout(timeoutId);
   }
@@ -737,7 +742,7 @@ async function runAiGeneration({ text, systemInstructionText, isJson = false, ma
       const candidateModel = candidates[i];
       const isLast = (i === candidates.length - 1);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${key.trim()}`;
@@ -1033,6 +1038,20 @@ ipcMain.handle('config:set-start-minimized', async (event, val) => {
   return startMinimized;
 });
 
+ipcMain.handle('config:sync', async (event, cfg) => {
+  if (!cfg) return false;
+  if (cfg.apiKey !== undefined) savedApiKey = cfg.apiKey;
+  if (cfg.primaryTargetLanguage !== undefined) savedTargetLang = cfg.primaryTargetLanguage;
+  if (cfg.model !== undefined) savedModel = cfg.model;
+  if (cfg.aiProvider !== undefined) savedAiProvider = cfg.aiProvider;
+  if (cfg.customGeminiModel !== undefined) savedCustomGeminiModel = cfg.customGeminiModel;
+  if (cfg.customEndpoint !== undefined) savedCustomEndpoint = cfg.customEndpoint;
+  if (cfg.customApiKey !== undefined) savedCustomApiKey = cfg.customApiKey;
+  if (cfg.customModel !== undefined) savedCustomModel = cfg.customModel;
+  saveConfig(cfg);
+  return true;
+});
+
 ipcMain.handle('hotkeys:get', async () => {
   return {
     translateHotkey,
@@ -1116,10 +1135,12 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
 
   // Ultra-fast streaming path in Node.js: bypasses Chromium renderer throttling
   if (!isExplain && savedAiProvider === 'gemini' && key) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    let accumulatedText = '';
+
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${key.trim()}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -1140,10 +1161,10 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
       if (response.ok && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
-        let accumulatedText = '';
         let buffer = '';
+        let isDone = false;
 
-        while (true) {
+        while (!isDone) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -1165,7 +1186,7 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
                     event.sender.send('quick-translate-chunk', accumulatedText);
                   }
                   if (candidate?.finishReason) {
-                    try { reader.cancel(); } catch {}
+                    isDone = true;
                     break;
                   }
                 } catch {}
@@ -1173,13 +1194,19 @@ ipcMain.handle('native:translate', async (event, { apiKey, text, targetLang, cus
             }
           }
         }
+        try { reader.cancel(); } catch {}
 
         if (accumulatedText && accumulatedText.trim()) {
           return { success: true, rawOutput: accumulatedText.trim() };
         }
       }
     } catch (streamErr) {
-      console.warn('Native stream failed, falling back to runAiGeneration:', streamErr.message);
+      console.warn('Native stream notice, checking accumulated buffer:', streamErr.message);
+      if (accumulatedText && accumulatedText.trim()) {
+        return { success: true, rawOutput: accumulatedText.trim() };
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
