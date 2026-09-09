@@ -1,0 +1,15 @@
+#!/bin/sh
+echo "🔍 Running pre-commit build verification..."
+npm run build
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "❌ [Pre-Commit Blocked] 'npm run build' exited with errors."
+  echo "❌ Broken files cannot be committed to Git. Please fix the errors and try again."
+  echo ""
+  exit 1
+fi
+
+echo "✅ Pre-commit build check passed! Proceeding with commit."
+exit 0

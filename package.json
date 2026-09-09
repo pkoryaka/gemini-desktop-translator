@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
-    "electron:build": "vite build && electron-builder"
+    "electron:build": "vite build && electron-builder",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "build": {
     "appId": "com.nativelingo.app",
