@@ -4,13 +4,19 @@
 
 ---
 
-## 1. The Monetization Architecture: 14-Day Reverse Trial
+## 1. Open Source Transparency & Commercial Model
 
-NativeLingo employs a **14-day Reverse Trial** rather than an artificially hobbled freemium gate.
+NativeLingo follows a **Fair-Code / Source-Available Commercial Model** (similar to Obsidian, Aseprite, and Zed):
 
-1. **Instant First Run**: Upon installation, every user receives full **Pro Edition** capabilities for 14 days. No credit card, phone number, or account creation is required.
-2. **Workflow Experience**: Users experience the full speed of instant in-place auto-paste, multi-hotkey rewrite slots, and deep jargon demystification in their daily apps (Slack, IDEs, Word, Email).
-3. **Graceful Transition**: If a license is not activated at the end of 14 days, the application **never locks up or disables your workflow**. It automatically transitions to the permanently usable **NativeLingo Free Edition**.
+1. **Open Source for Trust & Security**: The entire codebase is public on GitHub. Anyone can inspect the implementation, audit how data is routed, or build it locally for personal and non-commercial evaluation.
+2. **Commercial Licensing for Business**: In accordance with the [NativeLingo EULA](./LICENSE), using the software for business operations, commercial customer support, client communication, or corporate revenue generation requires an active **Pro** or **Team Commercial License**.
+3. **Official Pre-Compiled Binaries**: Commercial licenses fund full-time development, code-signing certificates, automatic updates, and priority Windows desktop support.
+
+---
+
+## 2. The 14-Day Reverse Trial (Official Binaries)
+
+For users downloading the official installer:
 
 ---
 

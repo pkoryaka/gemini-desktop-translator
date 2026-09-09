@@ -1814,7 +1814,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsUpdated, theme: initi
                 }}>
                   <ShieldAlert size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>100% BYOK & Zero Inference Markup:</strong> NativeLingo never bills per-token or acts as a middleman for your data. You use your own free Gemini API key (generous free tier) or run 100% offline with local Ollama models. Your text never touches third-party relay servers.
+                    <div>
+                      <strong style={{ color: 'var(--text-primary)' }}>100% BYOK & Zero Inference Markup:</strong> NativeLingo never bills per-token or acts as a middleman for your data. You use your own free Gemini API key (generous free tier) or run 100% offline with local Ollama models. Your text never touches third-party relay servers.
+                    </div>
+                    <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid rgba(59, 130, 246, 0.15)' }}>
+                      <strong style={{ color: 'var(--text-primary)' }}>Open Source & Commercial Licensing:</strong> The codebase is open on GitHub for transparency and security auditing. Personal & evaluation use is free. Under the NativeLingo EULA, use within commercial companies and revenue-generating workflows requires a Pro or Team license.
+                    </div>
                   </div>
                 </div>
               </div>
